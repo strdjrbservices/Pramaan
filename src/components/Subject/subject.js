@@ -783,7 +783,7 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
     });
 
     try {
-      const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/compare/', { method: 'POST', body: formData });
+      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/compare/', { method: 'POST', body: formData });
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(errorText || 'PDF-HTML comparison failed.');
@@ -1452,7 +1452,7 @@ function Subject() {
     formData.append('contract_copy_file', contractFile);
 
     try {
-      const response = await fetch('https://strdjrbservices2.pythonanywhere.com/api/compare-contract/', {
+      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/compare-contract/', {
         method: 'POST',
         body: formData,
       });
@@ -1487,7 +1487,7 @@ function Subject() {
     formData.append('engagement_letter_file', engagementLetterFile);
 
     try {
-      const response = await fetch('https://strdjrbservices2.pythonanywhere.com/api/compare-engagement-letter/', {
+      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/compare-engagement-letter/', {
         method: 'POST',
         body: formData,
       });
@@ -2232,7 +2232,7 @@ function Subject() {
           setExtractionProgress(prev => (prev < 40 ? prev + 5 : prev));
         }, 500);
 
-        const response = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+        const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
           method: 'POST', body: formData
         });
 
@@ -2394,7 +2394,7 @@ function Subject() {
         formData.append('form_type', selectedFormType);
         formData.append('category', category);
 
-        const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', { method: 'POST', body: formData });
+        const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', { method: 'POST', body: formData });
 
         if (!res.ok) {
           throw new Error(`Failed to extract ${category}`);
@@ -2433,7 +2433,7 @@ function Subject() {
     formData.append('comment', prompt);
 
     try {
-      const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2520,7 +2520,7 @@ function Subject() {
     formData.append('comment', STATE_REQUIREMENTS_PROMPT);
 
     try {
-      const res = await fetchWithRetry('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetchWithRetry('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
 
@@ -2585,7 +2585,7 @@ function Subject() {
     formData.append('comment', UNPAID_OK_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2649,7 +2649,7 @@ function Subject() {
     formData.append('comment', CLIENT_REQUIREMENT_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2714,7 +2714,7 @@ function Subject() {
     formData.append('comment', FHA_REQUIREMENTS_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2778,7 +2778,7 @@ function Subject() {
     formData.append('comment', ADU_REQUIREMENTS_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2841,7 +2841,7 @@ function Subject() {
     formData.append('comment', ESCALATION_CHECK_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
