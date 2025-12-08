@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Subject.css';
 import { GlobalStyles, keyframes } from '@mui/system';
-import { Info, Warning as WarningIcon, Brightness4 as Brightness4Icon, Brightness7 as Brightness7Icon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, ErrorOutline as ErrorOutlineIcon, KeyboardArrowUp as KeyboardArrowUpIcon } from '@mui/icons-material';
+import { Info, Warning as WarningIcon, Brightness4 as Brightness4Icon, Brightness7 as Brightness7Icon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, ErrorOutline as ErrorOutlineIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
 import { Button, Stack, List, ListItem, ListItemButton, ListItemText, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -9,6 +9,7 @@ import autoTable from 'jspdf-autotable';
 import Form1004 from './1004';
 import Form1007 from './1007';
 import Form1073 from './1073';
+import Form1025 from './1025';
 import { EditableField, GridInfoCard } from './FormComponents';
 import StateRequirementCheck, { STATE_REQUIREMENTS_PROMPT } from './StateRequirementCheck';
 import UnpaidOkCheck, { UNPAID_OK_PROMPT } from './UnpaidOkCheck';
@@ -17,6 +18,7 @@ import EscalationCheck, { ESCALATION_CHECK_PROMPT } from './EscalationCheck';
 import FhaCheck, { FHA_REQUIREMENTS_PROMPT } from './FhaCheck';
 import ADUCheck, { ADU_REQUIREMENTS_PROMPT } from './ADUCheck';
 import { lightTheme, darkTheme } from '../../theme';
+import { TextField } from '@mui/material';
 
 // Import all validation functions
 import * as generalValidation from './generalValidation';
@@ -27,12 +29,16 @@ import * as neighborhoodValidation from './neighborhoodValidation';
 import * as improvementsValidation from './improvementsValidation';
 import * as salesComparisonValidation from './salesComparisonValidation';
 import * as reconciliationValidation from './reconciliationValidation';
+import * as rentScheduleValidation from './rentScheduleValidation';
 import * as appraiserLenderValidation from './appraiserLenderValidation';
 
+import { SUBJECT_REVISION_PROMPTS, CONTRACT_REVISION_PROMPTS, NEIGHBORHOOD_REVISION_PROMPTS, SITE_REVISION_PROMPTS, IMPROVEMENTS_REVISION_PROMPTS, SALES_GRID_REVISION_PROMPTS, RECONCILIATION_REVISION_PROMPTS, COST_APPROACH_REVISION_PROMPTS, CERTIFICATION_REVISION_PROMPTS, ADDENDUM_GENERAL_REVISION_PROMPTS, FORM_1007_REVISION_PROMPTS } from './revisionPrompts';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import successSoundFile from '../../Assets/success.mp3';
 import errorSoundFile from '../../Assets/error.mp3';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
 const bounce = keyframes`
   0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
@@ -40,6 +46,31 @@ const bounce = keyframes`
   60% { transform: translateY(-4px); }
 `;
 
+const HighlightKeywords = ({ text, keywordGroups }) => {
+  if (!text || !keywordGroups || keywordGroups.length === 0) {
+    return text;
+  }
+
+  const allKeywords = keywordGroups.flatMap(group => group.keywords);
+  if (allKeywords.length === 0) {
+    return text;
+  }
+
+  const escapedKeywords = allKeywords.map(kw => kw.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&'));
+  const regex = new RegExp(`(${escapedKeywords.join('|')})`, 'gi');
+  const parts = String(text).split(regex);
+
+  return (
+    <span>
+      {parts.map((part, i) => {
+        const matchedGroup = keywordGroups.find(group =>
+          group.keywords.some(keyword => part.toLowerCase() === keyword.toLowerCase())
+        );
+        return matchedGroup ? <span key={i} style={matchedGroup.style}>{part}</span> : part;
+      })}
+    </span>
+  );
+};
 
 const TooltipStyles = () => (
   <GlobalStyles styles={{
@@ -185,6 +216,73 @@ const ContractComparisonDialog = ({ open, onClose, onCompare, loading, result, e
         <Button onClick={onCompare} variant="contained" disabled={loading || !selectedFile || !contractFile}>
           {loading ? <CircularProgress size={24} /> : (result ? 'Reload' : 'Compare')}
         </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const RevisionLanguageDialog = ({ open, onClose, title, prompts, onCopy, onAddToNotepad }) => (
+  <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <DialogTitle>{title}</DialogTitle>
+    <DialogContent dividers>
+      <List dense>
+        {prompts.map((prompt, index) => (
+          <ListItem key={index} secondaryAction={
+
+            <>
+              <IconButton edge="end" aria-label="copy" onClick={() => onCopy(prompt)}><ContentCopyIcon /></IconButton>
+              {onAddToNotepad && (
+                <IconButton edge="end" aria-label="add to notepad" onClick={() => onAddToNotepad(prompt)}><NoteAltIcon /></IconButton>
+              )}
+            </>
+          }>
+            <ListItemText primary={prompt} />
+          </ListItem>
+        ))}
+      </List>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose}>Close</Button>
+    </DialogActions>
+  </Dialog>
+);
+
+const NotepadDialog = ({ open, onClose, notes, onNotesChange }) => {
+  const handleSaveNotes = () => {
+    if (!notes) {
+      return; // Don't save an empty file
+    }
+    const blob = new Blob([notes], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Revision.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="notepad-dialog-title">
+      <DialogTitle id="notepad-dialog-title">Notepad</DialogTitle>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin="dense"
+          id="notes"
+          label="Your Notes"
+          type="text"
+          fullWidth
+          multiline
+          rows={10}
+          value={notes}
+          spellCheck="true"
+          onChange={(e) => onNotesChange(e.target.value)}
+          variant="outlined" />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleSaveNotes} disabled={!notes}>Save to File</Button>
+        <Button onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>
   );
@@ -581,7 +679,7 @@ const SalesComparisonSection = ({ data, salesGridRows, comparableSales, extracti
 };
 
 
-const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPrompt }) => {
+const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPrompt, onAddendumRevisionButtonClick }) => {
   // const [prompt, setPrompt] = useState('');
 
 
@@ -591,6 +689,25 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
   //     onPromptSubmit(prompt);
   //   }
   // };
+  const keywordGroups = [
+    {
+      keywords: ["consistently", "Fulfilled", "PRESENT", "CONSISTENT"],
+      style: { backgroundColor: '#91ff00ff', color: '#000000', padding: '1px 3px', borderRadius: '3px' }
+    },
+    {
+      keywords: [
+        "However", "Not consistently", "Not Fulfilled", "Not PRESENT",
+        "Not CONSISTENT", "ilconsistently", "absent", "ilCONSISTENT", "Specifically", "mismatch", "mismatched", "missing", "inconsistent",
+      ],
+      style: { backgroundColor: '#ff0000', color: '#ffffff', padding: '1px 3px', borderRadius: '3px' }
+    }
+  ];
+
+  // This is kept for other components that might still use the old prop.
+  // For PromptAnalysis, we will use keywordGroups.
+  // const highlightKeywords = keywordGroups.find(g => g.style.backgroundColor === '#91ff00ff')?.keywords || [];
+
+
   const prompt1 =
     "Verify that the Subject Property Address is identical across all locations in the report including: Subject Section, Sales Comparison Grid, Location Map, Aerial Map, Header/Footer, and any Addenda.\nAlso confirm the presence of the Subject Street View, Front View, and Rear View photos with no duplicates or mislabeled subject photos.";
 
@@ -603,8 +720,8 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
   const prompt5 =
     "Verify that every photo is properly labeled (Subject, Comp 1, Comp 2, etc.) and confirm that there are no duplicate photos, reused photos, or mislabeled views across the entire photo section.";
 
-  const prompt6 =
-    "Please confirm whether the following revision request is addressed in the file:&#10;&#10;• The lease begin date for Rental Comp #3 is incorrectly shown as 'Owner'. Confirm if corrected.&#10;&#10;If addressed in comments, confirm that the corresponding section was updated in the main form.&#10;&#10;For each revision item, answer only: 'Revised – Corrected', 'Revised – Not Corrected', or 'Not Addressed'. Keep responses short.&#10;&#10;Additional Verification (do NOT treat as revisions):&#10;&#10;• Identify any blank fields or unchecked/incorrect checkboxes throughout the form.&#10;• If assignment type is Refinance → Contract Section must be blank (including checkboxes).&#10;• If Purchase → Contract Section fields and checkboxes must be accurately completed.&#10;• Validate Garage/Carport count and type based on the checkboxes marked.&#10;• Verify Appraised Value matches in all required locations: Page 2 (Sales Grid Conclusion), Summary Section, Addendum (if repeated), and Signature Page.&#10;• Signature Date must be after the Effective/As-of Date.&#10;• Signature Page must include 'Fastapp' in the Company/AMC name.&#10;• Check prior services disclosure, exposure time comment, and confirm no appraiser invoice is included. If present, mark as must-remove.&#10;&#10;Now verify presence of the following sections. Answer only 'Present' or 'Not Present': This Report is One of the Following Types:, Comments on Standards Rule 2-3, Reasonable Exposure Time, Comments on Appraisal and Report Identification.";
+  // const prompt6 =
+  //   "Please confirm whether the following revision request is addressed in the file:&#10;&#10;• The lease begin date for Rental Comp #3 is incorrectly shown as 'Owner'. Confirm if corrected.&#10;&#10;If addressed in comments, confirm that the corresponding section was updated in the main form.&#10;&#10;For each revision item, answer only: 'Revised – Corrected', 'Revised – Not Corrected', or 'Not Addressed'. Keep responses short.&#10;&#10;Additional Verification (do NOT treat as revisions):&#10;&#10;• Identify any blank fields or unchecked/incorrect checkboxes throughout the form.&#10;• If assignment type is Refinance → Contract Section must be blank (including checkboxes).&#10;• If Purchase → Contract Section fields and checkboxes must be accurately completed.&#10;• Validate Garage/Carport count and type based on the checkboxes marked.&#10;• Verify Appraised Value matches in all required locations: Page 2 (Sales Grid Conclusion), Summary Section, Addendum (if repeated), and Signature Page.&#10;• Signature Date must be after the Effective/As-of Date.&#10;• Signature Page must include 'Fastapp' in the Company/AMC name.&#10;• Check prior services disclosure, exposure time comment, and confirm no appraiser invoice is included. If present, mark as must-remove.&#10;&#10;Now verify presence of the following sections. Answer only 'Present' or 'Not Present': This Report is One of the Following Types:, Comments on Standards Rule 2-3, Reasonable Exposure Time, Comments on Appraisal and Report Identification.";
 
   const supplementalAddendumPrompt =
     "1. Confirm presence of the following sections and answer only 'Present' or 'Not Present': SUPPLEMENTAL ADDENDUM, ADDITIONAL COMMENTS, APPRAISER'S CERTIFICATION, SUPERVISORY APPRAISER'S CERTIFICATION, Analysis/Comments, GENERAL INFORMATION ON ANY REQUIRED REPAIRS, UNIFORM APPRAISAL DATASET (UAD) DEFINITIONS ADDENDUM.&#10;&#10;2. Confirm presence of the following sections and answer only 'Present' or 'Not Present': SCOPE OF WORK, INTENDED USE, INTENDED USER, DEFINITION OF MARKET VALUE, STATEMENT OF ASSUMPTIONS AND LIMITING CONDITIONS.";
@@ -638,7 +755,7 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
                   Summary
                 </Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
-                  {summary}
+                  <HighlightKeywords text={summary} keywordGroups={keywordGroups} />
                 </Typography>
               </Paper>
             )}
@@ -659,9 +776,9 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
                     <TableBody>
                       {comparison_summary.map((item, index) => (
                         <TableRow key={index}>
-                          <TableCell>{item.status}</TableCell>
-                          <TableCell>{item.section}</TableCell>
-                          <TableCell>{item.comment}</TableCell>
+                          <TableCell><HighlightKeywords text={item.status} keywordGroups={keywordGroups} /></TableCell>
+                          <TableCell><HighlightKeywords text={item.section} keywordGroups={keywordGroups} /></TableCell>
+                          <TableCell><HighlightKeywords text={item.comment} keywordGroups={keywordGroups} /></TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -689,9 +806,11 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
                             {key}
                           </TableCell>
                           <TableCell>
-                            {(typeof value === 'object' && value !== null && 'value' in value)
+                            <HighlightKeywords text={(typeof value === 'object' && value !== null && 'value' in value)
                               ? String(value.value)
                               : (typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value))}
+                              keywordGroups={keywordGroups}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
@@ -712,7 +831,7 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
           Analysis Result
         </Typography>
         <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: 'inherit', fontFamily: 'monospace' }}>
-          {String(data)}
+          <HighlightKeywords text={String(data)} keywordGroups={keywordGroups} />
         </pre>
       </Paper>
     );
@@ -722,7 +841,12 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
   return (
     <div id="prompt-analysis-section" className="card shadow mb-4">
       <div className="card-header CAR1 bg-info text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <strong>Prompt Analysis</strong>
+        <strong style={{ fontSize: '1.1rem' }}>Prompt Analysis</strong>
+        {onAddendumRevisionButtonClick && (
+          <Tooltip title="General/Addendum Revisions">
+            <IconButton onClick={onAddendumRevisionButtonClick} size="small" sx={{ color: 'white', float: 'right' }}><LibraryBooksIcon /></IconButton>
+          </Tooltip>
+        )}
       </div>
       <div className="card-body">
         <Stack spacing={2}>
@@ -731,7 +855,7 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
             <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt2)} disabled={loading}>Compare Room Counts</Button>
             <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt4)} disabled={loading}>Match Comp Addresses</Button>
             <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt5)} disabled={loading}>Verify Photo Labels & Duplicates</Button>
-            <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt6)} disabled={loading}>Revision Requests Check</Button>
+            {/* <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt6)} disabled={loading}>Revision Requests Check</Button> */}
             <Button variant="outlined" size="small" onClick={() => onPromptSubmit(supplementalAddendumPrompt)} disabled={loading}>Page Present Check</Button>
           </Stack>
           {loading && <CircularProgress size={24} />}
@@ -1002,8 +1126,43 @@ function Subject() {
   const [engagementLetterCompareResult, setEngagementLetterCompareResult] = useState(null);
   const [engagementLetterCompareError, setEngagementLetterCompareError] = useState('');
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isHtmlReviewLoading, setIsHtmlReviewLoading] = useState(false);
+  const [htmlExtractionTimer, setHtmlExtractionTimer] = useState(0);
+  const htmlExtractionTimerRef = useRef(null);
+  const [isNotepadOpen, setIsNotepadOpen] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [isRentFormTypeMismatchDialogOpen, setIsRentFormTypeMismatchDialogOpen] = useState(false);
+  const [isContractPriceRevisionLangDialogOpen, setContractPriceRevisionLangDialogOpen] = useState(false);
+  const [isFinancialAssistanceRevisionLangDialogOpen, setFinancialAssistanceRevisionLangDialogOpen] = useState(false);
+  const [isDateOfContractRevisionLangDialogOpen, setDateOfContractRevisionLangDialogOpen] = useState(false);
+  const [isNeighborhoodBoundariesRevisionLangDialogOpen, setNeighborhoodBoundariesRevisionLangDialogOpen] = useState(false);
+  const [isOtherLandUseRevisionLangDialogOpen, setOtherLandUseRevisionLangDialogOpen] = useState(false);
+  const [isZoningComplianceRevisionLangDialogOpen, setZoningComplianceRevisionLangDialogOpen] = useState(false);
 
+  const [isRevisionLangDialogOpen, setRevisionLangDialogOpen] = useState(false);
+  const [isContractRevisionLangDialogOpen, setContractRevisionLangDialogOpen] = useState(false);
+  const [isNeighborhoodRevisionLangDialogOpen, setNeighborhoodRevisionLangDialogOpen] = useState(false);
+  const [isSiteRevisionLangDialogOpen, setSiteRevisionLangDialogOpen] = useState(false);
+  const [isImprovementsRevisionLangDialogOpen, setImprovementsRevisionLangDialogOpen] = useState(false);
+  const [isSalesGridRevisionLangDialogOpen, setSalesGridRevisionLangDialogOpen] = useState(false);
+  const [isReconciliationRevisionLangDialogOpen, setReconciliationRevisionLangDialogOpen] = useState(false);
+  const [isCostApproachRevisionLangDialogOpen, setCostApproachRevisionLangDialogOpen] = useState(false);
+  const [isCertificationRevisionLangDialogOpen, setCertificationRevisionLangDialogOpen] = useState(false);
+  const [isAddendumRevisionLangDialogOpen, setAddendumRevisionLangDialogOpen] = useState(false);
+  const [isPropertyAddressRevisionLangDialogOpen, setPropertyAddressRevisionLangDialogOpen] = useState(false);
+  const [isLenderClientRevisionLangDialogOpen, setLenderClientRevisionLangDialogOpen] = useState(false);
+  const [isHoaRevisionLangDialogOpen, setHoaRevisionLangDialogOpen] = useState(false);
+  const [isLenderClientAddressRevisionLangDialogOpen, setLenderClientAddressRevisionLangDialogOpen] = useState(false);
+  const [is1007RevisionLangDialogOpen, set1007RevisionLangDialogOpen] = useState(false);
 
+  const handleOpenNotepad = () => {
+    if (!notes) { // Only set default text if notes are empty
+      const now = new Date();
+      const dateTimeString = now.toLocaleString();
+      setNotes(`Date and Time: ${dateTimeString}\n\n`);
+    }
+    setIsNotepadOpen(true);
+  };
 
   const unpaidOkLenders = [
     'PRMG', 'Paramount Residential Mortgage Group',
@@ -1063,7 +1222,7 @@ function Subject() {
       "Assessor's Parcel #": [generalValidation.checkSubjectFieldsNotBlank],
       'Neighborhood Name': [generalValidation.checkSubjectFieldsNotBlank],
       'Map Reference': [generalValidation.checkSubjectFieldsNotBlank],
-      'Census Tract': [generalValidation.checkSubjectFieldsNotBlank],
+      'Census Tract': [generalValidation.checkSubjectFieldsNotBlank, subjectValidation.checkCensusTract],
       'Occupant': [generalValidation.checkSubjectFieldsNotBlank],
       'Property Rights Appraised': [generalValidation.checkSubjectFieldsNotBlank],
       'Lender/Client': [generalValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderNameInconsistency],
@@ -1153,6 +1312,11 @@ function Subject() {
     return registry;
   };
 
+  const rentScheduleValidationRegistry = {
+    'Proximity to Subject': [rentScheduleValidation.checkRentProximityToSubject],
+    // Add other rent schedule validations here
+  };
+
   const getValidationErrors = () => {
     const errors = [];
     if (!data || Object.keys(data).length === 0) {
@@ -1162,11 +1326,12 @@ function Subject() {
     const validationRegistry = buildValidationRegistry();
     const allData = data;
 
-    const runChecksForField = (sectionName, fieldName, value, path, saleName = null) => {
-      const validationFns = validationRegistry[fieldName] || [];
+    const runChecksForField = (sectionName, fieldName, value, path, saleName = null, customRegistry = validationRegistry) => {
+      const validationFns = customRegistry[fieldName] || [];
       for (const fn of validationFns) {
         try {
           const result = fn(fieldName, value, allData, path, saleName);
+
           if (result && result.isError) {
             errors.push([sectionName, `${fieldName}${saleName ? ` (${saleName})` : ''}`, result.message]);
             break; // Stop on first error for this field
@@ -1205,6 +1370,40 @@ function Subject() {
       }
     });
 
+    // Special handling for Rent Schedule Grid
+    comparableRents.forEach(rentName => {
+      if (allData[rentName]) {
+        Object.keys(allData[rentName]).forEach(fieldKey => {
+          const value = allData[rentName][fieldKey];
+          const path = [rentName, fieldKey];
+          runChecksForField('Rent Schedule', fieldKey, value, path, rentName, rentScheduleValidationRegistry);
+        });
+      }
+    });
+    ComparableRentAdjustments.forEach(rentName => {
+      if (allData[rentName]) {
+        Object.keys(allData[rentName]).forEach(fieldKey => {
+          const value = allData[rentName][fieldKey];
+          const path = [rentName, fieldKey];
+          runChecksForField('Rent Schedule', fieldKey, value, path, rentName, rentScheduleValidationRegistry);
+        });
+      }
+    });
+
+    return errors;
+  };
+
+  const getDataConsistencyErrors = (allData) => {
+    const errors = [];
+    if (!allData || Object.keys(allData).length === 0) return errors;
+
+    Object.keys(dataConsistencyFields).forEach(item => {
+      const fields = dataConsistencyFields[item];
+      const values = Object.values(fields).map(fieldKey => allData[fieldKey] || 'N/A');
+      if (new Set(values.filter(v => v !== 'N/A')).size > 1) {
+        errors.push([item, ...values]);
+      }
+    });
     return errors;
   };
 
@@ -1256,42 +1455,31 @@ function Subject() {
       yPos = doc.lastAutoTable.finalY + 10;
     };
 
-    // 1. Missing Fields
+    // 1. Missing & Invalid Fields
     const missingFields = [];
-    if (extractionAttempted) {
-      const allFields = [
-        ...subjectFields.map(f => ({ section: 'Subject', field: f, path: ['Subject', f] })),
-        ...contractFields.map(f => ({ section: 'Contract', field: f, path: ['CONTRACT', f] })),
-        ...neighborhoodFields.map(f => ({ section: 'Neighborhood', field: f, path: ['NEIGHBORHOOD', f] })),
-        ...siteFields.map(f => ({ section: 'Site', field: f, path: ['SITE', f] })),
-        ...improvementsFields.map(f => ({ section: 'Improvements', field: f, path: ['IMPROVEMENTS', f] })),
-        ...reconciliationFields.map(f => ({ section: 'Reconciliation', field: f, path: ['RECONCILIATION', f] })),
-        ...incomeApproachFields.map(f => ({ section: 'Income Approach', field: f, path: ['INCOME_APPROACH', f] })),
-        ...costApproachFields.map(f => ({ section: 'Cost Approach', field: f, path: ['COST_APPROACH', f] })),
-        ...pudInformationFields.map(f => ({ section: 'PUD Information', field: f, path: ['PUD_INFO', f] })),
-        ...appraiserFields.map(f => ({ section: 'Appraiser/Certification', field: f, path: ['CERTIFICATION', f] })),
-        ...marketConditionsFields.map(f => ({ section: 'Market Conditions', field: f, path: ['MARKET_CONDITIONS', f] })),
-        ...salesHistoryFields.map(f => ({ section: 'Sales History', field: f, path: ['SALES_HISTORY', f] })),
-        ...salesComparisonAdditionalInfoFields.map(f => ({ section: 'Sales Comparison Additional Info', field: f, path: ['SALES_TRANSFER', f] })),
-        ...infoOfSalesFields.map(f => ({ section: 'Info of Sales', field: f, path: ['INFO_OF_SALES', f] })),
-        ...projectSiteFields.map(f => ({ section: 'Project Site', field: f, path: ['PROJECT_SITE', f] })),
-        ...projectInfoFields.map(f => ({ section: 'Project Information', field: f, path: ['PROJECT_INFO', f] })),
-        ...projectAnalysisFields.map(f => ({ section: 'Project Analysis', field: f, path: ['PROJECT_ANALYSIS', f] })),
-        ...unitDescriptionsFields.map(f => ({ section: 'Unit Descriptions', field: f, path: ['UNIT_DESCRIPTIONS', f] })),
-        ...priorSaleHistoryFields.map(f => ({ section: 'Prior Sale History', field: f, path: ['PRIOR_SALE_HISTORY', f] })),
-      ];
+    const validationErrors = getValidationErrors();
+    const validationErrorRows = validationErrors.map(([section, field, message]) => {
+      if (message.toLowerCase().includes('blank') || message.toLowerCase().includes('empty')) {
+        missingFields.push([section, field, message]);
+        return null;
+      }
+      return [section, field, message];
+    }).filter(Boolean);
 
-      allFields.forEach(({ section, field, path }) => {
-        let value = data;
-        for (const key of path) {
-          value = value?.[key];
-        }
-        if (value === undefined || value === null || value === '') {
-          missingFields.push([section, field]);
-        }
-      });
+    addSection('Missing Fields', ['Section', 'Field', 'Message'], missingFields);
+    addSection('Field Validation Errors', ['Section', 'Field', 'Error Message'], validationErrorRows);
+
+    // 2. Data Consistency Errors
+    const consistencyErrors = getDataConsistencyErrors(data);
+    if (consistencyErrors.length > 0) {
+      const consistencyBody = consistencyErrors.map(([item, improvements, grid, photo, floorplan]) =>
+        [item, improvements, grid, photo, floorplan]
+      );
+      addSection('Data Consistency Issues',
+        ['Item', 'Improvements', 'Sales Grid', 'Photo', 'Floorplan'],
+        consistencyBody
+      );
     }
-    addSection('Missing Fields', ['Section', 'Field'], missingFields);
 
     // 2. Requirement Check Errors
     const requirementErrors = [];
@@ -1314,11 +1502,7 @@ function Subject() {
     });
     addSection('Requirement Check Issues', ['Check', 'Requirement', 'Status', 'Comment'], requirementErrors);
 
-    // 3. Field Validation Errors
-    const validationErrors = getValidationErrors(data);
-    addSection('Field Validation Errors', ['Section', 'Field', 'Error Message'], validationErrors);
-
-    // 3. Comparable Address Consistency
+    // 4. Comparable Address Consistency
     const addressInconsistencies = [];
     const getFirstThreeWords = (str) => str ? str.split(/\s+/).slice(0, 3).join(' ').toLowerCase() : '';
 
@@ -1374,6 +1558,14 @@ function Subject() {
     const file = e.target.files && e.target.files[0];
     if (file) {
       setHtmlFile(file);
+      setIsHtmlReviewLoading(true);
+      setHtmlExtractionTimer(0);
+      if (htmlExtractionTimerRef.current) {
+        clearInterval(htmlExtractionTimerRef.current);
+      }
+      htmlExtractionTimerRef.current = setInterval(() => {
+        setHtmlExtractionTimer(prev => prev + 1);
+      }, 1000);
       setNotification({ open: true, message: 'HTML file uploaded. Extracting data...', severity: 'info' });
 
       const reader = new FileReader();
@@ -1422,6 +1614,10 @@ function Subject() {
         setComparisonData(extractedData);
         // setIsComparisonDialogOpen(true); // Prevent automatic dialog opening
         setNotification({ open: true, message: 'HTML data extracted. Please review.', severity: 'success' });
+        setIsHtmlReviewLoading(false);
+        if (htmlExtractionTimerRef.current) {
+          clearInterval(htmlExtractionTimerRef.current);
+        }
       };
       reader.readAsText(file);
     }
@@ -1657,6 +1853,17 @@ function Subject() {
         subjectFields.splice(amcIndex, 0, 'AMC License #');
       }
     }
+    if (currentState === 'CA') {
+      const caFields = ["Smoke detector comment", "CO detector comment", "Water heater double-strapped comment"];
+      const stateIndex = subjectFields.indexOf('State') + 1;
+      let offset = 0;
+      caFields.forEach(field => {
+        if (!subjectFields.includes(field)) {
+          subjectFields.splice(stateIndex + offset, 0, field);
+          offset++;
+        }
+      });
+    }
   }
 
 
@@ -1726,11 +1933,22 @@ function Subject() {
     "FEMA Special Flood Hazard Area",
     "FEMA Flood Zone",
     "FEMA Map #",
-    "FEMA Map Date",
+    "FEMA Map Date", "Are the utilities and off-site improvements typical for the market area?",
     "Are the utilities and off-site improvements typical for the market area? If No, describe",
     "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe"
   ];
 
+  const zoningComplianceValue = data?.SITE?.['Zoning Compliance'];
+  if (zoningComplianceValue === 'Legal Nonconforming (Grandfathered Use)') {
+    if (!siteFields.includes('Legal Nonconforming (Grandfathered Use) comment')) {
+      siteFields.splice(siteFields.indexOf('Zoning Compliance') + 1, 0, 'Legal Nonconforming (Grandfathered Use) comment');
+    }
+  }
+  if (zoningComplianceValue === 'No Zoning') {
+    if (!siteFields.includes('No Zoning comment')) {
+      siteFields.splice(siteFields.indexOf('Zoning Compliance') + 1, 0, 'No Zoning comment');
+    }
+  }
   const improvementsFields = [
     "Units", "One with Accessory Unit", "# of Stories", "Type", "Existing/Proposed/Under Const.",
     "Design (Style)", "Year Built", "Effective Age (Yrs)", "Foundation Type",
@@ -1830,7 +2048,9 @@ function Subject() {
     "LENDER/CLIENT Name",
     "Lender/Client Company Name",
     "Lender/Client Company Address",
-    "Lender/Client Email Address"
+    "Lender/Client Email Address", "E&O Insurance",
+    "Policy Period From",
+    "Policy Period To", "License Vaild To", "LICENSE/REGISTRATION/CERTIFICATION #"
   ];
 
   const supplementalAddendumFields = [
@@ -1884,6 +2104,18 @@ function Subject() {
     "Effective Date of Data Source(s) for prior sale"
   ];
 
+  const COMPARABLE_RENTAL_DATA = ["Address", "Proximity to Subject", "Current Monthly Rent", "Rent/Gross Bldg. Area", "Rent Control", "Data Source(s)", "Date of Lease(s)", "Location", "Actual Age", "Condition", "Gross Building Area", "Unit Breakdown Rm Count Tot Unit # 1", "Unit Breakdown Rm Count Br Unit # 1", "Unit Breakdown Rm Count Ba Unit # 1", "Unit Breakdown Rm Count Tot Unit # 2", "Unit Breakdown Rm Count Br Unit # 2", "Unit Breakdown Rm Count Ba Unit # 2", "Unit Breakdown Rm Count Tot Unit # 3", "Unit Breakdown Rm Count Br Unit # 3", "Unit Breakdown Rm Count Ba Unit # 3", "Unit Breakdown Rm Count Tot Unit # 4", "Unit Breakdown Rm Count Br Unit # 4", "Unit Breakdown Rm Count Ba Unit # 4", "Utilities Included"];
+  const SUBJECT_RENT_SCHEDULE = ["Unit # Lease Date Begin Date 1", "Unit # Lease Date Begin Date 2", "Unit # Lease Date Begin Date 3", "Unit # Lease Date  Begin Date 4",
+    "Unit # Lease Date End Date 1", "Unit # Lease Date End Date 2", "Unit # Lease Date End Date 3", "Unit # Lease Date End Date 4",
+    "Actual Rents Unit # 1  Per Unit Unfurnished", "Actual Rents Unit # 2  Per Unit Unfurnished", "Actual Rents Unit # 3  Per Unit Unfurnished", "Actual Rents Unit # 4  Per Unit Unfurnished",
+    "Actual Rents Unit # 1  Per Unit Furnished", "Actual Rents Unit # 2  Per Unit Furnished", "Actual Rents Unit # 3  Per Unit Furnished", "Actual Rents Unit # 4  Per Unit Furnished",
+    "Actual Rents Unit # 1 Total Rents", "Actual Rents Unit # 2 Total Rents", "Actual Rents Unit # 3 Total Rents", "Actual Rents Unit # 4 Total Rents",
+    "Opinion Of Market Rent Unit # 1 Per Unit Unfurnished", "Opinion Of Market Rent Unit # 2 Per Unit Unfurnished", "Opinion Of Market Rent Unit # 3 Per Unit Unfurnished", "Opinion Of Market Rent Unit # 4 Per Unit Unfurnished",
+    "Opinion Of Market Rent Unit # 1 Per Unit Furnished", "Opinion Of Market Rent Unit # 2 Per Unit Furnished", "Opinion Of Market Rent Unit # 3 Per Unit Furnished", "Opinion Of Market Rent Unit # 4 Per Unit Furnished",
+    "Opinion Of Market Rent Unit # 1 Total Rents", "Opinion Of Market Rent Unit # 2 Total Rents", "Opinion Of Market Rent Unit # 3 Total Rents", "Opinion Of Market Rent Unit # 4 Total Rents",
+    "Comment on lease data", "Total Actual Monthly Rent", "Other Monthly Income (itemize)", "Total Actual Monthly Income", " Total Gross Monthly Rent", "Other Monthly Income (itemize)",
+    "Total Estimated Monthly Income", " Utilities included in estimated rents", "Comments on actual or estimated rents and other monthly income (including personal property)",
+  ];
   const salesComparisonAdditionalInfoFields = [
 
     "I did did not research the sale or transfer history of the subject property and comparable sales. If not, explain",
@@ -1905,10 +2137,6 @@ function Subject() {
     "Are foreclosure sales (REO sales) a factor in the project?", "If yes, indicate the number of REO listings and explain the trends in listings and sales of foreclosed properties.", "Summarize the above trends and address the impact on the subject unit and project.",
   ];
 
-  // const highlightedSalesComparisonAdditionalInfoFields = [
-  //   "There are ____ comparable properties currently offered for sale in the subject neighborhood ranging in price from$ ___to $___",
-  //   "There are ___comparable sales in the subject neighborhoodwithin the past twelvemonths ranging in sale price from$___ to $____",
-  // ];
 
 
   const condoCoopProjectsRows = [
@@ -1917,9 +2145,7 @@ function Subject() {
     { label: "Total # of Comparable Active Listings", fullLabel: "Subject Project Data Total # of Comparable Active Listings" },
     { label: "Months of Unit Supply (Total Listings/Ab.Rate)", fullLabel: "Subject Project Data Months of Unit Supply (Total Listings/Ab.Rate)" },
   ];
-  // const condoCoopProjectsFields = [
-  //   "Are foreclosure sales (REO sales) a factor in the project?", "If yes, indicate the number of REO listings and explain the trends in listings and sales of foreclosed properties.", "Summarize the above trends and address the impact on the subject unit and project.",
-  // ];
+
 
   const imageAnalysisFields = [
     "include bedroom, bed, bathroom, bath, half bath, kitchen, lobby, foyer, living room count with label and photo,please explan and match the floor plan with photo and improvement section, GLA",
@@ -1931,7 +2157,8 @@ function Subject() {
     "Topography", "Size", "Density", "View", "Specific Zoning Classification", "Zoning Description",
     "Zoning Compliance", "Is the highest and best use of subject property as improved (or as proposed per plans and specifications) the present use?",
     "Electricity", "Gas", "Water", "Sanitary Sewer", "Street", "Alley", "FEMA Special Flood Hazard Area",
-    "FEMA Flood Zone", "FEMA Map #", "FEMA Map Date", "Are the utilities and off-site improvements typical for the market area? If No, describe",
+    "FEMA Flood Zone", "FEMA Map #", "FEMA Map Date", "Are the utilities and off-site improvements typical for the market area?", "Are the utilities and off-site improvements typical for the market area? If No, describe",
+    "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)?",
     "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe",
   ];
 
@@ -1946,7 +2173,7 @@ function Subject() {
     "Project Primary Occupancy", "Is the developer/builder in control of the Homeowners' Association (HOA)?",
     "Management Group", "Does any single entity (the same individual, investor group, corporation, etc.) own more than 10% of the total units in the project?"
     , "Was the project created by the conversion of existing building(s) into a condominium?",
-    "If Yes,describe the original use and date of conversion",
+    "Was the project created by the conversion of existing building(s) into a condominium? If Yes,describe the original use and date of conversion",
     "Are the units, common elements, and recreation facilities complete (including any planned rehabilitation for a condominium conversion)?", "If No, describe",
     "Is there any commercial space in the project?",
     "If Yes, describe and indicate the overall percentage of the commercial space.", "Describe the condition of the project and quality of construction.",
@@ -2013,11 +2240,10 @@ function Subject() {
       'Floorplan': 'TOTAL Bathroom Floorplan Count',
     },
     'GLA': { 'Improvements': 'GLA Improvements Count', 'Grid': 'GLA Sales Comparison Approach Count', 'Photo': 'GLA Photo Count', 'Floorplan': 'GLA Floorplan Count' }
-  };
-  const formTypes = ['1004', '1004C', '1004D', '1025', '1073', '2090', '203k-FHA', '2055', '1075', '2095', '1007', '216'];
+  }; const formTypes = ['1004', '1004C', '1004D', '1025', '1073', '2090', '203k-FHA', '2055', '1075', '2095', '1007', '216', '1025 + 1007', '1073 + 1007'];
 
   const sections = useMemo(() => [
-    { id: 'subject-info', title: 'Subject', category: 'SUBJECT' }, // Root level data
+    { id: 'subject-info', title: 'Subject', category: 'SUBJECT' },
     // { id: 'html-data-section', title: 'HTML Data' },
     { id: 'contract-section', title: 'Contract', category: 'CONTRACT' },
     { id: 'neighborhood-section', title: 'Neighborhood', category: 'NEIGHBORHOOD' },
@@ -2028,14 +2254,16 @@ function Subject() {
     { id: 'unit-descriptions-section', title: 'Unit Descriptions', category: 'UNIT_DESCRIPTIONS' },
     { id: 'prior-sale-history-section', title: 'Prior Sale History', category: 'PRIOR_SALE_HISTORY' },
     { id: 'site-section', title: 'Site', category: 'SITE' },
-    { id: 'info-of-sales-section', title: 'Info of Sales', category: 'INFO_OF_SALES' },
     { id: 'improvements-section', title: 'Improvements', category: 'IMPROVEMENTS' },
     { id: 'sales-comparison', title: 'Sales Comparison & History', category: ['SALES_GRID'] },
+    { id: 'info-of-sales-section', title: 'Info of Sales', category: 'INFO_OF_SALES' },
     // { id: 'sales-comparison-additional-info', title: 'Sales Comparison Additional Info', category: 'SALES_COMPARISON_ADDITIONAL_INFO' },
     { id: 'sales-history-section', title: 'Sales History', category: 'SALES_TRANSFER' },
+    { id: 'comparable-rental-data', title: 'COMPARABLE RENTAL DATA', category: 'COMPARABLE_RENTAL_DATA' },
+    { id: 'subject-rent-schedule', title: 'SUBJECT RENT SCHEDULE', category: 'SUBJECT_RENT_SCHEDULE' },
     { id: 'rent-schedule-section', title: 'Comparable Rent Schedule', category: 'RENT_SCHEDULE_GRID' },
-    { id: 'reconciliation-section', title: 'Reconciliation', category: 'RECONCILIATION' },
     { id: 'rent-schedule-reconciliation-section', title: 'Rent Schedule Reconciliation', category: 'RENT_SCHEDULE_RECONCILIATION' },
+    { id: 'reconciliation-section', title: 'Reconciliation', category: 'RECONCILIATION' },
     { id: 'cost-approach-section', title: 'Cost Approach', category: 'COST_APPROACH' },
     { id: 'income-approach-section', title: 'Income Approach', category: 'INCOME_APPROACH' },
     { id: 'pud-info-section', title: 'PUD Information', category: 'PUD_INFO' },
@@ -2112,8 +2340,6 @@ function Subject() {
     "Indicated Monthly Market Rent",
   ];
 
-
-
   const comparableSales = [
     "COMPARABLE SALE #1",
     "COMPARABLE SALE #2",
@@ -2125,19 +2351,32 @@ function Subject() {
     "COMPARABLE SALE #8",
     "COMPARABLE SALE #9",
 
+
   ];
 
   const comparableRents = [
-    "COMPARABLE RENT #1",
-    "COMPARABLE RENT #2",
-    "COMPARABLE RENT #3",
-    "COMPARABLE RENT #4",
-    "COMPARABLE RENT #5",
-    "COMPARABLE RENT #6",
-    "COMPARABLE RENT #7",
-    "COMPARABLE SALE #8",
-    "COMPARABLE SALE #9",
+    "COMPARABLE NO. 1",
+    "COMPARABLE NO. 2",
+    "COMPARABLE NO. 3",
+    "COMPARABLE NO. 4",
+    "COMPARABLE NO. 5",
+    "COMPARABLE NO. 6",
+    "COMPARABLE NO. 7",
+    "COMPARABLE NO. 8",
+    "COMPARABLE NO. 9",
   ];
+
+  const ComparableRentAdjustments = [
+    "COMPARABLE RENTAL NO. 1",
+    "COMPARABLE RENTAL NO. 2",
+    "COMPARABLE RENTAL NO. 3",
+    "COMPARABLE RENTAL NO. 4",
+    "COMPARABLE RENTAL NO. 5",
+    "COMPARABLE RENTAL NO. 6",
+    "COMPARABLE RENTAL NO. 7",
+    "COMPARABLE RENTAL NO. 8",
+    "COMPARABLE RENTAL NO. 9",
+  ]
 
   const onFileChange = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -2206,6 +2445,7 @@ function Subject() {
   const startExtractionProcess = () => {
     setLoading(true);
     setExtractionAttempted(true);
+    // setIsHtmlReviewLoading(true); // Start HTML review loading along with main extraction
     setExtractionProgress(0);
     setTimer(0);
     timerRef.current = setInterval(() => {
@@ -2271,16 +2511,28 @@ function Subject() {
     }
 
     if (result.fields && result.fields['From Type']) {
-      const extractedFormType = String(result.fields['From Type'] || '').replace(/[^0-9a-zA-Z-]/g, '');
-      if (formTypes.includes(extractedFormType)) {
-        setSelectedFormType(extractedFormType);
+      const rawExtractedType = String(result.fields['From Type'] || '').trim();
+      let finalFormType = '';
+
+      if (rawExtractedType.includes('1004') && rawExtractedType.includes('1007')) {
+        finalFormType = '1007';
+      } else if (rawExtractedType.includes('1025') && rawExtractedType.includes('1007')) {
+        finalFormType = '1025 + 1007';
+      } else if (rawExtractedType.includes('1073') && rawExtractedType.includes('1007')) {
+        finalFormType = '1073 + 1007';
+      } else {
+        finalFormType = rawExtractedType.replace(/[^0-9a-zA-Z-]/g, '');
+      }
+
+      if (formTypes.includes(finalFormType)) {
+        setSelectedFormType(finalFormType);
         setNotification({
           open: true,
-          message: `Form type automatically set to '${extractedFormType}'.`,
+          message: `Form type automatically set to '${finalFormType}'.`,
           severity: 'success'
         });
-      } else if (extractedFormType) {
-        setNotification({ open: true, message: `Extracted form type '${extractedFormType}' is not supported. Please select manually.`, severity: 'warning' });
+      } else if (finalFormType) {
+        setNotification({ open: true, message: `Extracted form type '${finalFormType}' is not supported. Please select manually.`, severity: 'warning' });
       }
     }
 
@@ -2310,7 +2562,9 @@ function Subject() {
     const seconds = totalSeconds % 60;
 
     // Only show success notification if the 'From Type' warning isn't already active.
-    if (notification.severity !== 'warning' || !notification.message.startsWith('From Type is')) {
+    if (result.fields?.INCOME_APPROACH?.['Estimated Monthly Market Rent $'] && selectedFormType !== '1007') {
+      setIsRentFormTypeMismatchDialogOpen(true);
+    } else {
       const sectionName = category ? `${category.replace(/_/g, ' ').toLowerCase()} section` : 'extraction';
       let durationMessage = '';
       if (minutes > 0) {
@@ -2367,6 +2621,7 @@ function Subject() {
     } finally {
       if (timerRef.current) clearInterval(timerRef.current);
       setLoading(false);
+      // setIsHtmlReviewLoading(false); // Stop HTML review loading when main extraction is done
       setLoadingSection(null);
       if (extractionProgress !== 100) setExtractionProgress(0);
     }
@@ -2965,7 +3220,7 @@ function Subject() {
     }
 
     setIsGeneratingPdf(true);
-    setTimeout(() => { // Use setTimeout to allow UI to update
+    setTimeout(() => {
       try {
         const doc = new jsPDF();
         const pageHeight = doc.internal.pageSize.height;
@@ -2977,12 +3232,12 @@ function Subject() {
           const pageCount = doc.internal.getNumberOfPages();
           for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
-            // Header
+
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text('Appraisal Report Summary', margin, 10);
             doc.text(new Date().toLocaleDateString(), pageWidth - margin, 10, { align: 'right' });
-            // Footer
+
             doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
           }
         };
@@ -3116,8 +3371,11 @@ function Subject() {
       case '1004':
         visibleSectionIds = baseSections.filter(id => !['rent-schedule-section', 'prior-sale-history-section', 'rent-schedule-reconciliation-section', 'project-site-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
         break;
+      case '1025':
+        visibleSectionIds = baseSections.filter(id => !['rent-schedule-section', 'project-site-section', 'project-info-section', 'rent-schedule-reconciliation-section', 'project-analysis-section', 'unit-descriptions-section', 'market-conditions-section'].includes(id));
+        break;
       case '1073':
-        visibleSectionIds = baseSections.filter(id => !['rent-schedule-section', 'improvements-section', 'site-section', 'rent-schedule-reconciliation-section', 'pud-info-section', 'market-conditions-section'].includes(id));
+        visibleSectionIds = baseSections.filter(id => !['rent-schedule-section', 'improvements-section', 'site-section', 'rent-schedule-reconciliation-section', 'pud-info-section'].includes(id));
         break;
       case '1007':
         visibleSectionIds = baseSections.filter(id => !['project-site-section', 'prior-sale-history-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section', 'pud-info-section', 'market-conditions-section'].includes(id));
@@ -3132,7 +3390,80 @@ function Subject() {
   };
 
   const renderForm = () => {
-    const props = { data, allData: data, extractionAttempted, handleDataChange, editingField, setEditingField, isEditable, highlightedSubjectFields, highlightedContractFields, highlightedSiteFields, subjectFields, contractFields, neighborhoodFields, siteFields, improvementsFields, salesGridRows, comparableSales, salesComparisonAdditionalInfoFields, salesHistoryFields, priorSaleHistoryFields, reconciliationFields, costApproachFields, incomeApproachFields, pudInformationFields, marketConditionsFields, marketConditionsRows, condoCoopProjectsRows, condoForeclosureFields, appraiserFields, supplementalAddendumFields, uniformResidentialAppraisalReportFields, appraisalAndReportIdentificationFields, projectSiteFields, projectInfoFields, projectAnalysisFields, unitDescriptionsFields, imageAnalysisFields, dataConsistencyFields, comparableRents, RentSchedulesFIELDS2, rentScheduleReconciliationFields, formType: selectedFormType, comparisonData, getComparisonStyle, SalesComparisonSection, EditableField, infoOfSalesFields, loading, stateRequirementFields, handleStateRequirementCheck, stateReqLoading, stateReqResponse, stateReqError, handleUnpaidOkCheck, unpaidOkLoading, unpaidOkResponse, unpaidOkError, handleClientRequirementCheck, clientReqLoading, clientReqResponse, clientReqError, handleFhaCheck, handleADUCheck, fhaLoading, fhaResponse, fhaError, ADULoading, handleEscalationCheck, escalationLoading, escalationResponse, escalationError, onDataChange: handleDataChange, handleExtract, manualValidations, handleManualValidation };
+    const props = {
+      data, allData: data, extractionAttempted, handleDataChange, editingField, setEditingField, isEditable, highlightedSubjectFields, highlightedContractFields, highlightedSiteFields, subjectFields, contractFields, neighborhoodFields, siteFields, improvementsFields, salesGridRows, comparableSales, salesComparisonAdditionalInfoFields, salesHistoryFields, priorSaleHistoryFields, reconciliationFields, costApproachFields, incomeApproachFields, pudInformationFields, marketConditionsFields, marketConditionsRows, condoCoopProjectsRows, condoForeclosureFields, appraiserFields, supplementalAddendumFields, uniformResidentialAppraisalReportFields, appraisalAndReportIdentificationFields, projectSiteFields, projectInfoFields, projectAnalysisFields, unitDescriptionsFields, imageAnalysisFields, dataConsistencyFields, ComparableRentAdjustments, comparableRents, RentSchedulesFIELDS2, rentScheduleReconciliationFields, formType: selectedFormType, comparisonData, getComparisonStyle, SalesComparisonSection, EditableField, infoOfSalesFields, loading, stateRequirementFields, handleStateRequirementCheck, stateReqLoading, stateReqResponse, stateReqError, handleUnpaidOkCheck, unpaidOkLoading, unpaidOkResponse, unpaidOkError, handleClientRequirementCheck, clientReqLoading, clientReqResponse, clientReqError, handleFhaCheck, handleADUCheck, fhaLoading, fhaResponse, fhaError, ADULoading, handleEscalationCheck, escalationLoading, escalationResponse, escalationError, onDataChange: handleDataChange, handleExtract, manualValidations, handleManualValidation, SUBJECT_RENT_SCHEDULE, COMPARABLE_RENTAL_DATA,
+      onSubjectRevisionButtonClick: () => setRevisionLangDialogOpen(true),
+      onContractRevisionButtonClick: () => setContractRevisionLangDialogOpen(true),
+      onNeighborhoodRevisionButtonClick: () => setNeighborhoodRevisionLangDialogOpen(true),
+      onSiteRevisionButtonClick: () => setSiteRevisionLangDialogOpen(true),
+      onImprovementsRevisionButtonClick: () => setImprovementsRevisionLangDialogOpen(true),
+      onSalesGridRevisionButtonClick: () => setSalesGridRevisionLangDialogOpen(true),
+      onReconciliationRevisionButtonClick: () => setReconciliationRevisionLangDialogOpen(true),
+      onCostApproachRevisionButtonClick: () => setCostApproachRevisionLangDialogOpen(true),
+      onCertificationRevisionButtonClick: () => setCertificationRevisionLangDialogOpen(true),
+      onPropertyAddressRevisionButtonClick: () => setPropertyAddressRevisionLangDialogOpen(true),
+      onHoaRevisionButtonClick: () => setHoaRevisionLangDialogOpen(true),
+      onAddParcelNumberRevision: () => {
+
+        const revisionText = "Please have the ‘Assessor's Parcel #’ noted in the subject section.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onAddOwnerOfRecordRevision: () => {
+        const revisionText = "Please include an owner of public record on page 1.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onLenderClientAddressRevisionButtonClick: () => setLenderClientAddressRevisionLangDialogOpen(true),
+      onLenderClientRevisionButtonClick: () => setLenderClientRevisionLangDialogOpen(true),
+      onAddAssignmentTypeRevision: () => {
+        const revisionText = "Please revise the checkbox for assignment type to refinance transaction.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onAddRevision: () => {
+        const revisionText = "Please mark that the subject is offered for sale in the subject section.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onAddBorrowerRevision: () => {
+        const revisionText = "Please add the borrower's middle initial (M) to the report.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onAddEmptyBorrowerRevision: () => {
+        const revisionText = "Please add the borrower's to the report.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onAddLegalDescRevision: () => {
+        const revisionText = "The ‘Legal Description’ is noted as “see attached addendum”; however, the legal description is not provided in the addendum. Please revise.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onAddPropertyRightsRevision: () => {
+        const revisionText = "Please revise the checkbox for Property Rights Appraised to fee simple.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+
+      onContractPriceRevisionButtonClick: () => setContractPriceRevisionLangDialogOpen(true),
+      onFinancialAssistanceRevisionButtonClick: () => setFinancialAssistanceRevisionLangDialogOpen(true),
+      onDateOfContractRevisionButtonClick: () => setDateOfContractRevisionLangDialogOpen(true),
+      onNeighborhoodBoundariesRevisionButtonClick: () => setNeighborhoodBoundariesRevisionLangDialogOpen(true),
+      onOtherLandUseRevisionButtonClick: () => setOtherLandUseRevisionLangDialogOpen(true),
+      onZoningComplianceRevisionButtonClick: () => setZoningComplianceRevisionLangDialogOpen(true),
+
+      on1007RevisionButtonClick: () => set1007RevisionLangDialogOpen(true)
+    };
 
     let formComponent;
     switch (selectedFormType) {
@@ -3144,6 +3475,9 @@ function Subject() {
         break;
       case '1007':
         formComponent = <Form1007 {...props} allData={data} />;
+        break;
+      case '1025':
+        formComponent = <Form1025 {...props} allData={data} />;
         break;
       default:
         return (
@@ -3376,58 +3710,70 @@ function Subject() {
           </Paper>
 
           <Paper elevation={2} sx={{ p: 5, position: 'sticky', top: 0, zIndex: 1100, height: 'fit-content', backgroundColor: activeTheme.palette.background.paper }}>
-            {selectedFile && (
+            {selectedFile &&
+              (
+                <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
 
-              <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
+                  {/* FILE NAME */}
+                  <Typography variant="body2" noWrap>
+                    Selected File: <strong>{selectedFile.name}</strong>
+                  </Typography>
 
-                {/* FILE NAME */}
-                <Typography variant="body2" noWrap>
-                  Selected File: <strong>{selectedFile.name}</strong>
-                </Typography>
+                  {/* LOADING AREA */}
+                  {loading && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <CircularProgress size={24} />
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        Elapsed: {Math.floor(timer / 60)}m {timer % 60}s
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={extractionProgress}
+                        sx={{ width: '100px' }}
+                      />
+                    </Box>
+                  )}
 
-                {/* LOADING AREA */}
-                {loading && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <CircularProgress size={24} />
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      Elapsed: {Math.floor(timer / 60)}m {timer % 60}s
+                  {/* TOTAL TIME TIMER */}
+                  <Tooltip title={isTimerRunning
+                    // ? "Click to pause timer" : "Click to start timer"
+                  }>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                      onClick={handleTimerToggle}
+                    >
+                      Total Time: {Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:
+                      {Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:
+                      {(fileUploadTimer % 60).toString().padStart(2, '0')}
                     </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={extractionProgress}
-                      sx={{ width: '100px' }}
-                    />
-                  </Box>
-                )}
+                  </Tooltip>
 
-                {/* TOTAL TIME TIMER */}
-                <Tooltip title={isTimerRunning ? "Click to pause timer" : "Click to start timer"}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer' }}
-                    onClick={handleTimerToggle}
-                  >
-                    Total Time: {Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:
-                    {Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:
-                    {(fileUploadTimer % 60).toString().padStart(2, '0')}
-                  </Typography>
-                </Tooltip>
+                  {/* LAST EXTRACTION */}
+                  {!loading && lastExtractionTime && (
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      Last extraction: {lastExtractionTime >= 60 ? `${Math.floor(lastExtractionTime / 60)}m ` : ''}
+                      {`${(lastExtractionTime % 60).toFixed(1)}s`}
+                    </Typography>
+                  )}
 
-                {/* LAST EXTRACTION */}
-                {!loading && lastExtractionTime && (
-                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    Last extraction: {lastExtractionTime >= 60 ? `${Math.floor(lastExtractionTime / 60)}m ` : ''}
-                    {`${(lastExtractionTime % 60).toFixed(1)}s`}
-                  </Typography>
-                )}
-
-              </Stack>
-            )}
+                </Stack>
+              )
+            }
             {htmlFile && (
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Typography variant="caption">HTML File: {htmlFile.name}</Typography>
-                <Button size="small" variant="text" onClick={() => setIsComparisonDialogOpen(true)}>HTML Review</Button>
-
+                <Button size="small" variant="text" onClick={() => setIsComparisonDialogOpen(true)} disabled={isHtmlReviewLoading || loading}>
+                  {isHtmlReviewLoading ? (
+                    <>
+                      <CircularProgress size={16} sx={{ mr: 1 }} />
+                      <Typography variant="caption" sx={{ mr: 1 }}>{Math.floor(htmlExtractionTimer / 60)}m {htmlExtractionTimer % 60}s</Typography>
+                    </>
+                  ) : loading && isHtmlReviewLoading ? (
+                    <CircularProgress size={16} sx={{ mr: 1 }} />
+                  ) : null}
+                  HTML Review
+                </Button>
               </Stack>
             )}
             {contractFile && (
@@ -3700,6 +4046,7 @@ function Subject() {
             response={promptAnalysisResponse}
             error={promptAnalysisError}
             submittedPrompt={submittedPrompt}
+            onAddendumRevisionButtonClick={() => setAddendumRevisionLangDialogOpen(true)}
           />
 
           {rawGemini && (
@@ -3757,10 +4104,382 @@ function Subject() {
           <KeyboardArrowUpIcon />
         </Fab>
       )}
+      <NotepadDialog
+        open={isNotepadOpen}
+        onClose={() => setIsNotepadOpen(false)}
+        notes={notes}
+        onNotesChange={setNotes}
+      />
+      <Tooltip title="Open Notepad" placement="top">
+        <Fab color="secondary" size="small" onClick={handleOpenNotepad} sx={{ position: 'fixed', bottom: 16, right: 80, zIndex: 1200 }}>
+          <NoteAltIcon />
+        </Fab>
+      </Tooltip>
+      <Dialog open={isRentFormTypeMismatchDialogOpen} onClose={() => setIsRentFormTypeMismatchDialogOpen(false)}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
+          <WarningIcon color="warning" sx={{ mr: 1 }} />
+          Form Type Mismatch
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            "Estimated Monthly Market Rent $" is present, but the Form Type is not 1007.
+          </Typography>
+          <Typography sx={{ mt: 1 }}>
+            Please verify the selected form type.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsRentFormTypeMismatchDialogOpen(false)} variant="contained">Close</Button>
+        </DialogActions>
+      </Dialog>
+      <RevisionLanguageDialog
+        open={isContractRevisionLangDialogOpen}
+        onClose={() => setContractRevisionLangDialogOpen(false)}
+        title="Contract Section Revision Language"
+        prompts={CONTRACT_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isNeighborhoodRevisionLangDialogOpen}
+        onClose={() => setNeighborhoodRevisionLangDialogOpen(false)}
+        title="Neighborhood Section Revision Language"
+        prompts={NEIGHBORHOOD_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isSiteRevisionLangDialogOpen}
+        onClose={() => setSiteRevisionLangDialogOpen(false)}
+        title="Site Section Revision Language"
+        prompts={SITE_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isImprovementsRevisionLangDialogOpen}
+        onClose={() => setImprovementsRevisionLangDialogOpen(false)}
+        title="Improvements Section Revision Language"
+        prompts={IMPROVEMENTS_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isSalesGridRevisionLangDialogOpen}
+        onClose={() => setSalesGridRevisionLangDialogOpen(false)}
+        title="Sales Comparison Grid Revision Language"
+        prompts={SALES_GRID_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isReconciliationRevisionLangDialogOpen}
+        onClose={() => setReconciliationRevisionLangDialogOpen(false)}
+        title="Reconciliation Section Revision Language"
+        prompts={RECONCILIATION_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isCostApproachRevisionLangDialogOpen}
+        onClose={() => setCostApproachRevisionLangDialogOpen(false)}
+        title="Cost Approach Section Revision Language"
+        prompts={COST_APPROACH_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isCertificationRevisionLangDialogOpen}
+        onClose={() => setCertificationRevisionLangDialogOpen(false)}
+        title="Certification Section Revision Language"
+        prompts={CERTIFICATION_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isAddendumRevisionLangDialogOpen}
+        onClose={() => setAddendumRevisionLangDialogOpen(false)}
+        title="General / Addendum Revision Language"
+        prompts={ADDENDUM_GENERAL_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={is1007RevisionLangDialogOpen}
+        onClose={() => set1007RevisionLangDialogOpen(false)}
+        title="1007 / Rent Schedule Revision Language"
+        prompts={FORM_1007_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isRevisionLangDialogOpen}
+        onClose={() => setRevisionLangDialogOpen(false)}
+        title="Subject Section Revision Language"
+        prompts={SUBJECT_REVISION_PROMPTS}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isPropertyAddressRevisionLangDialogOpen}
+        onClose={() => setPropertyAddressRevisionLangDialogOpen(false)}
+        title="Property Address Revision Language"
+        prompts={[
+          "The subject's street name should reflect as \"River Bend\" (two words); please revise.",
+          "Please revise the subject's street suffix from Cir to Dr.",
+          "Please add the street suffix ‘Dr’ in the lender address."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          // onClose();
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isLenderClientRevisionLangDialogOpen}
+        onClose={() => setLenderClientRevisionLangDialogOpen(false)}
+        title="Lender/Client Revision Language"
+        prompts={[
+          "Please add ‘Inc’ at the end of the lender/client name: OCMBC Inc.",
+          "Please revise the spelling of the lender name:",
+          "Please remove ‘Inc’ from the lender/client name so it reflects as JMAC Lending.",
+          "Please revise the lender/client address city name to match the order form:",
+          "Please remove ‘Trust’ from the lender/client name so it reflects as BPL Mortgage, LLC.",
+          "Please revise the lender/client name to match the order form: NQM Funding, LLC"
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isFinancialAssistanceRevisionLangDialogOpen}
+        onClose={() => setFinancialAssistanceRevisionLangDialogOpen(false)}
+        title="Financial Assistance Revision Language"
+        prompts={[
+          "The question is, ‘Is there any financial assistance (loan charges, sale concessions, gift or down payment assistance, etc.) to be paid by any party on behalf of the borrower?’ is marked on YES; however, the concession amount is noted as 0, please revise."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isDateOfContractRevisionLangDialogOpen}
+        onClose={() => setDateOfContractRevisionLangDialogOpen(false)}
+        title="Date of Contract Revision Language"
+        prompts={[
+          "The ‘Date of Contract’ noted in the contract section does not match with the purchase agreement; please revise."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isHoaRevisionLangDialogOpen}
+        onClose={() => setHoaRevisionLangDialogOpen(false)}
+        title="HOA Revision Language"
+        prompts={[
+          "In the subject section, the HOA amount is noted; however, the ‘per year’ or ‘per month’ is not marked. Please revise.",
+          "The PUD box is marked in the subject section; however, the HOA amount is noted as 0. Please verify."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+          setHoaRevisionLangDialogOpen(false);
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isLenderClientAddressRevisionLangDialogOpen}
+        onClose={() => setLenderClientAddressRevisionLangDialogOpen(false)}
+        title="Lender/Client Address Revision Language"
+        prompts={[
+          "Please revise the lender/client address on the signature card:",
+          "Please revise the lender/client address city name to match the order form:"
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isContractPriceRevisionLangDialogOpen}
+        onClose={() => setContractPriceRevisionLangDialogOpen(false)}
+        title="Contract Price Revision Language"
+        prompts={[
+          "The ‘Contract Price’ noted in the report does not match with the purchase agreement; please revise.",
+          "The report shows the ‘Contract Price’ as $295,000; however, the purchase agreement shows the contract price as $280,000. Please verify."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isNeighborhoodBoundariesRevisionLangDialogOpen}
+        onClose={() => setNeighborhoodBoundariesRevisionLangDialogOpen(false)}
+        title="Neighborhood Boundaries Revision Language"
+        prompts={[
+          "Please provide appropriate neighborhood boundaries of all directions in the Neighborhood section.",
+          "The North boundary is missing from the ‘Neighborhood Boundaries’, please provide",
+          "Please provide the south side boundary of the neighborhood and revise the north boundary which is described twice."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isOtherLandUseRevisionLangDialogOpen}
+        onClose={() => setOtherLandUseRevisionLangDialogOpen(false)}
+        title="Other Land Use Revision Language"
+        prompts={[
+          "Please revise the ‘Present Land Use’ percentage as it should be 100%.",
+          "Please comment on 10% other land usage."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isZoningComplianceRevisionLangDialogOpen}
+        onClose={() => setZoningComplianceRevisionLangDialogOpen(false)}
+        title="Zoning Compliance Revision Language"
+        prompts={[
+          "The ‘Zoning Compliance’ is marked on ‘Legal Nonconforming (Grandfathered Use)’; please comment if the subject can be rebuilt if destroyed.",
+          "The ‘Zoning Compliance’ is marked as ‘No Zoning’; please comment if the subject can be rebuilt if destroyed."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+
+
     </ThemeProvider >
 
   );
 }
 
 export default Subject;
-  

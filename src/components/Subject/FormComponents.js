@@ -1,5 +1,5 @@
 import React from 'react';
-import {  checkAssignmentTypeConsistency, checkSubjectFieldsNotBlank } from './generalValidation';
+import { checkAssignmentTypeConsistency, checkSubjectFieldsNotBlank } from './generalValidation';
 import { checkContractFieldsMandatory, checkFinancialAssistanceInconsistency, checkContractAnalysisConsistency, checkYesNoOnly } from './contractValidation';
 import { checkTaxYear, checkRETaxes, checkSpecialAssessments, checkPUD, checkHOA, checkOfferedForSale, checkAnsi } from './subjectValidation';
 import { checkZoning, checkZoningDescription, checkSpecificZoningClassification, checkHighestAndBestUse, checkFemaInconsistency, checkFemaFieldsConsistency, checkSiteSectionBlank, checkArea, checkYesNoWithComment, checkUtilities } from './siteValidation';
@@ -7,7 +7,7 @@ import { checkHousingPriceAndAge, checkNeighborhoodUsageConsistency, checkSingle
 import { checkUnits, checkAccessoryUnit, checkNumberOfStories, checkPropertyType, checkConstructionStatusAndReconciliation, checkDesignStyle, checkYearBuilt, checkEffectiveAge, checkAdditionalFeatures, checkPropertyConditionDescription, checkPhysicalDeficienciesImprovements, checkNeighborhoodConformity, checkFoundationType, checkBasementDetails, checkEvidenceOf, checkMaterialCondition, checkHeatingFuel, checkCarStorage, checkImprovementsFieldsNotBlank } from './improvementsValidation';
 import { checkConditionAdjustment, checkBedroomsAdjustment, checkBathsAdjustment, checkQualityOfConstructionAdjustment, checkProximityToSubject, checkSiteAdjustment, checkGrossLivingAreaAdjustment, checkSubjectAddressInconsistency, checkDesignStyleAdjustment, checkFunctionalUtilityAdjustment, checkEnergyEfficientItemsAdjustment, checkPorchPatioDeckAdjustment, checkHeatingCoolingAdjustment, checkDataSourceDOM, checkActualAgeAdjustment, checkLeaseholdFeeSimpleConsistency, checkDateOfSale, checkLocationConsistency, checkSalePrice } from './salesComparisonValidation';
 import { checkFinalValueConsistency, checkCostApproachDeveloped, checkAppraisalCondition, checkAsOfDate, checkFinalValueBracketing, checkReconciliationFieldsNotBlank } from './reconciliationValidation';
-import { checkLenderAddressInconsistency, checkLenderNameInconsistency, checkAppraiserFieldsNotBlank } from './appraiserLenderValidation';
+import { checkLenderAddressInconsistency, checkLenderNameInconsistency, checkAppraiserFieldsNotBlank, checkLicenseNumberConsistency as checkAppraiserLicenseConsistency, checkDateGreaterThanToday, checkClientNameHtmlConsistency } from './appraiserLenderValidation';
 import { checkCostNew, checkSourceOfCostData, checkIndicatedValueByCostApproach, checkCostApproachFieldsNotBlank } from './costApproachValidation';
 import { checkResearchHistory, checkSubjectPriorSales, checkComparablePriorSales, checkDataSourceNotBlank, checkEffectiveDateIsCurrentYear, checkSubjectPriorSaleDate, checkCompPriorSaleDate } from './salesHistoryValidation';
 import { checkStateRequirements } from './stateValidation';
@@ -21,7 +21,8 @@ import { checkProjectSiteFieldsNotBlank } from './projectSiteValidation';
 import { checkPriorSaleHistoryFieldsNotBlank } from './priorSaleHistoryValidation';
 import { checkInfoOfSalesFieldsNotBlank } from './infoOfSalesValidation';
 import { Tooltip, Box, LinearProgress, Paper, Typography, IconButton } from '@mui/material';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import { ThumbUp as ThumbUpIcon, PlaylistAdd as PlaylistAddIcon } from '@mui/icons-material';
 
 
 const HighlightKeywords = ({ text, keywords }) => {
@@ -44,7 +45,7 @@ const HighlightKeywords = ({ text, keywords }) => {
   );
 };
 
-export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation }) => {
+export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation, onAddRevision, onAddBorrowerRevision, onAddEmptyBorrowerRevision, onAddLegalDescRevision, onPropertyAddressRevisionButtonClick, onLenderClientRevisionButtonClick, onAddAssignmentTypeRevision, onAddPropertyRightsRevision, onHoaRevisionButtonClick, onAddOwnerOfRecordRevision, onLenderClientAddressRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick }) => {
   const isEditing = isEditable && editingField && JSON.stringify(editingField) === JSON.stringify(fieldPath);
 
   const handleKeyDown = (e) => {
@@ -72,15 +73,15 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     'FEMA Map #': [checkFemaFieldsConsistency],
     'FEMA Map Date': [checkFemaFieldsConsistency],
     'Dimensions': [checkSiteSectionBlank],
-    'Shape': [checkSiteSectionBlank], 
-    'View': [checkSiteSectionBlank], 
+    'Shape': [checkSiteSectionBlank],
+    'View': [checkSiteSectionBlank],
     'Area': [checkArea],
     'Are the utilities and off-site improvements typical for the market area? If No, describe': [(field, text, data) => checkYesNoWithComment(field, text, data, { name: 'Are the utilities and off-site improvements typical for the market area? If No, describe', wantedValue: 'yes', unwantedValue: 'no' })],
     'Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe': [(field, text, data) => checkYesNoWithComment(field, text, data, { name: 'Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe', wantedValue: 'no', unwantedValue: 'yes' })],
     "Electricity": [checkUtilities], "Gas": [checkUtilities], "Water": [checkUtilities], "Sanitary Sewer": [checkUtilities], "Street": [checkUtilities], "Alley": [checkUtilities],
 
     // Subject Validations
-    'Tax Year': [checkTaxYear], 
+    'Tax Year': [checkTaxYear],
     'R.E. Taxes $': [checkRETaxes],
     'Special Assessments $': [checkSpecialAssessments],
     'PUD': [checkPUD, checkHOA],
@@ -105,10 +106,10 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     // Neighborhood Validations
     'one unit housing price(high,low,pred)': [checkHousingPriceAndAge, checkNeighborhoodFieldsNotBlank],
     'one unit housing age(high,low,pred)': [checkHousingPriceAndAge, checkNeighborhoodFieldsNotBlank],
-    "One-Unit": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank], 
-    "2-4 Unit": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank], 
-    "Multi-Family": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank], 
-    "Commercial": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank], 
+    "One-Unit": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
+    "2-4 Unit": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
+    "Multi-Family": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
+    "Commercial": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
     "Other": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
     "Neighborhood Boundaries": [checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank],
     "Built-Up": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Growth": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Property Values": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Demand/Supply": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Marketing Time": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank],
@@ -134,7 +135,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     'Foundation Walls (Material/Condition)': [checkMaterialCondition], 'Exterior Walls (Material/Condition)': [checkMaterialCondition],
     'Roof Surface (Material/Condition)': [checkMaterialCondition], 'Gutters & Downspouts (Material/Condition)': [checkMaterialCondition],
     'Window Type (Material/Condition)': [checkMaterialCondition], 'Floors (Material/Condition)': [checkMaterialCondition],
-    'Walls (Material/Condition)': [checkMaterialCondition], 
+    'Walls (Material/Condition)': [checkMaterialCondition],
     'Trim/Finish (Material/Condition)': [checkMaterialCondition],
     'Bath Floor (Material/Condition)': [checkMaterialCondition], 'Bath Wainscot (Material/Condition)': [checkMaterialCondition],
     'Fuel': [checkHeatingFuel, checkImprovementsFieldsNotBlank],
@@ -190,21 +191,21 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
 
     // Contract Validations
     "I did did not analyze the contract for sale for the subject purchase transaction. Explain the results of the analysis of the contract for sale or why the analysis was not performed.": [checkContractFieldsMandatory, checkContractAnalysisConsistency],
-    "Contract Price $": [checkContractFieldsMandatory, checkContractAnalysisConsistency], 
-    "Date of Contract": [checkContractFieldsMandatory, checkContractAnalysisConsistency], 
+    "Contract Price $": [checkContractFieldsMandatory, checkContractAnalysisConsistency],
+    "Date of Contract": [checkContractFieldsMandatory, checkContractAnalysisConsistency],
     "Is property seller owner of public record?": [
-        checkContractAnalysisConsistency,
-        (field, text, data) => checkYesNoOnly(field, text, data, {
+      checkContractAnalysisConsistency,
+      (field, text, data) => checkYesNoOnly(field, text, data, {
         name: 'Is property seller owner of public record?'
-    })], 
+      })],
     // "Data Source(s)": [checkContractAnalysisConsistency],
-    "Data Source(s) (Contract)": [checkContractFieldsMandatory, checkContractAnalysisConsistency], 
+    "Data Source(s) (Contract)": [checkContractFieldsMandatory, checkContractAnalysisConsistency],
     "Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?": [
-        checkContractAnalysisConsistency,
-        (field, text, data) => checkYesNoOnly(field, text, data, {
+      checkContractAnalysisConsistency,
+      (field, text, data) => checkYesNoOnly(field, text, data, {
         name: 'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?'
-    }), 
-    checkFinancialAssistanceInconsistency],
+      }),
+      checkFinancialAssistanceInconsistency],
     "If Yes, report the total dollar amount and describe the items to be paid": [checkFinancialAssistanceInconsistency, checkContractAnalysisConsistency],
   };
 
@@ -227,7 +228,10 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
   });
 
   validationRegistry['Lender/Client Company Address'].push(checkLenderAddressInconsistency);
-  validationRegistry['LENDER/CLIENT Name'].push(checkLenderNameInconsistency);
+  validationRegistry['LENDER/CLIENT Name'].push(checkLenderNameInconsistency, checkClientNameHtmlConsistency);
+  validationRegistry['LICENSE/REGISTRATION/CERTIFICATION #'] = [checkAppraiserLicenseConsistency]; // Corrected this line
+  validationRegistry['Policy Period To'] = [checkDateGreaterThanToday];
+  validationRegistry['License Vaild To'] = [checkDateGreaterThanToday];
 
   // Cost Approach Validations
   validationRegistry["ESTIMATED/REPRODUCTION / REPLACEMENT COST NEW"] = [checkCostNew];
@@ -417,7 +421,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
       }
     }
     if (!validationResult && saleName) {
-      const salesFns = validationRegistry[field] || [];
+      const salesFns = validationRegistry[field] || []; // Re-fetch for clarity
       const result = salesFns.map(fn => fn(field, data, saleName)).find(r => r);
       if (result) validationResult = result;
     }
@@ -442,7 +446,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     return { style, message };
   };
 
-  const validation = getValidationInfo(fieldPath.slice(-1)[0], value, allData, fieldPath, saleName, manualValidations);
+  const validation = getValidationInfo(fieldPath.slice(-1)[0], value, allData, fieldPath, saleName, manualValidations); // Pass allData here
   const isManuallyValidated = manualValidations && manualValidations[JSON.stringify(fieldPath)];
   const fieldContent = (
     <div className={`editable-field-container ${isAdjustment ? 'adjustment-value' : ''}`} onClick={handleContainerClick} style={{ ...(isMissing ? { border: '2px solid #ff50315b' } : {}), ...validation.style, position: 'relative' }}>
@@ -454,6 +458,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
           onBlur: () => setEditingField(null),
           onKeyDown: handleKeyDown,
           autoFocus: true,
+          spellCheck: true,
           className: inputClassName || `form-control form-control-sm ${isAdjustment ? 'adjustment-value' : ''}`,
           style: inputStyle || { width: '100%', border: '1px solid #ccc', background: '#fff', padding: 0, height: 'auto', resize: usePre ? 'vertical' : 'none' },
           rows: usePre ? 3 : undefined
@@ -491,6 +496,129 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
         <IconButton onClick={(e) => { e.stopPropagation(); handleManualValidation(fieldPath); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
           <ThumbUpIcon fontSize="small" />
         </IconButton>
+
+      )}
+      {fieldPath.includes('Offered for Sale in Last 12 Months') && (String(value).toLowerCase() === 'no' || String(value).toLowerCase() === 'yes' || String(value).toLowerCase() === '') && onAddRevision && (
+        <Tooltip title="Add revision for 'Offered for Sale'">
+          <IconButton onClick={(e) => { e.stopPropagation(); onAddRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Borrower') && !value && onAddEmptyBorrowerRevision && (
+        <Tooltip title="Please add the borrower's to the report.">
+          <IconButton onClick={(e) => { e.stopPropagation(); onAddEmptyBorrowerRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Borrower') && value && onAddBorrowerRevision && (
+
+        <Tooltip title="Add revision for Borrower's middle initial">
+          <IconButton onClick={(e) => { e.stopPropagation(); onAddBorrowerRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Legal Description') && String(value).toLowerCase().includes('see attached addendum') && onAddLegalDescRevision && (
+        <Tooltip title="Add revision for Legal Description">
+          <IconButton onClick={(e) => { e.stopPropagation(); onAddLegalDescRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Property Address') && onPropertyAddressRevisionButtonClick && (
+        <Tooltip title="Address Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onPropertyAddressRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {fieldPath.includes('Lender/Client') && onLenderClientRevisionButtonClick && (
+        <Tooltip title="Lender/Client Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onLenderClientRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Assignment Type') && onAddAssignmentTypeRevision && (
+        <Tooltip title="Revise assignment type to refinance transaction.">
+          <IconButton onClick={(e) => { e.stopPropagation(); onAddAssignmentTypeRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Property Rights Appraised') && onAddPropertyRightsRevision && (
+        <Tooltip title="Revise Property Rights Appraised to fee simple.">
+          <IconButton onClick={(e) => { e.stopPropagation(); onAddPropertyRightsRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('HOA $') && onHoaRevisionButtonClick && (
+        <Tooltip title="HOA Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onHoaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Owner of Public Record') && onAddOwnerOfRecordRevision && (
+        <Tooltip title="Add revision for Owner of Public Record">
+          <IconButton onClick={(e) => { e.stopPropagation(); onAddOwnerOfRecordRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Address (Lender/Client)') && onLenderClientAddressRevisionButtonClick && (
+        <Tooltip title="Lender/Client Address Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onLenderClientAddressRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Contract Price $') && onContractPriceRevisionButtonClick && (
+        <Tooltip title="Contract Price Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onContractPriceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Date of Contract') && onDateOfContractRevisionButtonClick && (
+        <Tooltip title="Date of Contract Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onDateOfContractRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?') && onFinancialAssistanceRevisionButtonClick && (
+        <Tooltip title="Financial Assistance Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onFinancialAssistanceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Neighborhood Boundaries') && onNeighborhoodBoundariesRevisionButtonClick && (
+        <Tooltip title="Neighborhood Boundaries Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onNeighborhoodBoundariesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Other') && onOtherLandUseRevisionButtonClick && (
+        <Tooltip title="Other Land Use Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onOtherLandUseRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Zoning Compliance') && onZoningComplianceRevisionButtonClick && (
+        <Tooltip title="Zoning Compliance Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onZoningComplianceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       )}
     </div>
   );
@@ -498,6 +626,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
   if (validation.message) {
     return <Tooltip title={validation.message} placement="top" arrow>{fieldContent}</Tooltip>;
   }
+
   return (
     <div>
       {fieldContent}
@@ -596,7 +725,8 @@ export const MarketConditionsTable = ({ id, title, data, onDataChange, editingFi
   );
 };
 
-export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, onDataChange, isEditable, editingField, setEditingField, highlightedFields, allData, comparisonData, getComparisonStyle, loading, loadingSection, contractExtracted, setContractExtracted, handleExtract, manualValidations, handleManualValidation }) => {
+export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, onDataChange, isEditable, editingField, setEditingField, highlightedFields, allData, comparisonData, getComparisonStyle, loading, loadingSection, contractExtracted, setContractExtracted, handleExtract, manualValidations, handleManualValidation, onRevisionButtonClick, onAddRevision, onAddBorrowerRevision, onAddEmptyBorrowerRevision, onAddLegalDescRevision, onPropertyAddressRevisionButtonClick, onLenderClientRevisionButtonClick, onAddAssignmentTypeRevision, onAddPropertyRightsRevision, onHoaRevisionButtonClick, onAddOwnerOfRecordRevision, onLenderClientAddressRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick }) => {
+
   const renderGridItem = (field) => {
     const isHighlighted = highlightedFields.includes(field);
     const itemStyle = {};
@@ -647,7 +777,8 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
           allData={allData}
           isEditable={isEditable || field === 'Property Address'}
           manualValidations={manualValidations}
-          handleManualValidation={handleManualValidation}
+          handleManualValidation={handleManualValidation} onAddRevision={field === 'Offered for Sale in Last 12 Months' ? onAddRevision : undefined} onAddBorrowerRevision={field === 'Borrower' ? onAddBorrowerRevision : undefined} onAddEmptyBorrowerRevision={field === 'Borrower' ? onAddEmptyBorrowerRevision : undefined} onAddLegalDescRevision={field === 'Legal Description' ? onAddLegalDescRevision : undefined} onPropertyAddressRevisionButtonClick={field === 'Property Address' ? onPropertyAddressRevisionButtonClick : undefined} onLenderClientRevisionButtonClick={field === 'Lender/Client' ? onLenderClientRevisionButtonClick : undefined} onAddAssignmentTypeRevision={field === 'Assignment Type' ? onAddAssignmentTypeRevision : undefined} onAddPropertyRightsRevision={field === 'Property Rights Appraised' ? onAddPropertyRightsRevision : undefined} onHoaRevisionButtonClick={field === 'HOA $' ? onHoaRevisionButtonClick : undefined} onAddOwnerOfRecordRevision={field === 'Owner of Public Record' ? onAddOwnerOfRecordRevision : undefined} onLenderClientAddressRevisionButtonClick={field === 'Address (Lender/Client)' ? onLenderClientAddressRevisionButtonClick : undefined} onContractPriceRevisionButtonClick={field === 'Contract Price $' ? onContractPriceRevisionButtonClick : undefined} onDateOfContractRevisionButtonClick={field === 'Date of Contract' ? onDateOfContractRevisionButtonClick : undefined} onFinancialAssistanceRevisionButtonClick={field === 'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?' ? onFinancialAssistanceRevisionButtonClick : undefined}
+
         />
       </div>
     );
@@ -656,7 +787,12 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
   return (
     <div id={id} className="card shadow mb-4 subject-info-card">
       <div className="card-header CAR1 bg-secondary text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <strong>{title}</strong>
+        <strong style={{ fontSize: '1.1rem' }}>{title}</strong>
+        {onRevisionButtonClick && (
+          <Tooltip title="Revision Language">
+            <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: 'white', float: 'right' }}><LibraryBooksIcon /></IconButton>
+          </Tooltip>
+        )}
       </div>
       {loading && loadingSection === id && (
         <Box sx={{ width: '100%' }}><LinearProgress /></Box>
@@ -676,7 +812,7 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
   );
 };
 
-export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondary', usePre = false, extractionAttempted, onDataChange, editingField, setEditingField, highlightedFields = [], allData, loading, loadingSection, manualValidations, handleManualValidation }) => {
+export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondary', usePre = false, extractionAttempted, onDataChange, editingField, setEditingField, highlightedFields = [], allData, loading, loadingSection, manualValidations, handleManualValidation, onRevisionButtonClick, onLenderClientRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick }) => {
 
   const renderNeighborhoodTotal = () => {
     if (id !== 'neighborhood-section' || !data) return null;
@@ -772,6 +908,14 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
           allData={allData}
           manualValidations={manualValidations}
           handleManualValidation={handleManualValidation}
+          onLenderClientRevisionButtonClick={field === 'Lender/Client' ? onLenderClientRevisionButtonClick : undefined}
+          onDateOfContractRevisionButtonClick={field === 'Date of Contract' ? onDateOfContractRevisionButtonClick : undefined}
+          onContractPriceRevisionButtonClick={field === 'Contract Price $' ? onContractPriceRevisionButtonClick : undefined}
+          onFinancialAssistanceRevisionButtonClick={field === 'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?' ? onFinancialAssistanceRevisionButtonClick : undefined}
+          onNeighborhoodBoundariesRevisionButtonClick={field === 'Neighborhood Boundaries' ? onNeighborhoodBoundariesRevisionButtonClick : undefined}
+          onOtherLandUseRevisionButtonClick={field === 'Other' ? onOtherLandUseRevisionButtonClick : undefined}
+          onZoningComplianceRevisionButtonClick={field === 'Zoning Compliance' ? onZoningComplianceRevisionButtonClick : undefined}
+
           inputStyle={{ width: '100%', border: 'none', background: 'transparent', padding: 0, height: 'auto', resize: usePre ? 'vertical' : 'none' }}
         />
       </div>
@@ -790,7 +934,12 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
           alignItems: 'center',
         }}>
         <Typography variant="h6" component="h5">{title}</Typography>
-          {renderNeighborhoodTotal()}
+        {onRevisionButtonClick && (
+          <Tooltip title="Revision Language">
+            <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: 'white' }}><LibraryBooksIcon /></IconButton>
+          </Tooltip>
+        )}
+        {renderNeighborhoodTotal()}
       </Box>
       {loading && loadingSection === id && (
         <Box sx={{ width: '100%' }}><LinearProgress /></Box>
