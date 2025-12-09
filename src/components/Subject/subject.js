@@ -1,10 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Subject.css';
-import { GlobalStyles, keyframes } from '@mui/system';
-import { Info, Warning as WarningIcon, Brightness4 as Brightness4Icon, Brightness7 as Brightness7Icon, Close as CloseIcon, CheckCircleOutline as CheckCircleOutlineIcon, ErrorOutline as ErrorOutlineIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
-import { Button, Stack, List, ListItem, ListItemButton, ListItemText, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab } from '@mui/material';
+import { GlobalStyles } from '@mui/system';
+import { Info, Warning as WarningIcon, Close as CloseIcon, ErrorOutline as ErrorOutlineIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
+import { Button, Stack, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+import Sidebar from './Sidebar.js';
+import PromptAnalysis from './PromptAnalysis.js';
+import {
+  ContractComparisonDialog,
+  RevisionLanguageDialog,
+  NotepadDialog,
+  EngagementLetterDialog,
+} from './dialogs.js';
+import { SalesComparisonSection, ComparisonResultTable } from './tables.js';
+import { getComparisonStyle, playSound } from './utils.js';
 
 import Form1004 from './1004';
 import Form1007 from './1007';
@@ -18,7 +29,7 @@ import EscalationCheck, { ESCALATION_CHECK_PROMPT } from './EscalationCheck';
 import FhaCheck, { FHA_REQUIREMENTS_PROMPT } from './FhaCheck';
 import ADUCheck, { ADU_REQUIREMENTS_PROMPT } from './ADUCheck';
 import { lightTheme, darkTheme } from '../../theme';
-import { TextField } from '@mui/material';
+// import { TextField } from '@mui/material';
 
 // Import all validation functions
 import * as generalValidation from './generalValidation';
@@ -33,44 +44,6 @@ import * as rentScheduleValidation from './rentScheduleValidation';
 import * as appraiserLenderValidation from './appraiserLenderValidation';
 
 import { SUBJECT_REVISION_PROMPTS, CONTRACT_REVISION_PROMPTS, NEIGHBORHOOD_REVISION_PROMPTS, SITE_REVISION_PROMPTS, IMPROVEMENTS_REVISION_PROMPTS, SALES_GRID_REVISION_PROMPTS, RECONCILIATION_REVISION_PROMPTS, COST_APPROACH_REVISION_PROMPTS, CERTIFICATION_REVISION_PROMPTS, ADDENDUM_GENERAL_REVISION_PROMPTS, FORM_1007_REVISION_PROMPTS } from './revisionPrompts';
-import uploadSoundFile from '../../Assets/upload.mp3';
-import successSoundFile from '../../Assets/success.mp3';
-import errorSoundFile from '../../Assets/error.mp3';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-
-const bounce = keyframes`
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-8px); }
-  60% { transform: translateY(-4px); }
-`;
-
-const HighlightKeywords = ({ text, keywordGroups }) => {
-  if (!text || !keywordGroups || keywordGroups.length === 0) {
-    return text;
-  }
-
-  const allKeywords = keywordGroups.flatMap(group => group.keywords);
-  if (allKeywords.length === 0) {
-    return text;
-  }
-
-  const escapedKeywords = allKeywords.map(kw => kw.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&'));
-  const regex = new RegExp(`(${escapedKeywords.join('|')})`, 'gi');
-  const parts = String(text).split(regex);
-
-  return (
-    <span>
-      {parts.map((part, i) => {
-        const matchedGroup = keywordGroups.find(group =>
-          group.keywords.some(keyword => part.toLowerCase() === keyword.toLowerCase())
-        );
-        return matchedGroup ? <span key={i} style={matchedGroup.style}>{part}</span> : part;
-      })}
-    </span>
-  );
-};
 
 const TooltipStyles = () => (
   <GlobalStyles styles={{
@@ -87,799 +60,15 @@ const TooltipStyles = () => (
       backgroundColor: '#864242ff',
       color: 'white',
       padding: '5px 10px',
-
       borderRadius: '4px',
       fontSize: '0.8rem',
       whiteSpace: 'nowrap',
       zIndex: 1000,
       marginBottom: '5px',
     },
-    '.sidebar-link.active': {
-      transform: 'scale(1.05)',
-      boxShadow: '0 4px 8px rgba(255, 255, 255, 0.2)',
-      backgroundColor: '#7587ebff !important',
-      color: '#ffffff !important',
-      transition: 'transform 0.2s ease-in-out, boxShadow 0.2s ease-in-out',
-    },
-    '.section-active': {
-      backgroundColor: 'rgba(22, 20, 20, 0.2) !important', // Light blue with some transparency
-      transition: 'background-color 0.3s ease-in-out',
-      borderRadius: '8px',
-    }
   }} />
 );
 
-const Sidebar = ({ sections, isOpen, isLocked, onLockToggle, onMouseEnter, onMouseLeave, onSectionClick, onThemeToggle, currentTheme, activeSection, loading, loadingSection, extractedSections, visibleSections, onArrowClick }) => (
-  <div className={`sidebar ${isOpen ? 'open' : 'closed'}`} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-    <div className="sidebar-header">
-      <img src={process.env.PUBLIC_URL + '/logo.png'} alt="logo" className="sidebar-logo" />
-      <h5 className="sidebar-title">DJRB</h5>
-      <Tooltip title={isLocked ? "Unpin Sidebar" : "Pin Sidebar"} placement="right">
-        <IconButton onClick={onLockToggle} size="small" className="sidebar-toggle-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isLocked ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Toggle Dark/Light Theme" placement="right">
-        <IconButton onClick={onThemeToggle} size="small" sx={{ color: 'var(--primary-color)', ml: 1 }}>
-          {currentTheme === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-        </IconButton>
-      </Tooltip>
-    </div>
-    <List dense>
-      {sections.map((section) => (
-        <ListItem key={section.id} disablePadding>
-          <ListItemButton component="a" href={`#${section.id}`} className={`sidebar-link ${activeSection === section.id ? 'active' : ''}`} onClick={() => onSectionClick(section)} disabled={loading}>
-            <ListItemText primary={section.title} />
-            {loadingSection === section.id && (
-              <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
-                <CircularProgress size={16} color="inherit" />
-              </Box>
-            )}
-            {extractedSections.has(section.id) && !visibleSections.has(section.id) && loadingSection !== section.id && (
-              <IconButton size="small" onClick={(e) => { e.stopPropagation(); onArrowClick(section.id); }} sx={{ rotate: '270deg', animation: `${bounce} 2s infinite`, ml: 'auto' }}>
-                <ArrowDownwardIcon fontSize="small" />
-              </IconButton>
-            )}
-          </ListItemButton>
-        </ListItem>
-      ))}
-    </List>
-    <div className="sidebar-footer">
-      Appraisal Extractor
-    </div>
-  </div>
-);
-
-const ContractComparisonDialog = ({ open, onClose, onCompare, loading, result, error, selectedFile, contractFile, mainData }) => {
-  const handleClose = () => {
-    onClose();
-  };
-
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth={result ? "md" : "sm"} fullWidth>
-      <DialogTitle>
-        Contract Comparison
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        {loading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>}
-        {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
-        {result ? (
-          <TableContainer component={Paper} sx={{ mt: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Field</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Main Report</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Contract Copy</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="center">Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {['Contract Price', 'Contract Date'].map(fieldName => {
-                  const item = result.find(r => r.field.toLowerCase() === fieldName.toLowerCase());
-                  const mainValue = fieldName === 'Contract Price' ? mainData?.CONTRACT?.['Contract Price $'] : mainData?.CONTRACT?.['Date of Contract'];
-                  return (
-                    <TableRow key={fieldName} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                      <TableCell>{fieldName}</TableCell>
-                      <TableCell>{item?.old_value || mainValue || 'N/A'}</TableCell>
-                      <TableCell>{item?.new_value || 'N/A'}</TableCell>
-                      <TableCell align="center">
-                        {item ? (
-                          item.status === 'Match' ? <CheckCircleOutlineIcon color="success" /> : <ErrorOutlineIcon color="error" />
-                        ) : <WarningIcon color="warning" />}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        ) : !loading && (
-          <Typography>
-            Click 'Compare' to check for consistency in Contract Date and Contract Price between the main report and the contract copy.
-          </Typography>
-        )
-        }
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-        <Button onClick={onCompare} variant="contained" disabled={loading || !selectedFile || !contractFile}>
-          {loading ? <CircularProgress size={24} /> : (result ? 'Reload' : 'Compare')}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
-
-const RevisionLanguageDialog = ({ open, onClose, title, prompts, onCopy, onAddToNotepad }) => (
-  <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-    <DialogTitle>{title}</DialogTitle>
-    <DialogContent dividers>
-      <List dense>
-        {prompts.map((prompt, index) => (
-          <ListItem key={index} secondaryAction={
-
-            <>
-              <IconButton edge="end" aria-label="copy" onClick={() => onCopy(prompt)}><ContentCopyIcon /></IconButton>
-              {onAddToNotepad && (
-                <IconButton edge="end" aria-label="add to notepad" onClick={() => onAddToNotepad(prompt)}><NoteAltIcon /></IconButton>
-              )}
-            </>
-          }>
-            <ListItemText primary={prompt} />
-          </ListItem>
-        ))}
-      </List>
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={onClose}>Close</Button>
-    </DialogActions>
-  </Dialog>
-);
-
-const NotepadDialog = ({ open, onClose, notes, onNotesChange }) => {
-  const handleSaveNotes = () => {
-    if (!notes) {
-      return; // Don't save an empty file
-    }
-    const blob = new Blob([notes], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Revision.txt';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="notepad-dialog-title">
-      <DialogTitle id="notepad-dialog-title">Notepad</DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          id="notes"
-          label="Your Notes"
-          type="text"
-          fullWidth
-          multiline
-          rows={10}
-          value={notes}
-          spellCheck="true"
-          onChange={(e) => onNotesChange(e.target.value)}
-          variant="outlined" />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSaveNotes} disabled={!notes}>Save to File</Button>
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
-
-const EngagementLetterDialog = ({ open, onClose, onCompare, loading, result, error, selectedFile, engagementLetterFile, mainData }) => {
-  const handleClose = () => {
-    onClose();
-  };
-
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth={result ? "md" : "sm"} fullWidth>
-      <DialogTitle>
-        Engagement Letter Comparison
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        {loading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>}
-        {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
-        {result ? (
-          <TableContainer component={Paper} sx={{ mt: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Field</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Main Report</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Engagement Letter</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="center">Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {result.map((item, index) => (
-                  <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                    <TableCell>{item.field}</TableCell>
-                    <TableCell>{item.main_report_value || 'N/A'}</TableCell>
-                    <TableCell>{item.engagement_letter_value || 'N/A'}</TableCell>
-                    <TableCell align="center">
-                      {item.status === 'Match' ? <CheckCircleOutlineIcon color="success" /> : <ErrorOutlineIcon color="error" />}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        ) : !loading && (
-          <Typography>
-            Click 'Compare' to check for consistency in Property Address and Vendor's Fee between the main report and the engagement letter.
-          </Typography>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-        {!result && (
-          <Button onClick={onCompare} variant="contained" disabled={loading || !selectedFile || !engagementLetterFile}>Compare</Button>
-        )}
-        {result && (
-          <Button onClick={onCompare} variant="contained" disabled={loading}>Reload</Button>
-        )}
-      </DialogActions>
-    </Dialog>
-  );
-};
-
-export const ComparableAddressConsistency = ({ data, comparableSales, extractionAttempted, onDataChange, editingField, setEditingField, isEditable, allData }) => {
-  return (
-    <div id="comparable-address-consistency-section" style={{}} className="card shadow ">
-      <div className="card-header CAR1 bg-dark text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <strong style={{ flexGrow: 1, textAlign: 'center' }}>Comparable Address Consistency Check</strong>
-        </div>
-      </div>
-      <div className="card-body p-0 table-container">
-        <table className="table table-hover table-striped mb-0">
-          <thead className="table-light">
-            <tr>
-              <th>Comparable Sale #</th>
-              <th>Sales Comparison Approach Address</th>
-              <th>Location Map Address</th>
-              <th>Photo Section Address</th>
-              <th>is label correct?</th>
-              <th>duplicate photo?</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {comparableSales.map((sale, index) => {
-              const compNum = index + 1;
-              const salesGridAddress = data[sale]?.Address || '';
-              const locationMapAddress = data[`Location Map Address ${compNum}`] || '';
-              const photoAddress = data[`Comparable Photo Address ${compNum}`] || '';
-              const matchingPhoto = data[`is label correct? ${compNum}`] || '';
-              const duplicatePhoto = data[`duplicate photo? ${compNum}`] || '';
-
-              const getFirstThreeWords = (str) => str.split(/\s+/).slice(0, 3).join(' ').toLowerCase();
-
-              const allAddresses = [salesGridAddress, locationMapAddress, photoAddress];
-              const validAddresses = allAddresses.filter(Boolean);
-
-              let isConsistent = false;
-              if (validAddresses.length < 2) {
-                isConsistent = true;
-              } else {
-                const shortAddresses = validAddresses.map(getFirstThreeWords);
-                const uniqueShortAddresses = new Set(shortAddresses);
-                if (uniqueShortAddresses.size < shortAddresses.length) {
-                  isConsistent = true;
-                }
-              }
-
-              const isMissingSalesGrid = extractionAttempted && !salesGridAddress;
-              const isMissingLocationMap = extractionAttempted && !locationMapAddress;
-              const isMissingPhoto = extractionAttempted && !photoAddress;
-
-              return (
-                <tr key={sale}>
-                  <td style={{ fontWeight: 'bold' }}>{`Comparable Sale #${compNum}`}</td>
-                  <td style={isMissingSalesGrid ? { border: '2px solid red' } : {}}>
-                    <EditableField
-                      fieldPath={[sale, 'Address']}
-                      value={salesGridAddress}
-                      onDataChange={onDataChange}
-                      editingField={editingField}
-                      setEditingField={setEditingField} allData={allData}
-                      isMissing={isMissingSalesGrid} isEditable={isEditable}
-                    // isEditable={true}
-                    />
-                  </td>
-                  <td style={isMissingLocationMap ? { border: '2px solid red' } : {}}>
-                    <EditableField
-                      fieldPath={[`Location Map Address ${compNum}`]}
-                      value={locationMapAddress}
-                      onDataChange={onDataChange}
-                      editingField={editingField}
-                      setEditingField={setEditingField}
-                      isMissing={isMissingLocationMap} allData={allData}
-                      isEditable={isEditable}
-                    />
-                  </td>
-                  <td style={isMissingPhoto ? { border: '2px solid red' } : {}}>
-                    <EditableField
-                      fieldPath={[`Comparable Photo Address ${compNum}`]}
-                      value={photoAddress}
-                      onDataChange={onDataChange}
-                      editingField={editingField}
-                      setEditingField={setEditingField}
-                      isMissing={isMissingPhoto} allData={allData}
-                      isEditable={isEditable}
-                    />
-                  </td>
-                  <td>
-                    <EditableField
-                      fieldPath={[`is label correct? ${compNum}`]}
-                      value={matchingPhoto}
-                      onDataChange={onDataChange}
-                      editingField={editingField}
-                      setEditingField={setEditingField} allData={allData}
-                      isEditable={isEditable} />
-                  </td>
-                  <td>
-                    <EditableField
-                      fieldPath={[`duplicate photo? ${compNum}`]}
-                      value={duplicatePhoto}
-                      onDataChange={onDataChange}
-                      editingField={editingField}
-                      setEditingField={setEditingField} allData={allData}
-                      isEditable={isEditable} />
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    {validAddresses.length > 0 && (isConsistent ? <CheckCircleOutlineIcon style={{ color: 'green' }} /> : <ErrorOutlineIcon style={{ color: 'red' }} />)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-export const MarketConditionsTable = ({ data, marketConditionsRows, marketConditionsFields, extractionAttempted, onDataChange, editingField, setEditingField, isEditable, allData }) => {
-  const timeframes = ["Prior 7-12 Months", "Prior 4-6 Months", "Current-3 Months", "Overall Trend"];
-
-  const getTableValue = (fullLabel, timeframe) => {
-    const marketData = data?.MARKET_CONDITIONS ?? {};
-    const key = `${fullLabel} (${timeframe})`;
-    return marketData[key] ?? marketData[fullLabel] ?? '';
-  };
-
-  return (
-    <TableContainer component={Paper} sx={{ marginTop: '20px', marginBottom: '20px' }}>
-      {/* <div className="card-header CAR1 bg-warning text-dark" style={{ position: 'sticky', top: 0, zIndex: 10 }}><strong>Market Conditions Addendum</strong></div> */}
-      <Table className="table mb-20" style={{ marginTop: '20px' }} size="small" aria-label="market-conditions-table">
-        <TableHead style={{}}>
-          <TableRow>
-            <TableCell>Inventory Analysis</TableCell>
-            {timeframes.map(tf => <TableCell key={tf} align="center">{tf}</TableCell>)}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {marketConditionsRows.map(row => (
-            <TableRow key={row.label}>
-              <TableCell component="th" scope="row">
-                {row.label}
-              </TableCell>
-              {timeframes.map(tf => {
-                const value = getTableValue(row.fullLabel, tf) || getTableValue(row.label, tf);
-                const style = {};
-                if (extractionAttempted && !value) {
-                  style.border = '2px solid red';
-                }
-                return <TableCell key={tf} align="center" style={style}>{value}</TableCell>
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <Box sx={{ p: 2 }}>
-        {marketConditionsFields.map(field => {
-          // Render only fields that are not part of the table
-          if (marketConditionsRows.some(row => row.fullLabel.includes(field) || field.includes(row.fullLabel))) return null;
-
-          return (
-            <Box key={field} sx={{ mb: 2 }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                {field}
-              </Typography>
-              <EditableField
-                fieldPath={['MARKET_CONDITIONS', field]}
-                value={data?.MARKET_CONDITIONS?.[field] || ''}
-                onDataChange={onDataChange}
-                editingField={editingField}
-                setEditingField={setEditingField} allData={allData}
-                isEditable={isEditable}
-              />
-            </Box>
-          );
-        })}
-      </Box>
-    </TableContainer>
-  );
-};
-
-export const CondoCoopProjectsTable = ({ id, title, data, onDataChange, editingField, setEditingField, isEditable, condoCoopProjectsRows, condoCoopProjectsFields, extractionAttempted, allData }) => {
-  const timeframes = ["Prior 7–12 Months", "Prior 4–6 Months", "Current – 3 Months", "Overall Trend"];
-
-  const getTableValue = (fullLabel, timeframe) => {
-    const projectData = data?.CONDO_COOP_PROJECTS ?? data ?? {};
-    const key = `${fullLabel} (${timeframe})`;
-    return projectData[key] ?? '';
-  };
-
-  return (
-    <div id={id} className="card shadow mb-4">
-      <div className="card-header CAR1 bg-primary text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <strong>{title}</strong>
-      </div>
-      <div className="card-body p-0 table-container">
-        <TableContainer component={Paper}>
-          <Table size="small" aria-label="condo-coop-projects-table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Subject Project Data</TableCell>
-                {timeframes.map(tf => <TableCell key={tf} align="center">{tf}</TableCell>)}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {condoCoopProjectsRows.map(row => (
-                <TableRow key={row.label}>
-                  <TableCell component="th" scope="row">{row.label}</TableCell>
-                  {timeframes.map(tf => {
-                    const fieldName = `${row.fullLabel} (${tf})`;
-                    const value = getTableValue(row.fullLabel, tf);
-                    const isMissing = extractionAttempted && !value;
-                    return (
-                      <TableCell key={tf} align="center" style={isMissing ? { border: '2px solid red' } : {}}>
-                        <EditableField fieldPath={['CONDO_COOP_PROJECTS', fieldName]} value={value} onDataChange={onDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} isMissing={isMissing} allData={allData} />
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </div>
-    </div>
-  );
-};
-
-const SalesComparisonSection = ({ data, salesGridRows, comparableSales, extractionAttempted, handleDataChange, editingField, setEditingField, formType, comparisonData, getComparisonStyle, isEditable, allData }) => {
-  const getSubjectValue = (row) => {
-    const subjectData = data.Subject || {}; let value = subjectData[row.valueKey] ?? subjectData[row.subjectValueKey] ?? data[row.subjectValueKey] ?? data[row.valueKey] ?? ''; return value;
-  };
-
-  return (
-    <div id="sales-comparison" className="card shadow mb-4">
-      <div className="card-header CAR1 bg-dark text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-
-      </div>
-      <div className="card-body p-0 table-container" style={{ overflowX: 'auto' }}>
-        <table className="table table-hover table-striped mb-0 sales-comparison-table">
-          <thead className="table-light">
-            <tr>
-              <th style={{ minWidth: '200px' }}>Feature</th>
-              <th style={{ minWidth: '200px' }}>Subject</th>
-              {comparableSales.map((sale, index) => (
-                <th key={sale} style={{ minWidth: '200px' }}>{`Comparable Sale #${index + 1}`}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {salesGridRows.flatMap((row, rowIndex) => {
-              const rows = [];
-              const subjectValue = getSubjectValue(row);
-
-              rows.push(
-                <tr key={`${row.label}-${rowIndex}`}>
-                  <td style={{ fontWeight: 'bold' }}>{row.label}</td>
-                  <td>
-                    {row.isAdjustmentOnly ? '' : (
-                      <EditableField
-                        fieldPath={['Subject', row.subjectValueKey || row.valueKey]}
-                        value={subjectValue}
-                        onDataChange={handleDataChange}
-                        isEditable={isEditable} allData={allData}
-                      />
-                    )}
-                  </td>
-                  {comparableSales.map((sale, compIndex) => {
-                    const compData = data[sale] || {};
-                    const value = compData[row.valueKey] || '';
-                    const isMissing = extractionAttempted && !value && !row.isAdjustmentOnly;
-                    return (
-                      <td key={`${sale}-${row.label}`} style={isMissing ? { border: '2px solid red' } : {}}>
-                        {row.isAdjustmentOnly ? '' : (
-                          <EditableField
-                            fieldPath={[sale, row.valueKey]}
-                            value={value}
-                            onDataChange={handleDataChange}
-                            editingField={editingField}
-                            setEditingField={setEditingField}
-                            isEditable={isEditable} allData={allData} />
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-
-              if (row.adjustmentKey) {
-                rows.push(
-                  <tr key={`${row.label}-adj-${rowIndex}`} className="adjustment-row">
-                    <td style={{ paddingLeft: '2rem' }}>
-                      <i>Adjustment</i>
-                    </td>
-                    <td>
-                      {/* Subject adjustment if any - usually none */}
-                    </td>
-                    {comparableSales.map((sale, compIndex) => {
-                      const compData = data[sale] || {};
-                      const adjValue = compData[row.adjustmentKey] || '';
-                      const isMissing = extractionAttempted && !adjValue;
-                      return (
-                        <td key={`${sale}-${row.adjustmentKey}`} style={isMissing ? { border: '2px solid red' } : {}}>
-                          <EditableField
-                            fieldPath={[sale, row.adjustmentKey]}
-                            value={adjValue}
-                            onDataChange={handleDataChange}
-                            editingField={editingField}
-                            setEditingField={setEditingField}
-                            isEditable={isEditable}
-                            allData={allData} />
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              }
-
-              return rows;
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-
-const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPrompt, onAddendumRevisionButtonClick }) => {
-  // const [prompt, setPrompt] = useState('');
-
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   if (prompt.trim()) {
-  //     onPromptSubmit(prompt);
-  //   }
-  // };
-  const keywordGroups = [
-    {
-      keywords: ["consistently", "Fulfilled", "PRESENT", "CONSISTENT"],
-      style: { backgroundColor: '#91ff00ff', color: '#000000', padding: '1px 3px', borderRadius: '3px' }
-    },
-    {
-      keywords: [
-        "However", "Not consistently", "Not Fulfilled", "Not PRESENT",
-        "Not CONSISTENT", "ilconsistently", "absent", "ilCONSISTENT", "Specifically", "mismatch", "mismatched", "missing", "inconsistent",
-      ],
-      style: { backgroundColor: '#ff0000', color: '#ffffff', padding: '1px 3px', borderRadius: '3px' }
-    }
-  ];
-
-  // This is kept for other components that might still use the old prop.
-  // For PromptAnalysis, we will use keywordGroups.
-  // const highlightKeywords = keywordGroups.find(g => g.style.backgroundColor === '#91ff00ff')?.keywords || [];
-
-
-  const prompt1 =
-    "Verify that the Subject Property Address is identical across all locations in the report including: Subject Section, Sales Comparison Grid, Location Map, Aerial Map, Header/Footer, and any Addenda.\nAlso confirm the presence of the Subject Street View, Front View, and Rear View photos with no duplicates or mislabeled subject photos.";
-
-  const prompt2 =
-    "1. Compare bedroom and bathroom counts across the Improvements/Property Characteristics section, Sales Comparison Grid, Sketch/Floor Plan, and all interior/exterior photos.\n2. Verify that Gross Living Area (GLA) is consistent between the Sketch, Improvements section, Sales Grid, Cost Approach (if present), and Addendum comments. Flag any mismatch.";
-
-  const prompt4 =
-    "Match all Comparable Sale addresses across the Sales Grid, Comparable Photo Pages, MLS/Map Exhibits, Location Map, and Aerial Map. Confirm that no comparable photos are duplicated, mislabeled, or incorrectly associated with the wrong comparable.";
-
-  const prompt5 =
-    "Verify that every photo is properly labeled (Subject, Comp 1, Comp 2, etc.) and confirm that there are no duplicate photos, reused photos, or mislabeled views across the entire photo section.";
-
-  // const prompt6 =
-  //   "Please confirm whether the following revision request is addressed in the file:&#10;&#10;• The lease begin date for Rental Comp #3 is incorrectly shown as 'Owner'. Confirm if corrected.&#10;&#10;If addressed in comments, confirm that the corresponding section was updated in the main form.&#10;&#10;For each revision item, answer only: 'Revised – Corrected', 'Revised – Not Corrected', or 'Not Addressed'. Keep responses short.&#10;&#10;Additional Verification (do NOT treat as revisions):&#10;&#10;• Identify any blank fields or unchecked/incorrect checkboxes throughout the form.&#10;• If assignment type is Refinance → Contract Section must be blank (including checkboxes).&#10;• If Purchase → Contract Section fields and checkboxes must be accurately completed.&#10;• Validate Garage/Carport count and type based on the checkboxes marked.&#10;• Verify Appraised Value matches in all required locations: Page 2 (Sales Grid Conclusion), Summary Section, Addendum (if repeated), and Signature Page.&#10;• Signature Date must be after the Effective/As-of Date.&#10;• Signature Page must include 'Fastapp' in the Company/AMC name.&#10;• Check prior services disclosure, exposure time comment, and confirm no appraiser invoice is included. If present, mark as must-remove.&#10;&#10;Now verify presence of the following sections. Answer only 'Present' or 'Not Present': This Report is One of the Following Types:, Comments on Standards Rule 2-3, Reasonable Exposure Time, Comments on Appraisal and Report Identification.";
-
-  const supplementalAddendumPrompt =
-    "1. Confirm presence of the following sections and answer only 'Present' or 'Not Present': SUPPLEMENTAL ADDENDUM, ADDITIONAL COMMENTS, APPRAISER'S CERTIFICATION, SUPERVISORY APPRAISER'S CERTIFICATION, Analysis/Comments, GENERAL INFORMATION ON ANY REQUIRED REPAIRS, UNIFORM APPRAISAL DATASET (UAD) DEFINITIONS ADDENDUM.&#10;&#10;2. Confirm presence of the following sections and answer only 'Present' or 'Not Present': SCOPE OF WORK, INTENDED USE, INTENDED USER, DEFINITION OF MARKET VALUE, STATEMENT OF ASSUMPTIONS AND LIMITING CONDITIONS.";
-
-
-  const renderResponse = (response) => {
-    let data = response;
-    if (typeof response === 'string') {
-      try {
-        const parsed = JSON.parse(response);
-        if (typeof parsed === 'object' && parsed !== null) {
-          data = parsed;
-        }
-      } catch (e) {
-        // Not a JSON string, treat as plain text
-      }
-    }
-
-    if (typeof data === 'object' && data !== null) {
-      const { summary, comparison_summary, ...otherData } = data.fields || data;
-      const hasOtherData = Object.keys(otherData).length > 0 && !(Object.keys(otherData).length === 1 && otherData.raw);
-      const hasComparisonSummary = Array.isArray(comparison_summary) && comparison_summary.length > 0;
-
-
-      return (
-        <>
-          <Stack spacing={3} sx={{ mt: 3 }}>
-            {summary && (
-              <Paper elevation={1} sx={{ p: 2, bgcolor: 'background.default' }}>
-                <Typography variant="h6" gutterBottom component="div" color="primary.main">
-                  Summary
-                </Typography>
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
-                  <HighlightKeywords text={summary} keywordGroups={keywordGroups} />
-                </Typography>
-              </Paper>
-            )}
-            {hasComparisonSummary && (
-              <Paper elevation={1} sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom component="div" color="primary.main">
-                  Comparison Summary
-                </Typography>
-                <TableContainer>
-                  <Table size="small" aria-label="comparison summary table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Section</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Comment</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {comparison_summary.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell><HighlightKeywords text={item.status} keywordGroups={keywordGroups} /></TableCell>
-                          <TableCell><HighlightKeywords text={item.section} keywordGroups={keywordGroups} /></TableCell>
-                          <TableCell><HighlightKeywords text={item.comment} keywordGroups={keywordGroups} /></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            )}
-            {hasOtherData && (
-              <Paper elevation={1} sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom component="div" color="primary.main">
-                  Analysis Details
-                </Typography>
-                <TableContainer>
-                  <Table size="small" aria-label="prompt analysis table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold', borderBottom: 2, borderColor: 'primary.light' }}>Field</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', borderBottom: 2, borderColor: 'primary.light' }}>Value</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {Object.entries(otherData).map(([key, value]) => (
-                        <TableRow key={key} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                          <TableCell component="th" scope="row" sx={{ fontWeight: 'medium' }}>
-                            {key}
-                          </TableCell>
-                          <TableCell>
-                            <HighlightKeywords text={(typeof value === 'object' && value !== null && 'value' in value)
-                              ? String(value.value)
-                              : (typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value))}
-                              keywordGroups={keywordGroups}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            )}
-          </Stack>
-        </>
-      );
-    }
-
-
-    return (
-      <Paper elevation={1} sx={{ p: 2, mt: 3, bgcolor: 'background.default' }}>
-        <Typography variant="h6" gutterBottom component="div" color="primary.main">
-          Analysis Result
-        </Typography>
-        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: 'inherit', fontFamily: 'monospace' }}>
-          <HighlightKeywords text={String(data)} keywordGroups={keywordGroups} />
-        </pre>
-      </Paper>
-    );
-  };
-
-
-  return (
-    <div id="prompt-analysis-section" className="card shadow mb-4">
-      <div className="card-header CAR1 bg-info text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <strong style={{ fontSize: '1.1rem' }}>Prompt Analysis</strong>
-        {onAddendumRevisionButtonClick && (
-          <Tooltip title="General/Addendum Revisions">
-            <IconButton onClick={onAddendumRevisionButtonClick} size="small" sx={{ color: 'white', float: 'right' }}><LibraryBooksIcon /></IconButton>
-          </Tooltip>
-        )}
-      </div>
-      <div className="card-body">
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-            <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt1)} disabled={loading}>Verify Subject Address & Photos</Button>
-            <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt2)} disabled={loading}>Compare Room Counts</Button>
-            <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt4)} disabled={loading}>Match Comp Addresses</Button>
-            <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt5)} disabled={loading}>Verify Photo Labels & Duplicates</Button>
-            {/* <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt6)} disabled={loading}>Revision Requests Check</Button> */}
-            <Button variant="outlined" size="small" onClick={() => onPromptSubmit(supplementalAddendumPrompt)} disabled={loading}>Page Present Check</Button>
-          </Stack>
-          {loading && <CircularProgress size={24} />}
-        </Stack>
-
-        {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
-
-        {response && (
-          <Box sx={{ mt: 3 }}>
-            {submittedPrompt && <Paper elevation={1} sx={{ p: 2, mb: 3, borderLeft: 4, borderColor: 'secondary.main', bgcolor: 'background.default' }}>
-              <Typography variant="h6" gutterBottom component="div" color="text.primary">
-                Given Prompt
-              </Typography>
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontStyle: 'italic', color: 'text.secondary' }}>
-                {submittedPrompt}
-              </Typography>
-            </Paper>}
-            {renderResponse(response)}
-          </Box>
-        )}
-      </div>
-    </div>
-  );
-};
 const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile, setComparisonData }) => {
   // const fields = [
   //   'Client Name', 'Client Address', 'Transaction Type', 'FHA Case Number', 'Borrower (and Co-Borrower)',
@@ -896,15 +85,10 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
   const handleCompare = React.useCallback(async () => {
     // setLoading(true);
     setResult(null);
-    // setError('');
 
     const formData = new FormData();
     if (pdfFile) formData.append('pdf_file', pdfFile);
     if (htmlFile) formData.append('html_file', htmlFile);
-
-    Object.entries(data.comparisonData).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
 
     try {
       const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/compare/', { method: 'POST', body: formData });
@@ -919,7 +103,7 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
     } finally {
       // setLoading(false);
     }
-  }, [data.comparisonData, pdfFile, htmlFile, setComparisonData]);
+  }, [pdfFile, htmlFile, setComparisonData]);
 
   useEffect(() => {
     if (open && !result) {
@@ -927,132 +111,8 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
     }
   }, [open, result, handleCompare]);
 
-  // const handleClose = () => {
-  //   setResult(null);
-  //   setError('');
-  //   setLoading(false);
-  //   onClose();
-  // };
 
-  // return (
-  //   <Dialog open={open} onClose={handleClose} maxWidth={result ? "md" : "sm"} fullWidth>
-  //     <DialogTitle>
-  //       {result ? 'Comparison Result' : 'Confirm Details for Comparison'}
-  //       <IconButton
-  //         aria-label="close"
-  //         onClick={handleClose}
-  //         sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
-  //       >
-  //         <CloseIcon />
-  //       </IconButton>
-  //     </DialogTitle>
-  //     <DialogContent>
-  //       {loading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>}
-  //       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
-  //       {result && (
-  //         <ComparisonResultTable result={result.comparison_results || []} />
-  //       )}
-  //       {!loading && !result && (
-  //         <Stack spacing={2} sx={{ mt: 1 }}>
-  //           {fields.map(field => (
-  //             <TextField
-  //               key={field}
-  //               label={field}
-  //               fullWidth
-  //               variant="outlined"
-  //               value={data.comparisonData[field] || ''}
-  //               onChange={(e) => onDataChange(field, e.target.value)}
-  //             />
-  //           ))}
-  //         </Stack>
-  //       )}
-  //     </DialogContent>
-  //     <DialogActions>
-  //       <Button onClick={handleClose}>Close</Button>
-  //       {!result && (
-  //         <Button onClick={handleCompare} variant="contained" disabled={loading}>
-  //           Compare
-  //         </Button>
-  //       )}
-  //       {result && (
-  //         <Button onClick={handleCompare} variant="contained" disabled={loading}>
-  //           Reload
-  //         </Button>
-  //       )}
-
-  //     </DialogActions>
-  //   </Dialog>
-  // );
-};
-
-const ComparisonResultTable = ({ result }) => {
-  if (!result || result.length === 0) {
-    return <Alert severity="success" sx={{ mt: 2 }}>No differences found.</Alert>;
-  }
-  return (
-    <TableContainer component={Paper} sx={{ mt: 2 }}>
-      <Table stickyHeader aria-label="comparison results table">
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 'bold' }}>Field</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Value from HTML</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Value from PDF</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }} align="center">Status</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {result.map((item, index) => (
-            <TableRow key={index} hover>
-              <TableCell>{item.field}</TableCell>
-              <TableCell>{item.html_value}</TableCell>
-              <TableCell>{item.pdf_value}</TableCell>
-              <TableCell align="center">
-                {item.status === 'Match' ? (
-                  <CheckCircleOutlineIcon color="success" />
-                ) : (
-                  <ErrorOutlineIcon color="error" />
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-};
-
-const getComparisonStyle = (field, extractedValue, comparisonValue) => {
-  if (!comparisonValue) {
-    return {};
-  }
-  const areDifferent = String(extractedValue).trim() !== String(comparisonValue).trim();
-  if (areDifferent) {
-    return { border: '1px solid red' };
-  }
-  return {};
-};
-
-const playSound = (soundType) => {
-  let soundFile;
-  if (soundType === 'success') {
-    soundFile = successSoundFile;
-  } else if (soundType === 'error') {
-    soundFile = errorSoundFile;
-  } else if (soundType === 'upload') {
-    soundFile = uploadSoundFile;
-  } else {
-    return;
-  }
-
-
-  try {
-    const audio = new Audio(soundFile);
-    audio.play().catch(e => console.error("Error playing sound:", e));
-
-  } catch (e) {
-    console.error("Error playing sound:", e);
-  }
-};
+};;
 
 function Subject() {
   const [data, setData] = useState({});
@@ -1138,7 +198,9 @@ function Subject() {
   const [isNeighborhoodBoundariesRevisionLangDialogOpen, setNeighborhoodBoundariesRevisionLangDialogOpen] = useState(false);
   const [isOtherLandUseRevisionLangDialogOpen, setOtherLandUseRevisionLangDialogOpen] = useState(false);
   const [isZoningComplianceRevisionLangDialogOpen, setZoningComplianceRevisionLangDialogOpen] = useState(false);
+  const [isAreaRevisionLangDialogOpen, setAreaRevisionLangDialogOpen] = useState(false);
 
+  const [isFemaHazardRevisionLangDialogOpen, setFemaHazardRevisionLangDialogOpen] = useState(false);
   const [isRevisionLangDialogOpen, setRevisionLangDialogOpen] = useState(false);
   const [isContractRevisionLangDialogOpen, setContractRevisionLangDialogOpen] = useState(false);
   const [isNeighborhoodRevisionLangDialogOpen, setNeighborhoodRevisionLangDialogOpen] = useState(false);
@@ -1334,15 +396,15 @@ function Subject() {
 
           if (result && result.isError) {
             errors.push([sectionName, `${fieldName}${saleName ? ` (${saleName})` : ''}`, result.message]);
-            break; // Stop on first error for this field
+            break;
           }
         } catch (e) {
-          // console.error(`Error validating ${fieldName} in ${sectionName}:`, e);
+
         }
       }
     };
 
-    // Iterate over all sections and fields in the data
+
     Object.keys(allData).forEach(sectionKey => {
       const sectionData = allData[sectionKey];
       if (typeof sectionData === 'object' && sectionData !== null) {
@@ -1359,7 +421,7 @@ function Subject() {
       }
     });
 
-    // Special handling for Sales Comparison Grid
+
     comparableSales.forEach(saleName => {
       if (allData[saleName]) {
         Object.keys(allData[saleName]).forEach(fieldKey => {
@@ -1521,8 +583,7 @@ function Subject() {
       } else {
         const shortAddresses = validAddresses.map(getFirstThreeWords);
         const uniqueShortAddresses = new Set(shortAddresses);
-        // The logic here seems to check if there's at least one duplicate, not if all are the same.
-        // Sticking to the UI logic. For full consistency, it should be uniqueShortAddresses.size === 1.
+
         if (uniqueShortAddresses.size < shortAddresses.length) {
           isConsistent = true;
         }
@@ -1612,7 +673,7 @@ function Subject() {
         });
 
         setComparisonData(extractedData);
-        // setIsComparisonDialogOpen(true); // Prevent automatic dialog opening
+
         setNotification({ open: true, message: 'HTML data extracted. Please review.', severity: 'success' });
         setIsHtmlReviewLoading(false);
         if (htmlExtractionTimerRef.current) {
@@ -1628,9 +689,7 @@ function Subject() {
     if (file) {
       setContractFile(file);
       setNotification({ open: true, message: 'Contract file uploaded. Click "Review Contract" to compare.', severity: 'success' });
-      // setIsContractCompareOpen(true); // Prevent automatic dialog opening
-      // setContractCompareResult(null);
-      // setContractCompareError('');
+
     }
   };
 
@@ -1710,9 +769,7 @@ function Subject() {
     if (file) {
       setEngagementLetterFile(file);
       setNotification({ open: true, message: 'Engagement letter uploaded. Click "Review Letter" to compare.', severity: 'success' });
-      // setIsEngagementLetterDialogOpen(true); // Prevent automatic dialog opening
-      // setEngagementLetterCompareResult(null);
-      // setEngagementLetterCompareError('');
+
     }
   };
 
@@ -1735,11 +792,6 @@ function Subject() {
     }));
   };
 
-  // const handleReviewHtml = () => {
-  //   setIsComparisonDialogOpen(true);
-  //   // This will open the dialog, and we can trigger the comparison from within the dialog
-  //   // when it opens in the "initial" state.
-  // };
 
   useEffect(() => {
     const checkScrollTop = () => {
@@ -1800,12 +852,7 @@ function Subject() {
 
 
   const subjectFields = [
-    // 'FHA Case No.',
-    // 'Exposure comment',
-    // 'Prior service comment',
-    // 'ANSI',
-    // 'From Type',
-    // 'ADU File Check',
+
     'Property Address',
     'City',
     'County',
@@ -2406,12 +1453,7 @@ function Subject() {
       setFileUploadTimer(0);
       setIsTimerRunning(true);
       extractInitialSections(); // Trigger initial extraction
-      // We will no longer trigger initial extraction on file change.
-      // The user can extract sections via the sidebar.
-      // This prevents errors if the API is not ready or if the user
-      // changes their mind.
-      // If you want to restore this, you can call:
-      // extractInitialSections();
+
     }
   };
 
@@ -2584,9 +1626,7 @@ function Subject() {
   const handleExtract = async (category, sectionId) => {
     setNotification({ open: false, message: '', severity: 'info' });
     if (!validateInputs()) return;
-    // If no category is provided, and the user clicks the main extract button,
-    // we should probably extract everything. For now, we require a section.
-    // This logic can be adjusted based on desired behavior for a "full extract" button.
+
     if (!category && !selectedFile) {
       setNotification({ open: true, message: 'Please select a section from the sidebar to extract.', severity: 'info' }); // This logic can be adjusted based on desired behavior for a "full extract" button.
       return;
@@ -2621,7 +1661,7 @@ function Subject() {
     } finally {
       if (timerRef.current) clearInterval(timerRef.current);
       setLoading(false);
-      // setIsHtmlReviewLoading(false); // Stop HTML review loading when main extraction is done
+
       setLoadingSection(null);
       if (extractionProgress !== 100) setExtractionProgress(0);
     }
@@ -2630,8 +1670,7 @@ function Subject() {
   const extractInitialSections = async () => {
     if (!selectedFile || !selectedFormType) return;
     if (!selectedFile || !selectedFormType) {
-      // Do not proceed if there is no file.
-      // This prevents sending an empty request on page load.
+
       return;
     }
 
@@ -3461,7 +2500,50 @@ function Subject() {
       onNeighborhoodBoundariesRevisionButtonClick: () => setNeighborhoodBoundariesRevisionLangDialogOpen(true),
       onOtherLandUseRevisionButtonClick: () => setOtherLandUseRevisionLangDialogOpen(true),
       onZoningComplianceRevisionButtonClick: () => setZoningComplianceRevisionLangDialogOpen(true),
-
+      onAreaRevisionButtonClick: () => setAreaRevisionLangDialogOpen(true),
+      onAdverseSiteConditionsRevisionButtonClick: () => {
+        const revisionText = "Please revise the checkbox marked for the question ‘Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)?’ in the site section, as it does not support the comment noted for the same.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: '‘Are there any adverse copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onSanitarySewerButtonClick: () => {
+        const revisionText = "Site section: The ‘Sanitary Sewer’ is marked as public; however, it is noted as septic. Please revise.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Sanitary Sewer revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onAlleyClick: () => {
+        const revisionText = "Photos indicate the subject has an ‘Alley’; however, the ‘Alley’ box is not marked in the Site section. Please revise.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Alley revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onHighestAndBestUseClick: () => {
+        const revisionText = "The question is, ‘Is the highest and best use of the subject property as improved (or as proposed per plans and specifications) the present use?’ is marked as No; however, the description is not provided; please revise/describe.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Highest and Best Use revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onLegalDescriptionUseClick: () => {
+        const revisionText = "Please have the ‘Legal Description’ noted in the report.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Legal Description revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onFemaHazardRevisionButtonClick: () => {
+        const revisionText = "‘FEMA Special Flood Hazard Area' marked as ‘NO’ ; however, FEMA Flood Zone is AE; please revise."
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'FEMA Special Flood Hazard Area copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onOffSiteImprovementsButtonClick: () => {
+        const revisionText = "On page 1, please check a box for 'Are the utilities and/or off-site improvements typical for the market area?'";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Off-Site Improvements revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      //  setFemaHazardRevisionLangDialogOpen(true),
       on1007RevisionButtonClick: () => set1007RevisionLangDialogOpen(true)
     };
 
@@ -3595,11 +2677,7 @@ function Subject() {
                     />
                   </Button>
                 </Tooltip>
-                {/* {htmlFile && (
-                  <Button variant="contained" onClick={handleReviewHtml} sx={{ ml: 1 }}>
-                    Review HTML
-                  </Button>
-                )} */}
+
 
 
 
@@ -3628,12 +2706,10 @@ function Subject() {
                     Review Contract
                   </Button>
                 )}
-                {/* {contractFile && <Typography variant="caption" sx={{ ml: 1 }}>{contractFile.name}</Typography>} */}
 
 
               </Grid>
 
-              {/* Optional Engagement Letter */}
               <Grid item>
                 <Tooltip title="Click to upload an optional engagement letter for comparison">
                   <Button variant="outlined" onClick={() => engagementLetterFileInputRef.current.click()}>
@@ -3669,18 +2745,7 @@ function Subject() {
                   </Select>
                 </FormControl>
               </Grid>
-              {/* Fast App Button */}
-              {/* <Grid item>
-                <Button
 
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => setIsComparisonDialogOpen(true)}
-                >
-                  Fast App
-                </Button>
-              </Grid> */}
-              {/* Generate PDF Button */}
               <Grid item>
                 <Button
                   variant="outlined"
@@ -4475,6 +3540,39 @@ function Subject() {
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
         }}
       />
+      <RevisionLanguageDialog
+        open={isAreaRevisionLangDialogOpen}
+        onClose={() => setAreaRevisionLangDialogOpen(false)}
+        title="Area Revision Language"
+        prompts={[
+          "Please mention ac. or sf for site area in the site section."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+      <RevisionLanguageDialog
+        open={isFemaHazardRevisionLangDialogOpen}
+        onClose={() => setFemaHazardRevisionLangDialogOpen(false)}
+        title="FEMA Hazard Revision Language"
+        prompts={[
+          "‘FEMA Special Flood Hazard Area' marked as ‘NO’ ; however, FEMA Flood Zone is AE; please revise."
+        ]}
+        onCopy={(text) => {
+          navigator.clipboard.writeText(text);
+          setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
+        }}
+        onAddToNotepad={(text) => {
+          setNotes(prev => `${prev}\n- ${text}`);
+          setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
+        }}
+      />
+
 
 
     </ThemeProvider >

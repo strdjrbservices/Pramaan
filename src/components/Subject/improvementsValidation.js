@@ -138,8 +138,8 @@ export const checkPropertyType = (field, text) => {
 
 export const checkConstructionStatusAndReconciliation = (field, data) => {
     if (field !== 'Existing/Proposed/Under Const.') return null;
-    const status = String(data['Existing/Proposed/Under Const.'] || '').trim().toLowerCase();
-    const reconciliationField = "This appraisal is made \"as is\", subject to completion per plans and specifications on the basis of a hypothetical condition that the improvements have been completed, subject to the following repairs or alterations on the basis of a hypothetical condition that the repairs or alterations have been completed, or subject to the following required inspection based on the extraordinary assumption that the condition or deficiency does not require alteration or repair:";
+    const status = ['existing', 'proposed', 'under const.'];
+    const reconciliationField = 'This appraisal is made "as is", subject to completion per plans and specifications on the basis of a hypothetical condition that the improvements have been completed, subject to the following repairs or alterations on the basis of a hypothetical condition that the repairs or alterations have been completed, or subject to the following required inspection based on the extraordinary assumption that the condition or deficiency does not require alteration or repair:';
     const reconciliationValue = String(data[reconciliationField] || '').toLowerCase();
     const validStatuses = ['existing', 'proposed', 'under const.'];
     const isStatusValid = validStatuses.some(validStatus => status.includes(validStatus));
