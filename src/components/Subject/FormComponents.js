@@ -45,7 +45,7 @@ const HighlightKeywords = ({ text, keywords }) => {
   );
 };
 
-export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation, onAddRevision, onAddBorrowerRevision, onAddEmptyBorrowerRevision, onAddLegalDescRevision, onPropertyAddressRevisionButtonClick, onLenderClientRevisionButtonClick, onAddAssignmentTypeRevision, onAddPropertyRightsRevision, onHoaRevisionButtonClick, onAddOwnerOfRecordRevision, onLenderClientAddressRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick, onAreaRevisionButtonClick, onAlleyClick, onLegalDescriptionUseClick, onOffSiteImprovementsClick, onHighestAndBestUseClick, onSanitarySewerButtonClick, onAdverseSiteConditionsRevisionButtonClick, onFemaHazardRevisionButtonClick }) => {
+export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation, onAddRevision, onAddBorrowerRevision, onAddEmptyBorrowerRevision, onAddLegalDescRevision, onPropertyAddressRevisionButtonClick, onLenderClientRevisionButtonClick, onAddAssignmentTypeRevision, onAddPropertyRightsRevision, onHoaRevisionButtonClick, onAddOwnerOfRecordRevision, onLenderClientAddressRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick, onAreaRevisionButtonClick, onAlleyClick, onLegalDescriptionUseClick, onOffSiteImprovementsClick, onHighestAndBestUseClick,onNeighborhoodNameRevisionButtonClick,onAssessorsParcelNumberRevisionButtonClick, onCensusTractRevisionButtonClick,  onStateButtonClick, onSanitarySewerButtonClick, onAdverseSiteConditionsRevisionButtonClick, onFemaHazardRevisionButtonClick }) => {
   const isEditing = isEditable && editingField && JSON.stringify(editingField) === JSON.stringify(fieldPath);
 
   const handleKeyDown = (e) => {
@@ -641,6 +641,40 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
           </IconButton>
         </Tooltip>
       )}
+      {fieldPath.includes('State') && onStateButtonClick && (
+        <Tooltip title="State">
+          <IconButton onClick={(e) => { e.stopPropagation(); onStateButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}> 
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Census Tract') && onCensusTractRevisionButtonClick && (
+        <Tooltip title="Census Tract Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); onCensusTractRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {
+        fieldPath.includes("Assessor's Parcel #") && onAssessorsParcelNumberRevisionButtonClick && (
+          <Tooltip title="Assessor's Parcel Number">
+            <IconButton onClick={(e) => { e.stopPropagation(); onAssessorsParcelNumberRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>  
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Neighborhood Name') && onNeighborhoodNameRevisionButtonClick && (
+          <Tooltip title="Neighborhood Name">
+            <IconButton onClick={(e) => { e.stopPropagation(); onNeighborhoodNameRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+
+      
       {fieldPath.includes('Is the highest and best use of subject property as improved (or as proposed per plans and specifications) the present use?') && onHighestAndBestUseClick && (
         <Tooltip title="Highest and Best Use">
           <IconButton onClick={(e) => { e.stopPropagation(); onHighestAndBestUseClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
@@ -869,7 +903,7 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
   );
 };
 
-export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondary', usePre = false, extractionAttempted, onDataChange, editingField, setEditingField, highlightedFields = [], allData, loading, loadingSection, manualValidations, handleManualValidation, onRevisionButtonClick, onLenderClientRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick, onAlleyClick, onAreaRevisionButtonClick, onOffSiteImprovementsClick, onLegalDescriptionUseClick, onHighestAndBestUseClick, onSanitarySewerButtonClick, onAdverseSiteConditionsRevisionButtonClick, onFemaHazardRevisionButtonClick }) => {
+export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondary', usePre = false, extractionAttempted, onDataChange, editingField, setEditingField, highlightedFields = [], allData, loading, loadingSection, manualValidations, handleManualValidation, onRevisionButtonClick, onLenderClientRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick, onAlleyClick, onAreaRevisionButtonClick, onOffSiteImprovementsClick, onLegalDescriptionUseClick, onHighestAndBestUseClick, onNeighborhoodNameRevisionButtonClick,onCensusTractRevisionButtonClick,  onStateButtonClick, onSanitarySewerButtonClick, onAdverseSiteConditionsRevisionButtonClick, onFemaHazardRevisionButtonClick, onAssessorsParcelNumberRevisionButtonClick }) => {
 
   const renderNeighborhoodTotal = () => {
     if (id !== 'neighborhood-section' || !data) return null;
@@ -965,6 +999,10 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
           allData={allData}
           manualValidations={manualValidations}
           handleManualValidation={handleManualValidation}
+          onStateButtonClick={field === 'State' ? onStateButtonClick : undefined}
+          onAssessorsParcelNumberRevisionButtonClick={field === "Assessor's Parcel #" ? onAssessorsParcelNumberRevisionButtonClick : undefined}
+          onCensusTractRevisionButtonClick={field === 'Census Tract' ? onCensusTractRevisionButtonClick : undefined}
+          onNeighborhoodNameRevisionButtonClick={field === 'Neighborhood Name' ? onNeighborhoodNameRevisionButtonClick : undefined}
           onLenderClientRevisionButtonClick={field === 'Lender/Client' ? onLenderClientRevisionButtonClick : undefined}
           onDateOfContractRevisionButtonClick={field === 'Date of Contract' ? onDateOfContractRevisionButtonClick : undefined}
           onContractPriceRevisionButtonClick={field === 'Contract Price $' ? onContractPriceRevisionButtonClick : undefined}
@@ -977,6 +1015,7 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
           onFemaHazardRevisionButtonClick={field === 'FEMA Special Flood Hazard Area' ? onFemaHazardRevisionButtonClick : undefined}
           onSanitarySewerButtonClick={field === 'Sanitary Sewer' ? onSanitarySewerButtonClick : undefined}
           onAlleyClick={field === 'Alley' ? onAlleyClick : undefined}
+          
           onLegalDescriptionUseClick={field === 'Legal Description' ? onLegalDescriptionUseClick : undefined}
           onOffSiteImprovementsClick={field === 'Are the utilities and off-site improvements typical for the market area? If No, describe' ? onOffSiteImprovementsClick : undefined}
           onHighestAndBestUseClick={field === 'Is the highest and best use of subject property as improved (or as proposed per plans and specifications) the present use?' ? onHighestAndBestUseClick : undefined}

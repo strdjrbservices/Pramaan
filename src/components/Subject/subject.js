@@ -2408,16 +2408,16 @@ function Subject() {
 
     switch (selectedFormType) {
       case '1004':
-        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data','subject-rent-schedule','rent-schedule-section', 'prior-sale-history-section', 'rent-schedule-reconciliation-section', 'project-site-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
+        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'rent-schedule-section', 'prior-sale-history-section', 'rent-schedule-reconciliation-section', 'project-site-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
         break;
       case '1025':
         visibleSectionIds = baseSections.filter(id => !['rent-schedule-section', 'project-site-section', 'project-info-section', 'rent-schedule-reconciliation-section', 'project-analysis-section', 'unit-descriptions-section', 'market-conditions-section'].includes(id));
         break;
       case '1073':
-        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data','subject-rent-schedule','rent-schedule-section', 'improvements-section', 'site-section', 'rent-schedule-reconciliation-section', 'pud-info-section'].includes(id));
+        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'rent-schedule-section', 'improvements-section', 'site-section', 'rent-schedule-reconciliation-section', 'pud-info-section'].includes(id));
         break;
       case '1007':
-        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data','subject-rent-schedule','project-site-section', 'prior-sale-history-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section', 'pud-info-section', 'market-conditions-section'].includes(id));
+        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'project-site-section', 'prior-sale-history-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section', 'pud-info-section', 'market-conditions-section'].includes(id));
         break;
       default:
 
@@ -2442,6 +2442,30 @@ function Subject() {
       onCertificationRevisionButtonClick: () => setCertificationRevisionLangDialogOpen(true),
       onPropertyAddressRevisionButtonClick: () => setPropertyAddressRevisionLangDialogOpen(true),
       onHoaRevisionButtonClick: () => setHoaRevisionLangDialogOpen(true),
+      onAssessorsParcelNumberRevisionButtonClick: () =>{
+        const revisionText = "Please revise the 'Assessor's Parcel Number' field in the Subject section.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Assessor\'s Parcel Number revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },  
+      onStateButtonClick: () => {
+        const revisionText = "Please revise the 'State' field in the Subject section.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'State revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onNeighborhoodNameRevisionButtonClick: () => {
+        const revisionText = "Please revise the 'Neighborhood Name' field in the Subject section.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Neighborhood Name revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onCensusTractRevisionButtonClick: () => {
+        const revisionText = "Please revise the 'Census Tract' field in the Subject section.";
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: 'Census Tract revision text copied to clipboard!', severity: 'success' });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
       onAddParcelNumberRevision: () => {
 
         const revisionText = "Please have the ‘Assessor's Parcel #’ noted in the subject section.";
@@ -2501,6 +2525,7 @@ function Subject() {
       onOtherLandUseRevisionButtonClick: () => setOtherLandUseRevisionLangDialogOpen(true),
       onZoningComplianceRevisionButtonClick: () => setZoningComplianceRevisionLangDialogOpen(true),
       onAreaRevisionButtonClick: () => setAreaRevisionLangDialogOpen(true),
+
       onAdverseSiteConditionsRevisionButtonClick: () => {
         const revisionText = "Please revise the checkbox marked for the question ‘Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)?’ in the site section, as it does not support the comment noted for the same.";
         navigator.clipboard.writeText(revisionText);
