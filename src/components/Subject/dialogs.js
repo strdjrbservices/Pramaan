@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton,
     TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Paper,
@@ -78,31 +78,56 @@ export const ContractComparisonDialog = ({ open, onClose, onCompare, loading, re
     );
 };
 
-export const RevisionLanguageDialog = ({ open, onClose, title, prompts, onCopy, onAddToNotepad }) => (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent dividers>
-            <List dense>
-                {prompts.map((prompt, index) => (
-                    <ListItem key={index} secondaryAction={
+export const RevisionLanguageDialog = ({ open, onClose, title, prompts, onCopy, onAddToNotepad }) => {
+    const [searchTerm, setSearchTerm] = useState('');
 
-                        <>
-                            <IconButton edge="end" aria-label="copy" onClick={() => onCopy(prompt)}><ContentCopyIcon /></IconButton>
-                            {onAddToNotepad && (
-                                <IconButton edge="end" aria-label="add to notepad" onClick={() => onAddToNotepad(prompt)}><NoteAltIcon /></IconButton>
-                            )}
-                        </>
-                    }>
-                        <ListItemText primary={prompt} />
-                    </ListItem>
-                ))}
-            </List>
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={onClose}>Close</Button>
-        </DialogActions>
-    </Dialog>
-);
+    useEffect(() => {
+        if (open) {
+            setSearchTerm('');
+        }
+    }, [open]);
+
+    const filteredPrompts = prompts.filter(prompt =>
+        prompt.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+            <DialogTitle>{title}</DialogTitle>
+            <DialogContent dividers>
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="search-revision"
+                    label="Search Revision Language"
+                    type="text"
+                    fullWidth
+                    variant="standard"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    sx={{ mb: 2 }}
+                />
+                <List dense>
+                    {filteredPrompts.map((prompt, index) => (
+                        <ListItem key={index} secondaryAction={
+                            <>
+                                <IconButton edge="end" aria-label="copy" onClick={() => onCopy(prompt)}><ContentCopyIcon /></IconButton>
+                                {onAddToNotepad && (
+                                    <IconButton edge="end" aria-label="add to notepad" onClick={() => onAddToNotepad(prompt)}><NoteAltIcon /></IconButton>
+                                )}
+                            </>
+                        }>
+                            <ListItemText primary={prompt} />
+                        </ListItem>
+                    ))}
+                </List>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Close</Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
 
 export const NotepadDialog = ({ open, onClose, notes, onNotesChange }) => {
     const handleSaveNotes = () => {
