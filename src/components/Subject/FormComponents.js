@@ -45,7 +45,7 @@ const HighlightKeywords = ({ text, keywords }) => {
   );
 };
 
-export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation, onAddRevision, onAddBorrowerRevision, onAddEmptyBorrowerRevision, onAddLegalDescRevision, onPropertyAddressRevisionButtonClick, onLenderClientRevisionButtonClick, onAddAssignmentTypeRevision, onAddPropertyRightsRevision, onHoaRevisionButtonClick, onAddOwnerOfRecordRevision, onLenderClientAddressRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick, onAreaRevisionButtonClick, onAlleyClick, onFEMAFloodZoneRevisionButtonClick, onLegalDescriptionUseClick, onOffSiteImprovementsClick, onDimensionsRevisionButtonClick, onHighestAndBestUseClick, onNeighborhoodNameRevisionButtonClick, onViewRevisionButtonClick, onAssessorsParcelNumberRevisionButtonClick, onCensusTractRevisionButtonClick, onStateRevisionButtonClick, onOneWithAccessoryUnitRevisionButtonClick, onDesignStyleRevisionButtonClick,onExteriorWallsRevisionButtonClick, onproposedUseRevisionButtonClick, onSanitarySewerButtonClick, onElectricityRevisionButtonClick, onAdverseSiteConditionsRevisionButtonClick, onFemaHazardRevisionButtonClick, onFEMAMapDateRevisionButtonClick, onShapeRevisionButtonClick, onZoningRevisionButtonClick, onSpecificZoningClassificationRevisionButtonClick, onTopographyRevisionButtonClick, onGasRevisionButtonClick, onSizeRevisionButtonClick, onDensityRevisionButtonClick, ONStreetRevisionButtonClick, ONFEMAMaprevisionButtonClick, onWaterRevisionButtonClick }) => {
+export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation, revisionHandlers = {} }) => {
   const isEditing = isEditable && editingField && JSON.stringify(editingField) === JSON.stringify(fieldPath);
 
   const handleKeyDown = (e) => {
@@ -500,384 +500,1346 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
         </IconButton>
 
       )}
-      {fieldPath.includes('Offered for Sale in Last 12 Months') && (String(value).toLowerCase() === 'no' || String(value).toLowerCase() === 'yes' || String(value).toLowerCase() === '') && onAddRevision && (
+      {fieldPath.includes('Offered for Sale in Last 12 Months') && (String(value).toLowerCase() === 'no' || String(value).toLowerCase() === 'yes' || String(value).toLowerCase() === '') && revisionHandlers.onAddRevision && (
         <Tooltip title="Add revision for 'Offered for Sale'">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAddRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAddRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('Borrower') && !value && onAddEmptyBorrowerRevision && (
+      {fieldPath.includes('Borrower') && !value && revisionHandlers.onAddEmptyBorrowerRevision && (
         <Tooltip title="Please add the borrower's to the report.">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAddEmptyBorrowerRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAddEmptyBorrowerRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('Borrower') && value && onAddBorrowerRevision && (
+      {fieldPath.includes('Borrower') && value && revisionHandlers.onAddBorrowerRevision && (
 
         <Tooltip title="Add revision for Borrower's middle initial">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAddBorrowerRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAddBorrowerRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('Legal Description') && String(value).toLowerCase().includes('see attached addendum') && onAddLegalDescRevision && (
+      {fieldPath.includes('Legal Description') && String(value).toLowerCase().includes('see attached addendum') && revisionHandlers.onAddLegalDescRevision && (
         <Tooltip title="Legal Description">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAddLegalDescRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAddLegalDescRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('Property Address') && onPropertyAddressRevisionButtonClick && (
+      {fieldPath.includes('Property Address') && revisionHandlers.onPropertyAddressRevisionButtonClick && (
         <Tooltip title="Address Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onPropertyAddressRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onPropertyAddressRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
 
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
 
-      {fieldPath.includes('Lender/Client') && onLenderClientRevisionButtonClick && (
+      {fieldPath.includes('Lender/Client') && revisionHandlers.onLenderClientRevisionButtonClick && (
         <Tooltip title="Lender/Client Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onLenderClientRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onLenderClientRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('Assignment Type') && onAddAssignmentTypeRevision && (
+      {fieldPath.includes('Assignment Type') && revisionHandlers.onAddAssignmentTypeRevision && (
         <Tooltip title="Revise assignment type to refinance transaction.">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAddAssignmentTypeRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAddAssignmentTypeRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('Property Rights Appraised') && onAddPropertyRightsRevision && (
+      {fieldPath.includes('Property Rights Appraised') && revisionHandlers.onAddPropertyRightsRevision && (
         <Tooltip title="Revise Property Rights Appraised to fee simple.">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAddPropertyRightsRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAddPropertyRightsRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('HOA $') && onHoaRevisionButtonClick && (
+      {fieldPath.includes('HOA $') && revisionHandlers.onHoaRevisionButtonClick && (
         <Tooltip title="HOA Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onHoaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Owner of Public Record') && onAddOwnerOfRecordRevision && (
-        <Tooltip title="Add revision for Owner of Public Record">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAddOwnerOfRecordRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Address (Lender/Client)') && onLenderClientAddressRevisionButtonClick && (
-        <Tooltip title="Lender/Client Address Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onLenderClientAddressRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Contract Price $') && onContractPriceRevisionButtonClick && (
-        <Tooltip title="Contract Price Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onContractPriceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Date of Contract') && onDateOfContractRevisionButtonClick && (
-        <Tooltip title="Date of Contract Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onDateOfContractRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?') && onFinancialAssistanceRevisionButtonClick && (
-        <Tooltip title="Financial Assistance Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onFinancialAssistanceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Neighborhood Boundaries') && onNeighborhoodBoundariesRevisionButtonClick && (
-        <Tooltip title="Neighborhood Boundaries Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onNeighborhoodBoundariesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Other') && onOtherLandUseRevisionButtonClick && (
-        <Tooltip title="Other Land Use Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onOtherLandUseRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Zoning Compliance') && onZoningComplianceRevisionButtonClick && (
-        <Tooltip title="Zoning Compliance Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onZoningComplianceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Area') && onAreaRevisionButtonClick && (
-        <Tooltip title="Area Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAreaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onHoaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
       {
-        fieldPath.includes('Size') && onSizeRevisionButtonClick && (
-          <Tooltip title="Size Revisions">
-            <IconButton onClick={(e) => { e.stopPropagation(); onSizeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {fieldPath.includes('Density') && onDensityRevisionButtonClick && (
-        <Tooltip title="Density Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onDensityRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Street') && ONStreetRevisionButtonClick && (
-        <Tooltip title="Street Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); ONStreetRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {
-        fieldPath.includes('FEMA Map #') && ONFEMAMaprevisionButtonClick && (
-          <Tooltip title="FEMA Map # Revisions">
-            <IconButton onClick={(e) => { e.stopPropagation(); ONFEMAMaprevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+        fieldPath.includes('Units') && revisionHandlers.ONUnitsRevisionButtonClick && (
+          <Tooltip title="Units Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONUnitsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )
       }
       {
-        fieldPath.includes('Water') && onWaterRevisionButtonClick && (
-          <Tooltip title="Water Revisions">
-            <IconButton onClick={(e) => { e.stopPropagation(); onWaterRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {fieldPath.includes('Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe') && onAdverseSiteConditionsRevisionButtonClick && (
-        <Tooltip title="Adverse Site Conditions Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAdverseSiteConditionsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Sanitary Sewer') && onSanitarySewerButtonClick && (
-        <Tooltip title="Sanitary Sewer Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onSanitarySewerButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('State') && onStateRevisionButtonClick && (
-        <Tooltip title="State">
-          <IconButton onClick={(e) => { e.stopPropagation(); onStateRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {
-        fieldPath.includes('Design (Style)') && onDesignStyleRevisionButtonClick && (
-          <Tooltip title="Design (Style)">
-            <IconButton onClick={(e) => { e.stopPropagation(); onDesignStyleRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+        fieldPath.includes('Zip Code') && revisionHandlers.ONZipCodeRevisionButtonClick && (
+          <Tooltip title="Zip Code Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONZipCodeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )
       }
       {
-        fieldPath.includes('Exterior Walls (Material/Condition)') && onExteriorWallsRevisionButtonClick && (
-          <Tooltip title="Exterior Walls (Material/Condition)">
-            <IconButton onClick={(e) => { e.stopPropagation(); onExteriorWallsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {
-        fieldPath.includes('Existing/Proposed/Under Const.') && onproposedUseRevisionButtonClick && (
-          <Tooltip title="Existing/Proposed/Under Const.">
-            <IconButton onClick={(e) => { e.stopPropagation(); onproposedUseRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {
-        fieldPath.includes('One with Accessory Unit') && onOneWithAccessoryUnitRevisionButtonClick && (
-          <Tooltip title="One with Accessory Unit">
-            <IconButton onClick={(e) => { e.stopPropagation(); onOneWithAccessoryUnitRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-
-      {fieldPath.includes('Census Tract') && onCensusTractRevisionButtonClick && (
-        <Tooltip title="Census Tract Revisions"
-
-        >
-          <IconButton onClick={(e) => { e.stopPropagation(); onCensusTractRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {
-        fieldPath.includes("Assessor's Parcel #") && onAssessorsParcelNumberRevisionButtonClick && (
-          <Tooltip title="Assessor's Parcel Number">
-            <IconButton onClick={(e) => { e.stopPropagation(); onAssessorsParcelNumberRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {
-        fieldPath.includes('Neighborhood Name') && onNeighborhoodNameRevisionButtonClick && (
-          <Tooltip title="Neighborhood Name">
-            <IconButton onClick={(e) => { e.stopPropagation(); onNeighborhoodNameRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {fieldPath.includes('Is the highest and best use of subject property as improved (or as proposed per plans and specifications) the present use?') && onHighestAndBestUseClick && (
-        <Tooltip title="Highest and Best Use">
-          <IconButton onClick={(e) => { e.stopPropagation(); onHighestAndBestUseClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Legal Description') && onLegalDescriptionUseClick && (
-        <Tooltip title="Add revision for Legal Description">
-          <IconButton onClick={e => { e.stopPropagation(); onLegalDescriptionUseClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {fieldPath.includes('Are the utilities and off-site improvements typical for the market area?') && onOffSiteImprovementsClick && (
-        <Tooltip title="Are the utilities and off-site improvements typical for the market area?">
-          <IconButton onClick={e => { e.stopPropagation(); onOffSiteImprovementsClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {
-        fieldPath.includes('Dimensions') && onDimensionsRevisionButtonClick && (
-          <Tooltip title="Dimensions">
-            <IconButton onClick={(e) => { e.stopPropagation(); onDimensionsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {
-        fieldPath.includes('Electricity') && onElectricityRevisionButtonClick && (
-          <Tooltip title="Electricity">
-            <IconButton onClick={(e) => { e.stopPropagation(); onElectricityRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {
-        fieldPath.includes('FEMA Map Date') && onFEMAMapDateRevisionButtonClick && (
-          <Tooltip title="FEMA Map Date">
-            <IconButton onClick={(e) => { e.stopPropagation(); onFEMAMapDateRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )
-      }
-      {
-        fieldPath.includes('Shape') && onShapeRevisionButtonClick && (
-          <Tooltip title="Shape">
-            <IconButton onClick={(e) => { e.stopPropagation(); onShapeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+        fieldPath.includes('Report data source(s) used, offering price(s), and date(s)') && revisionHandlers.ONReportdataRevisionButtonClick && (
+          <Tooltip title="Report data source(s) used, offering price(s), and date(s) Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONReportdataRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )
       }{
-        fieldPath.includes('Zoning Description') && onZoningRevisionButtonClick && (
-          <Tooltip title="Zoning Description">
-            <IconButton onClick={(e) => { e.stopPropagation(); onZoningRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-              <PlaylistAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )}
-      {
-        fieldPath.includes('Specific Zoning Classification') && onSpecificZoningClassificationRevisionButtonClick && (
-          <Tooltip title="Specific Zoning Classification">
-            <IconButton onClick={(e) => { e.stopPropagation(); onSpecificZoningClassificationRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+        fieldPath.includes('Map Reference') && revisionHandlers.ONMapReferencerevisionButtonClick && (
+          <Tooltip title="Map Reference Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONMapReferencerevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )
       }
       {
-        fieldPath.includes('Gas') && onGasRevisionButtonClick && (
-          <Tooltip title="Gas">
-            <IconButton onClick={(e) => { e.stopPropagation(); onGasRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+        fieldPath.includes('There are ____ comparable properties currently offered for sale in the subject neighborhood ranging in price from$ ___to $___') && revisionHandlers.ONComparablePropertiesRevisionButtonClick && (
+          <Tooltip title="Comparable Properties Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONComparablePropertiesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )
       }
       {
-        fieldPath.includes('Topography') && onTopographyRevisionButtonClick && (
-          <Tooltip title="Topography">
-            <IconButton onClick={(e) => { e.stopPropagation(); onTopographyRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+        fieldPath.includes('There are ___comparable sales in the subject neighborhoodwithin the past twelvemonths ranging in sale price from$___ to $____') && revisionHandlers.ONcomparablepropertyrevisionButtonClick && (
+          <Tooltip title="Comparable Sales Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONcomparablepropertyrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )
       }
-      {fieldPath.includes('Alley') && onAlleyClick && (
-        <Tooltip title="Alley">
-          <IconButton onClick={(e) => { e.stopPropagation(); onAlleyClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
-            <PlaylistAddIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
       {
-        fieldPath.includes('FEMA Flood Zone') && onFEMAFloodZoneRevisionButtonClick && (
-          <Tooltip title="FEMA Flood Zone">
-            <IconButton onClick={(e) => { e.stopPropagation(); onFEMAFloodZoneRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+        fieldPath.includes('Occupant') && revisionHandlers.ONOccupantRevisionButtonClick && (
+          <Tooltip title="Occupant Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONOccupantRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('PUD') && revisionHandlers.ONPUDRevisionButtonClick && (
+          <Tooltip title="PUD Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONPUDRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )
       }
 
-      {fieldPath.includes('FEMA Special Flood Hazard Area') && onFemaHazardRevisionButtonClick && (
+      {
+        fieldPath.includes('City') && revisionHandlers.ONCityRevisionButtonClick && (
+          <Tooltip title="City Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONCityRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {fieldPath.includes('Owner of Public Record') && revisionHandlers.onAddOwnerOfRecordRevision && (
+        <Tooltip title="Add revision for Owner of Public Record">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAddOwnerOfRecordRevision(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Address (Lender/Client)') && revisionHandlers.onLenderClientAddressRevisionButtonClick && (
+        <Tooltip title="Lender/Client Address Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onLenderClientAddressRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Contract Price $') && revisionHandlers.onContractPriceRevisionButtonClick && (
+        <Tooltip title="Contract Price Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onContractPriceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Date of Contract') && revisionHandlers.onDateOfContractRevisionButtonClick && (
+        <Tooltip title="Date of Contract Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDateOfContractRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?') && revisionHandlers.onFinancialAssistanceRevisionButtonClick && (
+        <Tooltip title="Financial Assistance Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFinancialAssistanceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Neighborhood Boundaries') && revisionHandlers.onNeighborhoodBoundariesRevisionButtonClick && (
+        <Tooltip title="Neighborhood Boundaries Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onNeighborhoodBoundariesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Other') && revisionHandlers.onOtherLandUseRevisionButtonClick && (
+        <Tooltip title="Other Land Use Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onOtherLandUseRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Zoning Compliance') && revisionHandlers.onZoningComplianceRevisionButtonClick && (
+        <Tooltip title="Zoning Compliance Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onZoningComplianceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Area') && revisionHandlers.onAreaRevisionButtonClick && (
+        <Tooltip title="Area Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAreaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {
+        fieldPath.includes('Size') && revisionHandlers.onSizeRevisionButtonClick && (
+          <Tooltip title="Size Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onSizeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {fieldPath.includes('Density') && revisionHandlers.onDensityRevisionButtonClick && (
+        <Tooltip title="Density Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDensityRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Street') && revisionHandlers.ONStreetRevisionButtonClick && (
+        <Tooltip title="Street Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONStreetRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {
+        fieldPath.includes('FEMA Map #') && revisionHandlers.ONFEMAMaprevisionButtonClick && (
+          <Tooltip title="FEMA Map # Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONFEMAMaprevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Special Assessments $') && revisionHandlers.ONSpecialAssessmentsRevisionButtonClick && (
+          <Tooltip title="Special Assessments $ Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONSpecialAssessmentsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Water') && revisionHandlers.onWaterRevisionButtonClick && (
+          <Tooltip title="Water Revisions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onWaterRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {fieldPath.includes('Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe') && revisionHandlers.onAdverseSiteConditionsRevisionButtonClick && (
+        <Tooltip title="Adverse Site Conditions Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAdverseSiteConditionsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Sanitary Sewer') && revisionHandlers.onSanitarySewerButtonClick && (
+        <Tooltip title="Sanitary Sewer Revisions">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onSanitarySewerButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('State') && revisionHandlers.onStateRevisionButtonClick && (
+        <Tooltip title="State">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onStateRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('R.E. Taxes $') && revisionHandlers.onRETaxesRevisionButtonClick && (
+        <Tooltip title="R.E. Taxes $">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onRETaxesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {
+        fieldPath.includes('County') && revisionHandlers.ONCountyRevisionButtonClick && (
+          <Tooltip title="County">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONCountyRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Tax Year') && revisionHandlers.ONTaxYearRevisionButtonClick && (
+          <Tooltip title="Tax Year">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONTaxYearRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+
+      {
+        fieldPath.includes('Design (Style)') && revisionHandlers.onDesignStyleRevisionButtonClick && (
+          <Tooltip title="Design (Style)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDesignStyleRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Roof Surface (Material/Condition)') && revisionHandlers.onRoofRevisionButtonClick && (
+          <Tooltip title="Roof Surface (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onRoofRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Heating Type') && revisionHandlers.onHeatingSystemRevisionButtonClick && (
+          <Tooltip title="Heating Type">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onHeatingSystemRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Window Type (Material/Condition)') && revisionHandlers.onwindowRevisionButtonClick && (
+          <Tooltip title="Window Type (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onwindowRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Fuel') && revisionHandlers.onFuelRevisionButtonClick && (
+          <Tooltip title="Fuel">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFuelRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Exterior Walls (Material/Condition)') && revisionHandlers.onExteriorWallsRevisionButtonClick && (
+          <Tooltip title="Exterior Walls (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onExteriorWallsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Storm Sash/Insulated') && revisionHandlers.onStormSashInsulatedRevisionButtonClick && (
+          <Tooltip title="Storm Sash/Insulated">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onStormSashInsulatedRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }{
+        fieldPath.includes('Floors (Material/Condition)') && revisionHandlers.onFloorsRevisionButtonClick && (
+          <Tooltip title="Floors (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFloorsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Window Type (Material/Condition)') && revisionHandlers.onWindowTypeRevisionButtonClick && (
+          <Tooltip title="Window Type (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onWindowTypeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Walls (Material/Condition)') && revisionHandlers.onWallsRevisionButtonClick && (
+          <Tooltip title="Walls (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onWallsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Bath Floor (Material/Condition)') && revisionHandlers.onbathfloorRevisionButtonClick && (
+          <Tooltip title="Bath Floor (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onbathfloorRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Bath Wainscot (Material/Condition)') && revisionHandlers.onbsthwainscotRevisionButtonClick && (
+          <Tooltip title="Bath Wainscot (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onbsthwainscotRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Cooling Type') && revisionHandlers.onCoolingTypeRevisionButtonClick && (
+          <Tooltip title="Cooling Type">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onCoolingTypeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Fireplace(s) #') && revisionHandlers.onFireplaceRevisionButtonClick && (
+          <Tooltip title="Fireplace(s) #">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFireplaceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Patio/Deck') && revisionHandlers.onPatioDeckrevisionButtonClick && (
+          <Tooltip title="Patio/Deck">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onPatioDeckrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Car Storage') && revisionHandlers.onCarStorageRevisionButtonClick && (
+          <Tooltip title="Car Storage">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onCarStorageRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Carport # of Cars') && revisionHandlers.onCarportRevisionButtonClick && (
+          <Tooltip title="Carport # of Cars">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onCarportRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Driveway Surface') && revisionHandlers.onDrivewaySurfaceRevisionButtonClick && (
+          <Tooltip title="Driveway Surface">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDrivewaySurfaceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Attic') && revisionHandlers.onAtticRevisionButtonClick && (
+          <Tooltip title="Attic">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAtticRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Fence') && revisionHandlers.ONFenceRevisionButtonClick && (
+          <Tooltip title="Fence">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONFenceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Data Source(s)') && revisionHandlers.oncontractDataSourceRevisionButtonClick && (
+          <Tooltip title="Data Source(s)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.oncontractDataSourceRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+
+      }
+      {
+        fieldPath.includes('Location') && revisionHandlers.onLocationRevisionButtonClick && (
+          <Tooltip title="Location">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onLocationRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Growth') && revisionHandlers.ONGrowthRevisionButtonClick && (
+          <Tooltip title="Growth">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONGrowthRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Demand/Supply') && revisionHandlers.ONDemandSupplyRevisionButtonClick && (
+          <Tooltip title="Demand/Supply">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONDemandSupplyRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('One-Unit') && revisionHandlers.ONOneUnitrevisionButtonClick && (
+          <Tooltip title="One-Unit">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONOneUnitrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('2-4 Unit') && revisionHandlers.ONTwoUnitrevisionButtonClick && (
+          <Tooltip title="2-4 Unit">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONTwoUnitrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Commercial') && revisionHandlers.ONCommercialrevisionButtonClick && (
+          <Tooltip title="Commercial">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONCommercialrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('one unit housing price(high,low,pred)') && revisionHandlers.ONONEUNITHOUSINGrevisionButtonClick && (
+          <Tooltip title="one unit housing price(high,low,pred)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONONEUNITHOUSINGrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Neighborhood Description') && revisionHandlers.ONNeighborhoodDescriptionrevisionButtonClick && (
+          <Tooltip title="Neighborhood Description">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONNeighborhoodDescriptionrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+
+      }
+      {
+        fieldPath.includes('Market Conditions:') && revisionHandlers.ONMarketConditionsrevisionButtonClick && (
+          <Tooltip title="Market Conditions:">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONMarketConditionsrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('one unit housing age(high,low,pred)') && revisionHandlers.ONTWOUNITAGErevisionButtonClick && (
+          <Tooltip title="one unit housing age(high,low,pred)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONTWOUNITAGErevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Multi-Family') && revisionHandlers.ONMultiFamilyrevisionButtonClick && (
+          <Tooltip title="Multi-Family">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONMultiFamilyrevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Marketing Time') && revisionHandlers.onMarketingTimeRevisionButtonClick && (
+          <Tooltip title="Marketing Time">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onMarketingTimeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Property Values') && revisionHandlers.onPropertyValuesRevisionButtonClick && (
+          <Tooltip title="Property Values">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onPropertyValuesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Built-Up') && revisionHandlers.onBuiltUpRevisionButtonClick && (
+          <Tooltip title="Built-Up">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onBuiltUpRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('If Yes, report the total dollar amount and describe the items to be paid') && revisionHandlers.ontotaldollaramountRevisionButtonClick && (
+          <Tooltip title="If Yes, report the total dollar amount and describe the items to be paid">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ontotaldollaramountRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('I did did not analyze the contract for sale for the subject purchase transaction. Explain the results of the analysis of the contract for sale or why the analysis was not performed.') && revisionHandlers.oncontractdiddidnotRevisionButtonClick && (
+          <Tooltip title="Contract Analysis">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.oncontractdiddidnotRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+
+      }
+      {
+        fieldPath.includes('Garage Att./Det./Built-in') && revisionHandlers.onGarageRevisionButtonClick && (
+          <Tooltip title="Garage Att./Det./Built-in">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGarageRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Appliances') && revisionHandlers.ONAppliancesRevisionButtonClick && (
+          <Tooltip title="Appliances ">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONAppliancesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Finished area above grade Rooms') && revisionHandlers.onFinishedareaRevisionButtonClick && (
+          <Tooltip title="Finished area above grade Rooms">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFinishedareaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }{
+        fieldPath.includes('Square Feet of Gross Living Area Above Grade') && revisionHandlers.onFinishedAreaAboveGradeBathroomsRevisionButtonClick && (
+          <Tooltip title="Square Feet of Gross Living Area Above Grade">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFinishedAreaAboveGradeBathroomsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Additional features') && revisionHandlers.onAdditionalfeaturesRevisionButtonClick && (
+          <Tooltip title="Additional features">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAdditionalfeaturesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }{
+        fieldPath.includes('Describe the condition of the property') && revisionHandlers.onconditionRevisionButtonClick && (
+          <Tooltip title="Describe the condition of the property">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onconditionRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Are there any physical deficiencies or adverse conditions that affect the livability, soundness, or structural integrity of the property? If Yes, describe') && revisionHandlers.onphysicaldeficienciesRevisionButtonClick && (
+          <Tooltip title="Are there any physical deficiencies or adverse conditions that affect the livability, soundness, or structural integrity of the property? If Yes, describe">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onphysicaldeficienciesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Does the property generally conform to the neighborhood (functional utility, style, condition, use, construction, etc.)?If Yes, describe') && revisionHandlers.onpropertygenerallyconformRevisionButtonClick && (
+          <Tooltip title="Does the property generally conform to the neighborhood (functional utility, style, condition, use, construction, etc.)?If Yes, describe">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onpropertygenerallyconformRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Does the property generally conform to the neighborhood (functional utility, style, condition, use, construction, etc.)?') && revisionHandlers.onpropertygenerallyRevisionButtonClick && (
+          <Tooltip title="Does the property generally conform to the neighborhood (functional utility, style, condition, use, construction, etc.)?">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onpropertygenerallyRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+
+      {
+        fieldPath.includes('Finished area above grade Bath(s)') && revisionHandlers.onFinishedAreaAboveGradeBathroomsRevisionButtonClick && (
+          <Tooltip title="Finished area above grade Bath(s)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFinishedAreaAboveGradeBathroomsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Finished area above grade Bedrooms') && revisionHandlers.onFinishedAreaAboveGradeBedroomsRevisionButtonClick && (
+          <Tooltip title="Finished area above grade Bedrooms">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFinishedAreaAboveGradeBedroomsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Driveway # of Cars') && revisionHandlers.onDrivewayRevisionButtonClick && (
+          <Tooltip title="Driveway # of Cars">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDrivewayRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Pool') && revisionHandlers.onPoolRevisionButtonClick && (
+          <Tooltip title="Pool">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onPoolRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Woodstove(s) #') && revisionHandlers.onWoodstoveRevisionButtonClick && (
+          <Tooltip title="Woodstove(s) #">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onWoodstoveRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Trim/Finish (Material/Condition)') && revisionHandlers.ontrimRevisionButtonClick && (
+          <Tooltip title="Trim/Finish (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ontrimRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Gutters & Downspouts (Material/Condition)') && revisionHandlers.onGuttersDownspoutsRevisionButtonClick && (
+          <Tooltip title="Gutters & Downspouts (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGuttersDownspoutsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Screens') && revisionHandlers.onScreensRevisionButtonClick && (
+          <Tooltip title="Screens">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onScreensRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Foundation Walls (Material/Condition)') && revisionHandlers.onFoundationWallsRevisionButtonClick && (
+          <Tooltip title="Foundation Walls (Material/Condition)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFoundationWallsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Existing/Proposed/Under Const.') && revisionHandlers.onproposedUseRevisionButtonClick && (
+          <Tooltip title="Existing/Proposed/Under Const.">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onproposedUseRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Effective Age (Yrs)') && revisionHandlers.onEffectiveAgeRevisionButtonClick && (
+          <Tooltip title="Effective Age (Yrs)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onEffectiveAgeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Basement Finish %') && revisionHandlers.onBasementFinishRevisionButtonClick && (
+          <Tooltip title="Basement Finish %">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onBasementFinishRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Foundation Type') && revisionHandlers.onFoundationTypeRevisionButtonClick && (
+          <Tooltip title="Foundation Type">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFoundationTypeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Evidence of') && revisionHandlers.onEvidenceofRevisionButtonClick && (
+          <Tooltip title="Evidence of">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onEvidenceofRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Garage # of Cars') && revisionHandlers.onGarageAreaRevisionButtonClick && (
+          <Tooltip title="Garage # of Cars">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGarageAreaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Basement Area sq.ft.') && revisionHandlers.onBasementAreaRevisionButtonClick && (
+          <Tooltip title="Basement Area sq.ft.">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onBasementAreaRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Year Built') && revisionHandlers.onYearBuiltRevisionButtonClick && (
+          <Tooltip title="Year Built">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onYearBuiltRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('# of Stories') && revisionHandlers.onofStoriesRevisionButtonClick && (
+          <Tooltip title="Basement">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onofStoriesRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Type') && revisionHandlers.onTypeRevisionButtonClick && (
+          <Tooltip title="Type">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTypeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('One with Accessory Unit') && revisionHandlers.onOneWithAccessoryUnitRevisionButtonClick && (
+          <Tooltip title="One with Accessory Unit">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onOneWithAccessoryUnitRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {fieldPath.includes('Census Tract') && revisionHandlers.onCensusTractRevisionButtonClick && (
+        <Tooltip title="Census Tract">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onCensusTractRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {
+        fieldPath.includes("Assessor's Parcel #") && revisionHandlers.onAssessorsParcelNumberRevisionButtonClick && (
+          <Tooltip title="Assessor's Parcel Number">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAssessorsParcelNumberRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Neighborhood Name') && revisionHandlers.onNeighborhoodNameRevisionButtonClick && (
+          <Tooltip title="Neighborhood Name">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onNeighborhoodNameRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {fieldPath.includes('Is the highest and best use of subject property as improved (or as proposed per plans and specifications) the present use?') && revisionHandlers.onHighestAndBestUseClick && (
+        <Tooltip title="Highest and Best Use">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onHighestAndBestUseClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Legal Description') && revisionHandlers.onLegalDescriptionUseClick && (
+        <Tooltip title="Add revision for Legal Description">
+          <IconButton onClick={e => { e.stopPropagation(); revisionHandlers.onLegalDescriptionUseClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {fieldPath.includes('Are the utilities and off-site improvements typical for the market area?') && revisionHandlers.onOffSiteImprovementsClick && (
+        <Tooltip title="Are the utilities and off-site improvements typical for the market area?">
+          <IconButton onClick={e => { e.stopPropagation(); revisionHandlers.onOffSiteImprovementsClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {
+        fieldPath.includes('Dimensions') && revisionHandlers.onDimensionsRevisionButtonClick && (
+          <Tooltip title="Dimensions">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDimensionsRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Electricity') && revisionHandlers.onElectricityRevisionButtonClick && (
+          <Tooltip title="Electricity">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onElectricityRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('FEMA Map Date') && revisionHandlers.onFEMAMapDateRevisionButtonClick && (
+          <Tooltip title="FEMA Map Date">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFEMAMapDateRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Shape') && revisionHandlers.onShapeRevisionButtonClick && (
+          <Tooltip title="Shape">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onShapeRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }{
+        fieldPath.includes('Zoning Description') && revisionHandlers.onZoningRevisionButtonClick && (
+          <Tooltip title="Zoning Description">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onZoningRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      {
+        fieldPath.includes('Specific Zoning Classification') && revisionHandlers.onSpecificZoningClassificationRevisionButtonClick && (
+          <Tooltip title="Specific Zoning Classification">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onSpecificZoningClassificationRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Gas') && revisionHandlers.onGasRevisionButtonClick && (
+          <Tooltip title="Gas">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGasRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Topography') && revisionHandlers.onTopographyRevisionButtonClick && (
+          <Tooltip title="Topography">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTopographyRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {fieldPath.includes('Alley') && revisionHandlers.onAlleyClick && (
+        <Tooltip title="Alley">
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onAlleyClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <PlaylistAddIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {
+        fieldPath.includes('FEMA Flood Zone') && revisionHandlers.onFEMAFloodZoneRevisionButtonClick && (
+          <Tooltip title="FEMA Flood Zone">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFEMAFloodZoneRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+
+      {fieldPath.includes('FEMA Special Flood Hazard Area') && revisionHandlers.onFemaHazardRevisionButtonClick && (
         <Tooltip title="FEMA Hazard Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onFemaHazardRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onFemaHazardRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
-      {fieldPath.includes('View') && onViewRevisionButtonClick && (
+      {fieldPath.includes('View') && revisionHandlers.onViewRevisionButtonClick && (
         <Tooltip title="View Revisions">
-          <IconButton onClick={(e) => { e.stopPropagation(); onViewRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+          <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onViewRevisionButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
             <PlaylistAddIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
+
+      {
+        fieldPath.includes('I did did not research the sale or transfer history of the subject property and comparable sales. If not, explain') && revisionHandlers.onGRID1ButtonClick && (
+          <Tooltip title="I did did not research the sale or transfer history of the subject property and comparable sales. If not, explain">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID1ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('My research did did not reveal any prior sales or transfers of the subject property for the three years prior to the effective date of this appraisal.') && revisionHandlers.onGRID2ButtonClick && (
+          <Tooltip title="My research did did not reveal any prior sales or transfers of the subject property for the three years prior to the effective date of this appraisal.">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID2ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Data Source(s) for subject property research') && revisionHandlers.onGRID3ButtonClick && (
+          <Tooltip title="Data Source(s) for subject property research">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID3ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('My research did did not reveal any prior sales or transfers of the comparable sales for the year prior to the date of sale of the comparable sale.') && revisionHandlers.onGRID4ButtonClick && (
+          <Tooltip title="My research did did not reveal any prior sales or transfers of the comparable sales for the year prior to the date of sale of the comparable sale.">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID4ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Data Source(s) for comparable sales research') && revisionHandlers.onGRID5ButtonClick && (
+          <Tooltip title="Data Source(s) for comparable sales research">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID5ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Analysis of prior sale or transfer history of the subject property and comparable sales') && revisionHandlers.onGRID6ButtonClick && (
+          <Tooltip title="Analysis of prior sale or transfer history of the subject property and comparable sales">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID6ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Summary of Sales Comparison Approach') && revisionHandlers.onGRID6ButtonClick && (
+          <Tooltip title="Summary of Sales Comparison Approach">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID6ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+
+      {
+        fieldPath.includes('Indicated Value by Sales Comparison Approach $') && revisionHandlers.onGRID6ButtonClick && (
+          <Tooltip title="Indicated Value by Sales Comparison Approach $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGRID6ButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+
+
+      {/* CERTIFICATION */}
+      {
+        fieldPath.includes('Signature') && revisionHandlers.onSignatureButtonClick && (
+          <Tooltip title="Signature">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onSignatureButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Name') && revisionHandlers.onNameButtonClick && (
+          <Tooltip title="Name">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onNameButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }     {
+        fieldPath.includes('Company Name') && revisionHandlers.onCompanyNameButtonClick && (
+          <Tooltip title="Company Name">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onCompanyNameButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }     {
+        fieldPath.includes('Company Address') && revisionHandlers.onCompanyAddressButtonClick && (
+          <Tooltip title="Company Address">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onCompanyAddressButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }     {
+        fieldPath.includes('Telephone Number') && revisionHandlers.onTelephoneNumberButtonClick && (
+          <Tooltip title="Telephone Number">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTelephoneNumberButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }     {
+        fieldPath.includes('Email Address') && revisionHandlers.onEmailButtonClick && (
+          <Tooltip title="Email Address">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onEmailButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }     {
+        fieldPath.includes('Date of Signature and Report') && revisionHandlers.onDATESignatureButtonClick && (
+          <Tooltip title="Date of Signature and Report">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDATESignatureButtonClick(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }{
+        fieldPath.includes('Effective Date of Appraisal') && revisionHandlers.ONEffectiveDateofAppraisal && (
+          <Tooltip title="Effective Date of Appraisal">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONEffectiveDateofAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('State Certification #') && revisionHandlers.ONSTATE1ofAppraisal && (
+          <Tooltip title="State Certification #">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONSTATE1ofAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('or State License #') && revisionHandlers.ONSTATE1ofAppraisal && (
+          <Tooltip title="or State License #">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONSTATE1ofAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('or Other (describe)') && revisionHandlers.ONSTATE1ofAppraisal && (
+          <Tooltip title="or Other (describe)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONSTATE1ofAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('State #') && revisionHandlers.ONSTATE1ofAppraisal && (
+          <Tooltip title="State #">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONSTATE1ofAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('ADDRESS OF PROPERTY APPRAISED') && revisionHandlers.ONADDRESSOFPROPERTYAppraisal && (
+          <Tooltip title="ADDRESS OF PROPERTY APPRAISED">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONADDRESSOFPROPERTYAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('APPRAISED VALUE OF SUBJECT PROPERTY $') && revisionHandlers.ONAPPRAISEDVALUEofAppraisal && (
+          <Tooltip title="APPRAISED VALUE OF SUBJECT PROPERTY $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONAPPRAISEDVALUEofAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('LENDER/CLIENT Name') && revisionHandlers.ONCLIENTNameAppraisal && (
+          <Tooltip title="LENDER/CLIENT Name">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONCLIENTNameAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Lender/Client Company Name') && revisionHandlers.ONCompanyName && (
+          <Tooltip title="Lender/Client Company Name">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONCompanyName(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Lender/Client Company Address') && revisionHandlers.ONCompanyAddress && (
+          <Tooltip title="Lender/Client Company Address">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONCompanyAddress(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Lender/Client Email Address') && revisionHandlers.ONEmailAddress && (
+          <Tooltip title="Lender/Client Email Address">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONEmailAddress(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('E&O Insurance') && revisionHandlers.ONInsurance && (
+          <Tooltip title="E&O Insurance">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONInsurance(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Policy Period From') && revisionHandlers.ONEffectiveDateofAppraisal && (
+          <Tooltip title="Policy Period From">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONEffectiveDateofAppraisal(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Expiration Date of Certification or License') && revisionHandlers.ONEXP && (
+          <Tooltip title="Expiration Date of Certification or License">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONEXP(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Policy Period To') && revisionHandlers.ONPPT && (
+          <Tooltip title="Policy Period To">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONPPT(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      {
+        fieldPath.includes('License Vaild To') && revisionHandlers.ONLVT && (
+          <Tooltip title="License Vaild To">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONLVT(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+        {
+        fieldPath.includes('LICENSE/REGISTRATION/CERTIFICATION #') && revisionHandlers.ONLVT1 && (
+          <Tooltip title="LICENSE/REGISTRATION/CERTIFICATION #">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONLVT1(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+
     </div>
   );
 
@@ -983,7 +1945,7 @@ export const MarketConditionsTable = ({ id, title, data, onDataChange, editingFi
   );
 };
 
-export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, onDataChange, isEditable, editingField, setEditingField, highlightedFields, allData, comparisonData, getComparisonStyle, loading, loadingSection, contractExtracted, setContractExtracted, handleExtract, manualValidations, handleManualValidation, onRevisionButtonClick, onAddRevision, onAddBorrowerRevision, onAddEmptyBorrowerRevision, onAddLegalDescRevision, onPropertyAddressRevisionButtonClick, onLenderClientRevisionButtonClick, onAddAssignmentTypeRevision, onAddPropertyRightsRevision, onHoaRevisionButtonClick, onAddOwnerOfRecordRevision, onLenderClientAddressRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick }) => {
+export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, onDataChange, isEditable, editingField, setEditingField, highlightedFields, allData, comparisonData, getComparisonStyle, loading, loadingSection, contractExtracted, setContractExtracted, handleExtract, manualValidations, handleManualValidation, onRevisionButtonClick, revisionHandlers }) => {
 
   const renderGridItem = (field) => {
     const isHighlighted = highlightedFields.includes(field);
@@ -1035,8 +1997,7 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
           allData={allData}
           isEditable={isEditable || field === 'Property Address'}
           manualValidations={manualValidations}
-          handleManualValidation={handleManualValidation} onAddRevision={field === 'Offered for Sale in Last 12 Months' ? onAddRevision : undefined} onAddBorrowerRevision={field === 'Borrower' ? onAddBorrowerRevision : undefined} onAddEmptyBorrowerRevision={field === 'Borrower' ? onAddEmptyBorrowerRevision : undefined} onAddLegalDescRevision={field === 'Legal Description' ? onAddLegalDescRevision : undefined} onPropertyAddressRevisionButtonClick={field === 'Property Address' ? onPropertyAddressRevisionButtonClick : undefined} onLenderClientRevisionButtonClick={field === 'Lender/Client' ? onLenderClientRevisionButtonClick : undefined} onAddAssignmentTypeRevision={field === 'Assignment Type' ? onAddAssignmentTypeRevision : undefined} onAddPropertyRightsRevision={field === 'Property Rights Appraised' ? onAddPropertyRightsRevision : undefined} onHoaRevisionButtonClick={field === 'HOA $' ? onHoaRevisionButtonClick : undefined} onAddOwnerOfRecordRevision={field === 'Owner of Public Record' ? onAddOwnerOfRecordRevision : undefined} onLenderClientAddressRevisionButtonClick={field === 'Address (Lender/Client)' ? onLenderClientAddressRevisionButtonClick : undefined} onContractPriceRevisionButtonClick={field === 'Contract Price $' ? onContractPriceRevisionButtonClick : undefined} onDateOfContractRevisionButtonClick={field === 'Date of Contract' ? onDateOfContractRevisionButtonClick : undefined} onFinancialAssistanceRevisionButtonClick={field === 'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?' ? onFinancialAssistanceRevisionButtonClick : undefined}
-
+          handleManualValidation={handleManualValidation} revisionHandlers={revisionHandlers}
         />
       </div>
     );
@@ -1070,7 +2031,7 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
   );
 };
 
-export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondary', usePre = false, extractionAttempted, onDataChange, editingField, setEditingField, highlightedFields = [], allData, loading, loadingSection, manualValidations, handleManualValidation, onRevisionButtonClick, onLenderClientRevisionButtonClick, onContractPriceRevisionButtonClick, onDateOfContractRevisionButtonClick, onFinancialAssistanceRevisionButtonClick, onNeighborhoodBoundariesRevisionButtonClick, onOtherLandUseRevisionButtonClick, onZoningComplianceRevisionButtonClick, onFEMAFloodZoneRevisionButtonClick, onAlleyClick, onAreaRevisionButtonClick, onOffSiteImprovementsClick, onDimensionsRevisionButtonClick, onLegalDescriptionUseClick, onHighestAndBestUseClick, onNeighborhoodNameRevisionButtonClick, onCensusTractRevisionButtonClick, onStateRevisionButtonClick, onSanitarySewerButtonClick, onAdverseSiteConditionsRevisionButtonClick, onFemaHazardRevisionButtonClick, onElectricityRevisionButtonClick, onViewRevisionButtonClick, onAssessorsParcelNumberRevisionButtonClick, onFEMAMapDateRevisionButtonClick, onShapeRevisionButtonClick, onZoningRevisionButtonClick, onSpecificZoningClassificationRevisionButtonClick, onGasRevisionButtonClick, onTopographyRevisionButtonClick, onSizeRevisionButtonClick, onOneWithAccessoryUnitRevisionButtonClick, onDesignStyleRevisionButtonClick, onExteriorWallsRevisionButtonClick,onproposedUseRevisionButtonClick, onDensityRevisionButtonClick, ONStreetRevisionButtonClick, ONFEMAMaprevisionButtonClick, onWaterRevisionButtonClick }) => {
+export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondary', usePre = false, extractionAttempted, onDataChange, editingField, setEditingField, highlightedFields = [], allData, loading, loadingSection, manualValidations, handleManualValidation, onRevisionButtonClick, revisionHandlers }) => {
 
   const renderNeighborhoodTotal = () => {
     if (id !== 'neighborhood-section' || !data) return null;
@@ -1165,50 +2126,7 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
           isEditable={true}
           allData={allData}
           manualValidations={manualValidations}
-          handleManualValidation={handleManualValidation}
-          onStateRevisionButtonClick={field === 'State' ? onStateRevisionButtonClick : undefined}
-          onOneWithAccessoryUnitRevisionButtonClick={field === 'One with Accessory Unit' ? onOneWithAccessoryUnitRevisionButtonClick : undefined}
-          onViewRevisionButtonClick={field === 'View' ? onViewRevisionButtonClick : undefined}
-          onDesignStyleRevisionButtonClick={field === 'Design (Style)' ? onDesignStyleRevisionButtonClick : undefined}
-          onproposedUseRevisionButtonClick={
-            (field === 'Existing/Proposed/Under Const.' ||
-              field === 'Existing/Proposed/Under Construction')
-              ? onproposedUseRevisionButtonClick
-              : undefined
-          }
-          onExteriorWallsRevisionButtonClick={field === 'Exterior Walls (Material/Condition)' ? onExteriorWallsRevisionButtonClick : undefined}
-          onAssessorsParcelNumberRevisionButtonClick={field === "Assessor's Parcel #" ? onAssessorsParcelNumberRevisionButtonClick : undefined}
-          onCensusTractRevisionButtonClick={field === 'Census Tract' ? onCensusTractRevisionButtonClick : undefined}
-          onNeighborhoodNameRevisionButtonClick={field === 'Neighborhood Name' ? onNeighborhoodNameRevisionButtonClick : undefined}
-          onLenderClientRevisionButtonClick={field === 'Lender/Client' ? onLenderClientRevisionButtonClick : undefined}
-          onDateOfContractRevisionButtonClick={field === 'Date of Contract' ? onDateOfContractRevisionButtonClick : undefined}
-          onContractPriceRevisionButtonClick={field === 'Contract Price $' ? onContractPriceRevisionButtonClick : undefined}
-          onFinancialAssistanceRevisionButtonClick={field === 'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?' ? onFinancialAssistanceRevisionButtonClick : undefined}
-          onNeighborhoodBoundariesRevisionButtonClick={field === 'Neighborhood Boundaries' ? onNeighborhoodBoundariesRevisionButtonClick : undefined}
-          onOtherLandUseRevisionButtonClick={field === 'Other' ? onOtherLandUseRevisionButtonClick : undefined}
-          onZoningComplianceRevisionButtonClick={field === 'Zoning Compliance' ? onZoningComplianceRevisionButtonClick : undefined}
-          onDensityRevisionButtonClick={field === 'Density' ? onDensityRevisionButtonClick : undefined}
-          ONStreetRevisionButtonClick={field === 'Street' ? ONStreetRevisionButtonClick : undefined}
-          ONFEMAMaprevisionButtonClick={field === 'FEMA Map #' ? ONFEMAMaprevisionButtonClick : undefined}
-          onWaterRevisionButtonClick={field === 'Water' ? onWaterRevisionButtonClick : undefined}
-          onSizeRevisionButtonClick={field === 'Size' ? onSizeRevisionButtonClick : undefined}
-          onAreaRevisionButtonClick={field === 'Area' ? onAreaRevisionButtonClick : undefined}
-          onAdverseSiteConditionsRevisionButtonClick={field === 'Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe' ? onAdverseSiteConditionsRevisionButtonClick : undefined}
-          onFemaHazardRevisionButtonClick={field === 'FEMA Special Flood Hazard Area' ? onFemaHazardRevisionButtonClick : undefined}
-          onSanitarySewerButtonClick={field === 'Sanitary Sewer' ? onSanitarySewerButtonClick : undefined}
-          onAlleyClick={field === 'Alley' ? onAlleyClick : undefined}
-          onFEMAFloodZoneRevisionButtonClick={field === 'FEMA Flood Zone' ? onFEMAFloodZoneRevisionButtonClick : undefined}
-          onLegalDescriptionUseClick={field === 'Legal Description' ? onLegalDescriptionUseClick : undefined}
-          onOffSiteImprovementsClick={field === 'Are the utilities and off-site improvements typical for the market area?' ? onOffSiteImprovementsClick : undefined}
-          onDimensionsRevisionButtonClick={field === 'Dimensions' ? onDimensionsRevisionButtonClick : undefined}
-          onElectricityRevisionButtonClick={field === 'Electricity' ? onElectricityRevisionButtonClick : undefined}
-          onShapeRevisionButtonClick={field === 'Shape' ? onShapeRevisionButtonClick : undefined}
-          onZoningRevisionButtonClick={field === 'Zoning Description' ? onZoningRevisionButtonClick : undefined}
-          onSpecificZoningClassificationRevisionButtonClick={field === 'Specific Zoning Classification' ? onSpecificZoningClassificationRevisionButtonClick : undefined}
-          onGasRevisionButtonClick={field === 'Gas' ? onGasRevisionButtonClick : undefined}
-          onTopographyRevisionButtonClick={field === 'Topography' ? onTopographyRevisionButtonClick : undefined}
-          onFEMAMapDateRevisionButtonClick={field === 'FEMA Map Date' ? onFEMAMapDateRevisionButtonClick : undefined}
-          onHighestAndBestUseClick={field === 'Is the highest and best use of subject property as improved (or as proposed per plans and specifications) the present use?' ? onHighestAndBestUseClick : undefined}
+          handleManualValidation={handleManualValidation} revisionHandlers={revisionHandlers}
           inputStyle={{ width: '100%', border: 'none', background: 'transparent', padding: 0, height: 'auto', resize: usePre ? 'vertical' : 'none' }}
         />
       </div>

@@ -19,7 +19,7 @@ const SalesComparisonSection = ({
   allData,
   manualValidations,
   handleManualValidation,
-  onRevisionButtonClick
+  onRevisionButtonClick,revisionHandlers
 }) => {
 
   return (
@@ -196,6 +196,7 @@ const SalesComparisonSection = ({
                       isEditable={true}
                       manualValidations={manualValidations}
                       handleManualValidation={handleManualValidation}
+                      revisionHandlers={revisionHandlers}
                     />
                   </td>
                 </tr>
