@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Subject.css';
 import { GlobalStyles } from '@mui/system';
-import { Info, Warning as WarningIcon, Close as CloseIcon, ErrorOutline as ErrorOutlineIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
+import { Info, Warning as WarningIcon, Close as CloseIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
 import { Button, Stack, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -2402,6 +2402,37 @@ function Subject() {
     }, 100); // 100ms delay
   };
 
+  const handleSaveToDB = async () => {
+    if (Object.keys(data).length === 0) {
+      setNotification({ open: true, message: 'No data to save.', severity: 'warning' });
+      return;
+    }
+
+    setLoading(true);
+    setNotification({ open: true, message: 'Saving data to database...', severity: 'info' });
+
+    try {
+      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'An unknown error occurred while saving.' }));
+        throw new Error(errorData.detail || 'Failed to save data.');
+      }
+
+      const result = await response.json();
+      setNotification({ open: true, message: result.message || 'Data saved successfully!', severity: 'success' });
+    } catch (error) {
+      setNotification({ open: true, message: error.message, severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getVisibleSections = () => {
     const baseSections = sections.map(s => s.id);
@@ -3585,6 +3616,16 @@ function Subject() {
                   Generate Error Log
                 </Button>
               </Grid>
+              <Grid item>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSaveToDB}
+                  disabled={Object.keys(data).length === 0 || loading}
+                >
+                  Save to DB
+                </Button>
+              </Grid>
             </Grid>
           </Paper>
 
@@ -3782,14 +3823,14 @@ function Subject() {
                         </Box>
                       )}
                       {/* {!data['FHA Case No.'] && !data['ANSI'] && !data['Exposure comment'] && !data['Prior service comment'] && !isUnpaidOkLender && ( */}
-                      {(!data['FHA Case No.'] || !data['ANSI'] || !data['Exposure comment'] || !data['Prior service comment'] || !isUnpaidOkLender) && (
+                      {/* {(!data['FHA Case No.'] || !data['ANSI'] || !data['Exposure comment'] || !data['Prior service comment'] || !isUnpaidOkLender) && (
                         <Box sx={{ display: 'flex', alignItems: 'center', p: 1, borderRadius: 1, bgcolor: 'error.light' }}>
                           <ErrorOutlineIcon color="error" sx={{ mr: 1 }} />
                           <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.dark' }}>
                             Plz check the report
                           </Typography>
                         </Box>
-                      )}
+                      )} */}
                     </Stack>
                   </Paper>
                   {/* {(() => {
@@ -4406,12 +4447,7 @@ function Subject() {
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
         }}
       />
-
-
-
     </ThemeProvider >
-
   );
 }
-
 export default Subject;
