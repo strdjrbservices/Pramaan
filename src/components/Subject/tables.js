@@ -1,10 +1,11 @@
 import React from 'react';
 import {
     TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Paper,
-    Box, Typography,Alert
+    Box, Typography, Alert
 } from '@mui/material';
 import {
-    CheckCircleOutline as CheckCircleOutlineIcon,ErrorOutline as ErrorOutlineIcon} from '@mui/icons-material';
+    CheckCircleOutline as CheckCircleOutlineIcon, ErrorOutline as ErrorOutlineIcon
+} from '@mui/icons-material';
 import { EditableField } from './FormComponents';
 
 export const ComparableAddressConsistency = ({ data, comparableSales, extractionAttempted, onDataChange, editingField, setEditingField, isEditable, allData }) => {

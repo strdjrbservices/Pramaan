@@ -37,19 +37,15 @@ export const checkSubjectFieldsNotBlank = (field, text) => {
 export const checkAssignmentTypeConsistency = (field, text, data) => {
     if (field !== 'Assignment Type') return null;
     const assignmentType = String(text || '').trim().toLowerCase();
+    const contractData = data.CONTRACT;
+    const isContractSectionEmpty = !contractData || Object.values(contractData).every(value => value == null || value === '');
 
-    if (assignmentType === 'purchase transaction') {
-        const contractData = data.CONTRACT;
-        const isContractSectionEmpty = !contractData || Object.values(contractData).every(value => value === '' || value === null || value === undefined);
-        if (isContractSectionEmpty) {
-            return { isError: true, message: `Assignment Type is 'Purchase Transaction' then the Contract Section should not be empty.` };
-        }
-    } else if (assignmentType === 'refinance transaction') {
-        const contractData = data.CONTRACT;
-        const isContractSectionEmpty = !contractData || Object.values(contractData).every(value => value === '' || value === null || value === undefined);
-        if (!isContractSectionEmpty) {
-            return { isError: true, message: `Assignment Type is 'Refinance Transaction' then the Contract Section should be empty.` };
-        }
+    if (assignmentType === 'purchase transaction' && isContractSectionEmpty) {
+        return { isError: true, message: `Assignment Type is 'Purchase Transaction' then the Contract Section should not be empty.` };
+    }
+
+    if (assignmentType === 'refinance transaction' && !isContractSectionEmpty) {
+        return { isError: true, message: `Assignment Type is 'Refinance Transaction' then the Contract Section should be empty.` };
     }
     return { isMatch: true };
 };

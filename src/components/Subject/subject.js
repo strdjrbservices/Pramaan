@@ -29,9 +29,6 @@ import EscalationCheck, { ESCALATION_CHECK_PROMPT } from './EscalationCheck';
 import FhaCheck, { FHA_REQUIREMENTS_PROMPT } from './FhaCheck';
 import ADUCheck, { ADU_REQUIREMENTS_PROMPT } from './ADUCheck';
 import { lightTheme, darkTheme } from '../../theme';
-// import { TextField } from '@mui/material';
-
-// Import all validation functions
 import * as generalValidation from './generalValidation';
 import * as contractValidation from './contractValidation';
 import * as subjectValidation from './subjectValidation';
@@ -70,20 +67,12 @@ const TooltipStyles = () => (
 );
 
 const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile, setComparisonData }) => {
-  // const fields = [
-  //   'Client Name', 'Client Address', 'Transaction Type', 'FHA Case Number', 'Borrower (and Co-Borrower)',
-  //   'Property Address', 'Property County', 'Property Type', 'Assigned to Vendor(s)', 'AMC Reg. Number',
-  //   'Client Name', 'Client Address', 'Transaction Type', 'FHA Case Number',
-  //   'Borrower (and Co-Borrower)', 'Property Address', 'Property County',
-  //   'Property Type', 'Assigned to Vendor(s)', 'AMC Reg. Number',
-  //   'Appraisal Type', 'Unit Number', 'UAD XML Report'
-  // ];
-  // const [loading, setLoading] = useState(false);
+
+
   const [result, setResult] = useState(null);
-  // const [error, setError] = useState('');
 
   const handleCompare = React.useCallback(async () => {
-    // setLoading(true);
+
     setResult(null);
 
     const formData = new FormData();
@@ -99,9 +88,9 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
       const apiResult = await res.json();
       setComparisonData(prev => ({ ...prev, ...apiResult }));
     } catch (err) {
-      // setError(err.message);
+
     } finally {
-      // setLoading(false);
+
     }
   }, [pdfFile, htmlFile, setComparisonData]);
 
@@ -135,10 +124,7 @@ function Subject() {
   const [themeMode, setThemeMode] = useState('light');
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [isComparisonDialogOpen, setIsComparisonDialogOpen] = useState(false);
-  const [comparisonData, setComparisonData] = useState({
-    // This will be populated from HTML extraction
-
-  });
+  const [comparisonData, setComparisonData] = useState({});
   const [activeSection, setActiveSection] = useState(null);
   const [promptAnalysisLoading, setPromptAnalysisLoading] = useState(false);
   const [promptAnalysisResponse, setPromptAnalysisResponse] = useState(null);
@@ -175,7 +161,7 @@ function Subject() {
 
   const [isCheckModalOpen, setIsCheckModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
-  // const [contractExtracted, setContractExtracted] = useState(false);
+
   const [isContractCompareOpen, setIsContractCompareOpen] = useState(false);
   const [contractCompareLoading, setContractCompareLoading] = useState(false);
   const [contractCompareResult, setContractCompareResult] = useState(null);
@@ -219,7 +205,7 @@ function Subject() {
   const [is1007RevisionLangDialogOpen, set1007RevisionLangDialogOpen] = useState(false);
 
   const handleOpenNotepad = () => {
-    if (!notes) { // Only set default text if notes are empty
+    if (!notes) { 
       const now = new Date();
       const dateTimeString = now.toLocaleString();
       setNotes(`Date and Time: ${dateTimeString}\n\n`);
@@ -564,6 +550,29 @@ function Subject() {
       }
     });
     addSection('Requirement Check Issues', ['Check', 'Requirement', 'Status', 'Comment'], requirementErrors);
+
+    // 3. Prompt Analysis Errors
+    const promptAnalysisIssues = [];
+    if (promptAnalysisResponse && typeof promptAnalysisResponse === 'object' && !Array.isArray(promptAnalysisResponse)) {
+      if (Array.isArray(promptAnalysisResponse.comparison_summary)) {
+        promptAnalysisResponse.comparison_summary.forEach(item => {
+          const status = String(item.status || '').toLowerCase();
+          if (status.includes('not fulfilled') || status.includes('not present')) {
+            promptAnalysisIssues.push(['Prompt Analysis', item.section, item.status, item.comment]);
+          }
+        });
+      }
+
+      Object.entries(promptAnalysisResponse).forEach(([key, value]) => {
+        if (key === 'summary' || key === 'comparison_summary') return;
+        const valueStr = (typeof value === 'object' && value !== null && 'value' in value) ? String(value.value) : String(value);
+        const comment = (typeof value === 'object' && value !== null && (value.comment || value.tooltip)) ? String(value.comment || value.tooltip) : '';
+        if (valueStr.toLowerCase().includes('not fulfilled') || valueStr.toLowerCase().includes('not present')) {
+          promptAnalysisIssues.push(['Prompt Analysis', key, valueStr, comment]);
+        }
+      });
+    }
+    addSection('Prompt Analysis Issues', ['Check', 'Requirement', 'Value', 'Comment'], promptAnalysisIssues);
 
     // 4. Comparable Address Consistency
     const addressInconsistencies = [];
@@ -2412,12 +2421,17 @@ function Subject() {
     setNotification({ open: true, message: 'Saving data to database...', severity: 'info' });
 
     try {
+      const dataToSave = {
+        ...data,
+        promptAnalysis: promptAnalysisResponse
+      };
       const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        body: JSON.stringify(dataToSave),
       });
 
       if (!response.ok) {

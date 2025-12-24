@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
-const HighlightKeywords = ({ text, keywordGroups }) => {
+const HighlightKeywords = ({ text, keywordGroups, comment }) => {
     if (!text || !keywordGroups || keywordGroups.length === 0) {
         return text;
     }
@@ -25,7 +25,22 @@ const HighlightKeywords = ({ text, keywordGroups }) => {
                 const matchedGroup = keywordGroups.find(group =>
                     group.keywords.some(keyword => part.toLowerCase() === keyword.toLowerCase())
                 );
-                return matchedGroup ? <span key={i} style={matchedGroup.style}>{part}</span> : part;
+                if (matchedGroup) {
+                    const styledPart = <span style={matchedGroup.style}>{part}</span>;
+
+                    const isErrorGroup = matchedGroup.style.backgroundColor === '#ff0000';
+
+                    let tooltipText = matchedGroup.Tooltip;
+                    if (isErrorGroup && comment) {
+                        tooltipText = comment;
+                    }
+
+                    if (tooltipText) {
+                        return <Tooltip key={i} title={tooltipText}>{styledPart}</Tooltip>;
+                    }
+                    return <span key={i} style={matchedGroup.style}>{part}</span>;
+                }
+                return part;
             })}
         </span>
     );
@@ -36,14 +51,16 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
     const keywordGroups = [
         {
             keywords: ["consistently", "Fulfilled", "PRESENT", "CONSISTENT"],
-            style: { backgroundColor: '#91ff00ff', color: '#000000', padding: '1px 3px', borderRadius: '3px' }
+            style: { backgroundColor: '#91ff00ff', color: '#000000', padding: '1px 3px', borderRadius: '3px' },
+            Tooltip: `Field is valid.`
         },
         {
             keywords: [
                 "However", "Not consistently", "Not Fulfilled", "Not PRESENT",
                 "Not CONSISTENT", "ilconsistently", "absent", "ilCONSISTENT", "Specifically", "mismatch", "mismatched", "missing", "inconsistent",
             ],
-            style: { backgroundColor: '#ff0000', color: '#ffffff', padding: '1px 3px', borderRadius: '3px' }
+            style: { backgroundColor: '#ff0000', color: '#ffffff', padding: '1px 3px', borderRadius: '3px' },
+            Tooltip: `Value must be Fulfilled or PRESENT.`
         }
     ];
 
@@ -112,7 +129,7 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
                                         <TableBody>
                                             {comparison_summary.map((item, index) => (
                                                 <TableRow key={index}>
-                                                    <TableCell><HighlightKeywords text={item.status} keywordGroups={keywordGroups} /></TableCell>
+                                                    <TableCell><HighlightKeywords text={item.status} keywordGroups={keywordGroups} comment={item.comment} /></TableCell>
                                                     <TableCell><HighlightKeywords text={item.section} keywordGroups={keywordGroups} /></TableCell>
                                                     <TableCell><HighlightKeywords text={item.comment} keywordGroups={keywordGroups} /></TableCell>
                                                 </TableRow>
@@ -142,9 +159,11 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
                                                         {key}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <HighlightKeywords text={(typeof value === 'object' && value !== null && 'value' in value)
-                                                            ? String(value.value)
-                                                            : (typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value))}
+                                                        <HighlightKeywords
+                                                            text={(typeof value === 'object' && value !== null && 'value' in value)
+                                                                ? String(value.value)
+                                                                : (typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value))}
+                                                            comment={(typeof value === 'object' && value !== null) ? (value.comment || value.tooltip) : null}
                                                             keywordGroups={keywordGroups}
                                                         />
                                                     </TableCell>
