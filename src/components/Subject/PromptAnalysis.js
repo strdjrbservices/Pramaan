@@ -64,20 +64,31 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
         }
     ];
 
-    const prompt1 =
-        "Verify that the Subject Property Address is identical across all locations in the report including: Subject Section, Sales Comparison Grid, Location Map, Aerial Map, Header/Footer, and any Addenda.\nAlso confirm the presence of the Subject Street View, Front View, and Rear View photos with no duplicates or mislabeled subject photos.";
+    const ALL_IN_ONE_PROMPT = `Please perform a comprehensive accuracy and consistency check on the entire appraisal report. For each point, provide a clear status (e.g., 'Consistent', 'Inconsistent', 'Present', 'Missing'), a brief comment explaining any issues found, and the specific data values extracted from the report (labeled as 'values').
 
-    const prompt2 =
-        "1. Compare bedroom and bathroom counts across the Improvements/Property Characteristics section, Sales Comparison Grid, Sketch/Floor Plan, and all interior/exterior photos.\n2. Verify that Gross Living Area (GLA) is consistent between the Sketch, Improvements section, Sales Grid, Cost Approach (if present), and Addendum comments. Flag any mismatch.";
+1.  **Subject Data Consistency:**
+    a. **Address:** Verify that the Subject Property Address is identical across all locations: Subject Section, Sales Comparison Grid, Location Map, Aerial Map, Header/Footer, and any Addenda.
+    b. **Photos:** Confirm the presence of the Subject Street View, Front View, and Rear View photos. Ensure there are no duplicate or mislabeled subject photos.
+    c. **Room Counts:** Compare bedroom and bathroom counts across the Improvements section, Sales Comparison Grid, Sketch/Floor Plan, and all interior photos.
+    d. **GLA:** Verify that Gross Living Area (GLA) is consistent between the Sketch, Improvements section, Sales Grid, and Cost Approach (if present).
 
-    const prompt4 =
-        "Match all Comparable Sale addresses across the Sales Grid, Comparable Photo Pages, MLS/Map Exhibits, Location Map, and Aerial Map. Confirm that no comparable photos are duplicated, mislabeled, or incorrectly associated with the wrong comparable.";
+2.  **Comparable Sales Data Consistency:**
+    a. **Addresses:** Match all Comparable Sale addresses across the Sales Grid, Comparable Photo Pages, MLS/Map Exhibits, Location Map, and Aerial Map.
+    b. **Photos:** Confirm that no comparable photos are duplicated, mislabeled, or incorrectly associated with the wrong comparable.
 
-    const prompt5 =
-        "Verify that every photo is properly labeled (Subject, Comp 1, Comp 2, etc.) and confirm that there are no duplicate photos, reused photos, or mislabeled views across the entire photo section.";
+3.  **Sales Grid & Value Analysis:**
+    a. **Value Bracketing:** Verify that the final 'opinion of market value' in the Reconciliation section is bracketed by the 'Adjusted Sale Price of Comparable' values in the Sales Comparison Grid.
+    b. **Adjustment Logic:** For each comparable, review the 'Condition' adjustment. If the comp's condition rating (e.g., C3) is superior to the subject's (e.g., C4), the adjustment should be negative. If inferior, it should be positive. Flag any illogical adjustments.
+    c. **PUD/HOA Fees:** If the property is identified as part of a PUD, confirm that HOA fees are greater than $0. If PUD is 'No', confirm HOA fees are $0 or N/A.
 
-    const supplementalAddendumPrompt =
-        "1. Confirm presence of the following sections and answer only 'Present' or 'Not Present': SUPPLEMENTAL ADDENDUM, ADDITIONAL COMMENTS, APPRAISER'S CERTIFICATION, SUPERVISORY APPRAISER'S CERTIFICATION, Analysis/Comments, GENERAL INFORMATION ON ANY REQUIRED REPAIRS, UNIFORM APPRAISAL DATASET (UAD) DEFINITIONS ADDENDUM.&#10;&#10;2. Confirm presence of the following sections and answer only 'Present' or 'Not Present': SCOPE OF WORK, INTENDED USE, INTENDED USER, DEFINITION OF MARKET VALUE, STATEMENT OF ASSUMPTIONS AND LIMITING CONDITIONS.";
+4.  **Certification & Dates:**
+    a. **Signatures:** Verify the presence of the appraiser's signature and license number in the Certification section.
+    b. **Dates:** Confirm the 'Date of Signature and Report' is on or after the 'Effective Date of Appraisal'.
+
+5.  **Photo & Page Integrity:**
+    a. **Photo Labeling:** Verify that every photo is properly labeled (Subject, Comp 1, Comp 2, etc.) and that there are no reused photos or mislabeled views across the entire photo section.
+    b. **Page Presence:** Confirm presence of the following sections and answer only 'Present' or 'Not Present': SUPPLEMENTAL ADDENDUM, APPRAISER'S CERTIFICATION, SCOPE OF WORK, INTENDED USE, and DEFINITION OF MARKET VALUE.
+`;
 
 
     const renderResponse = (response) => {
@@ -123,6 +134,7 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
                                             <TableRow>
                                                 <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                                                 <TableCell sx={{ fontWeight: 'bold' }}>Section</TableCell>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>Values</TableCell>
                                                 <TableCell sx={{ fontWeight: 'bold' }}>Comment</TableCell>
                                             </TableRow>
                                         </TableHead>
@@ -131,6 +143,7 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
                                                 <TableRow key={index}>
                                                     <TableCell><HighlightKeywords text={item.status} keywordGroups={keywordGroups} comment={item.comment} /></TableCell>
                                                     <TableCell><HighlightKeywords text={item.section} keywordGroups={keywordGroups} /></TableCell>
+                                                    <TableCell><HighlightKeywords text={item.values} keywordGroups={keywordGroups} /></TableCell>
                                                     <TableCell><HighlightKeywords text={item.comment} keywordGroups={keywordGroups} /></TableCell>
                                                 </TableRow>
                                             ))}
@@ -205,14 +218,9 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
             </div>
             <div className="card-body">
                 <Stack spacing={2}>
-                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                        <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt1)} disabled={loading}>Verify Subject Address & Photos</Button>
-                        <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt2)} disabled={loading}>Compare Room Counts</Button>
-                        <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt4)} disabled={loading}>Match Comp Addresses</Button>
-                        <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt5)} disabled={loading}>Verify Photo Labels & Duplicates</Button>
-                        {/* <Button variant="outlined" size="small" onClick={() => onPromptSubmit(prompt6)} disabled={loading}>Revision Requests Check</Button> */}
-                        <Button variant="outlined" size="small" onClick={() => onPromptSubmit(supplementalAddendumPrompt)} disabled={loading}>Page Present Check</Button>
-                    </Stack>
+                    <Button variant="contained" onClick={() => onPromptSubmit(ALL_IN_ONE_PROMPT)} disabled={loading}>
+                        Run Full Analysis
+                    </Button>
                     {loading && <CircularProgress size={24} />}
                 </Stack>
 

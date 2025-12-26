@@ -391,7 +391,6 @@ function Subject() {
       }
     };
 
-
     Object.keys(allData).forEach(sectionKey => {
       const sectionData = allData[sectionKey];
       if (typeof sectionData === 'object' && sectionData !== null) {
@@ -407,7 +406,6 @@ function Subject() {
         runChecksForField('General', sectionKey, value, path);
       }
     });
-
 
     comparableSales.forEach(saleName => {
       if (allData[saleName]) {
@@ -442,23 +440,71 @@ function Subject() {
     return errors;
   };
 
-  const getDataConsistencyErrors = (allData) => {
-    const errors = [];
-    if (!allData || Object.keys(allData).length === 0) return errors;
+  const getValidationSuccesses = () => {
+    const successes = [];
+    if (!data || Object.keys(data).length === 0) {
+      return successes;
+    }
 
-    Object.keys(dataConsistencyFields).forEach(item => {
-      const fields = dataConsistencyFields[item];
-      const values = Object.values(fields).map(fieldKey => allData[fieldKey] || 'N/A');
-      if (new Set(values.filter(v => v !== 'N/A')).size > 1) {
-        errors.push([item, ...values]);
+    const validationRegistry = buildValidationRegistry();
+    const allData = data;
+
+    const runChecksForField = (sectionName, fieldName, value, path, saleName = null, customRegistry = validationRegistry) => {
+      const validationFns = customRegistry[fieldName] || [];
+      if (validationFns.length === 0) {
+        return; // No validation rules for this field, so no success to log.
+      }
+
+      let hasError = false;
+      for (const fn of validationFns) {
+        try {
+          const result = fn(fieldName, value, allData, path, saleName);
+          if (result && result.isError) {
+            hasError = true;
+            break; // An error was found, so it's not a success.
+          }
+        } catch (e) {
+          hasError = true;
+          break;
+        }
+      }
+
+      if (!hasError) {
+        successes.push([sectionName, `${fieldName}${saleName ? ` (${saleName})` : ''}`, 'Passed']);
+      }
+    };
+
+    Object.keys(allData).forEach(sectionKey => {
+      const sectionData = allData[sectionKey];
+      if (typeof sectionData === 'object' && sectionData !== null) {
+        Object.keys(sectionData).forEach(fieldKey => {
+          const value = sectionData[fieldKey];
+          const path = [sectionKey, fieldKey];
+          runChecksForField(sectionKey, fieldKey, value, path);
+        });
+      } else {
+        const value = allData[sectionKey];
+        const path = [sectionKey];
+        runChecksForField('General', sectionKey, value, path);
       }
     });
-    return errors;
+
+    comparableSales.forEach(saleName => {
+      if (allData[saleName]) {
+        Object.keys(allData[saleName]).forEach(fieldKey => {
+          const value = allData[saleName][fieldKey];
+          const path = [saleName, fieldKey];
+          runChecksForField('Sales Comparison', fieldKey, value, path, saleName);
+        });
+      }
+    });
+
+    return successes;
   };
 
   const handleGenerateErrorLog = () => {
     if (Object.keys(data).length === 0) {
-      setNotification({ open: true, message: 'No data to generate an error log.', severity: 'warning' });
+      setNotification({ open: true, message: 'No data to generate a log.', severity: 'warning' });
       return;
     }
 
@@ -473,52 +519,51 @@ function Subject() {
         doc.setPage(i);
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text('Error Log Report', margin, 10);
+        doc.text('Appraisal Review Log', margin, 10);
         doc.text(new Date().toLocaleDateString(), doc.internal.pageSize.width - margin, 10, { align: 'right' });
         doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, pageHeight - 10, { align: 'center' });
       }
     };
 
-    const addSection = (title, head, body) => {
+    const addSection = (title, head, body, headerColor = [200, 0, 0]) => {
       if (body.length === 0) return;
-
       if (yPos > pageHeight - 40) {
         doc.addPage();
         yPos = margin;
       }
-
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.setTextColor(40);
       doc.text(title, margin, yPos);
       yPos += 8;
-
       autoTable(doc, {
         startY: yPos,
         head: [head],
         body: body,
         theme: 'grid',
-        headStyles: { fillColor: [200, 0, 0], textColor: 255 },
+        headStyles: { fillColor: headerColor, textColor: 255 },
         didDrawPage: (data) => { yPos = data.cursor.y + 10; },
       });
       yPos = doc.lastAutoTable.finalY + 10;
     };
 
-    // 1. Missing & Invalid Fields
-    const missingFields = [];
+    // 1. Validation Errors
     const validationErrors = getValidationErrors();
-    const validationErrorRows = validationErrors.map(([section, field, message]) => {
-      if (message.toLowerCase().includes('blank') || message.toLowerCase().includes('empty')) {
-        missingFields.push([section, field, message]);
-        return null;
-      }
-      return [section, field, message];
-    }).filter(Boolean);
+    const validationErrorRows = validationErrors.map(([section, field, message]) => [section, field, message]);
+    if (validationErrorRows.length === 0) {
+        validationErrorRows.push(['All', 'All', 'No validation errors found.']);
+    }
+    addSection('Validation Errors', ['Section', 'Field', 'Error Message'], validationErrorRows, [255, 165, 0]);
 
-    addSection('Missing Fields', ['Section', 'Field', 'Message'], missingFields);
-    addSection('Field Validation Errors', ['Section', 'Field', 'Error Message'], validationErrorRows);
+    // 2. Validation Successes
+    const validationSuccesses = getValidationSuccesses();
+    const validationSuccessRows = validationSuccesses.map(([section, field, message]) => [section, field, message]);
+    if (validationSuccessRows.length === 0) {
+      validationSuccessRows.push(['All', 'All', 'No successful validations found.']);
+    }
+    addSection('Successful Validations', ['Section', 'Field', 'Status'], validationSuccessRows, [34, 139, 34]);
 
-    // 2. Data Consistency Errors
+    // 3. Data Consistency Errors
     const consistencyErrors = getDataConsistencyErrors(data);
     if (consistencyErrors.length > 0) {
       const consistencyBody = consistencyErrors.map(([item, improvements, grid, photo, floorplan]) =>
@@ -530,7 +575,7 @@ function Subject() {
       );
     }
 
-    // 2. Requirement Check Errors
+    // 4. Requirement Check Errors
     const requirementErrors = [];
     const checks = [
       { name: 'Client Requirements', response: clientReqResponse },
@@ -539,7 +584,6 @@ function Subject() {
       { name: 'ADU Requirements', response: ADUResponse },
       { name: 'Escalation Points', response: escalationResponse },
     ];
-
     checks.forEach(check => {
       if (check.response && Array.isArray(check.response.details)) {
         check.response.details.forEach(item => {
@@ -551,7 +595,7 @@ function Subject() {
     });
     addSection('Requirement Check Issues', ['Check', 'Requirement', 'Status', 'Comment'], requirementErrors);
 
-    // 3. Prompt Analysis Errors
+    // 5. Prompt Analysis Issues
     const promptAnalysisIssues = [];
     if (promptAnalysisResponse && typeof promptAnalysisResponse === 'object' && !Array.isArray(promptAnalysisResponse)) {
       if (Array.isArray(promptAnalysisResponse.comparison_summary)) {
@@ -562,7 +606,6 @@ function Subject() {
           }
         });
       }
-
       Object.entries(promptAnalysisResponse).forEach(([key, value]) => {
         if (key === 'summary' || key === 'comparison_summary') return;
         const valueStr = (typeof value === 'object' && value !== null && 'value' in value) ? String(value.value) : String(value);
@@ -574,7 +617,7 @@ function Subject() {
     }
     addSection('Prompt Analysis Issues', ['Check', 'Requirement', 'Value', 'Comment'], promptAnalysisIssues);
 
-    // 4. Comparable Address Consistency
+    // 6. Comparable Address Consistency
     const addressInconsistencies = [];
     const getFirstThreeWords = (str) => str ? str.split(/\s+/).slice(0, 3).join(' ').toLowerCase() : '';
 
@@ -583,7 +626,6 @@ function Subject() {
       const salesGridAddress = data[sale]?.Address || '';
       const locationMapAddress = data[`Location Map Address ${compNum}`] || '';
       const photoAddress = data[`Comparable Photo Address ${compNum}`] || '';
-
       const allAddresses = [salesGridAddress, locationMapAddress, photoAddress];
       const validAddresses = allAddresses.filter(Boolean);
 
@@ -593,7 +635,6 @@ function Subject() {
       } else {
         const shortAddresses = validAddresses.map(getFirstThreeWords);
         const uniqueShortAddresses = new Set(shortAddresses);
-
         if (uniqueShortAddresses.size < shortAddresses.length) {
           isConsistent = true;
         }
@@ -605,10 +646,26 @@ function Subject() {
     });
     addSection('Comparable Address Inconsistencies', ['Comparable', 'Sales Grid Address', 'Location Map Address', 'Photo Address'], addressInconsistencies);
 
-    // Finalize PDF
+    // Finalize PDF and notify
     addHeaderFooter();
-    doc.save('Appraisal_Error_Log.pdf');
-    setNotification({ open: true, message: 'Error log generated successfully.', severity: 'success' });
+    doc.save('Appraisal_Review_Log.pdf');
+    setNotification({ open: true, message: 'Combined review log generated successfully.', severity: 'success' });
+  };
+
+  const handleGenerateValidationLog = handleGenerateErrorLog;
+
+  const getDataConsistencyErrors = (allData) => {
+    const errors = [];
+    if (!allData || Object.keys(allData).length === 0) return errors;
+
+    Object.keys(dataConsistencyFields).forEach(item => {
+      const fields = dataConsistencyFields[item];
+      const values = Object.values(fields).map(fieldKey => allData[fieldKey] || 'N/A');
+      if (new Set(values.filter(v => v !== 'N/A')).size > 1) {
+        errors.push([item, ...values]);
+      }
+    });
+    return errors;
   };
 
   const fileUploadTimerRef = useRef(null);
@@ -2291,13 +2348,13 @@ function Subject() {
           }
         };
 
-        const addSection = (title, sectionFields, sectionData, usePre = false) => {
-          if (!sectionData || sectionFields.every(field => !sectionData[field])) return;
+        const addSection = (title, sectionFields, sectionData, usePre = false) => {          const dataForSection = sectionData || {};
 
           if (yPos > pageHeight - 40) {
             doc.addPage();
             yPos = margin;
           }
+
 
           doc.setFontSize(14);
           doc.setFont(undefined, 'bold');
@@ -2306,12 +2363,12 @@ function Subject() {
           yPos += 8;
 
           const body = sectionFields.map(field => {
-            let value = sectionData[field];
+            let value = dataForSection[field];
             if (typeof value === 'object' && value !== null) {
               value = Object.entries(value).map(([k, v]) => `${k}: ${v}`).join('\n');
             }
             return [field, value || ''];
-          }).filter(row => row[1]);
+          });
 
           if (body.length > 0) {
             autoTable(doc, {
@@ -2350,16 +2407,12 @@ function Subject() {
           { id: 'appraiser-section', title: 'Certification/Signature Section', fields: appraiserFields, data: data.CERTIFICATION },
         ];
 
-        const extractedPdfSections = sectionDefinitions.filter(section =>
-          extractedSections.has(section.id) && section.data && Object.keys(section.data).length > 0
-        );
-
-        extractedPdfSections.forEach(section => {
+        sectionDefinitions.forEach(section => {
           addSection(section.title, section.fields, section.data, section.usePre)
         });
 
 
-        if (extractedSections.has('sales-comparison') && (data.Subject || comparableSales.some(s => data[s]))) {
+        
           if (yPos > pageHeight - 60) { doc.addPage(); yPos = margin; }
           doc.setFontSize(14);
           doc.setFont(undefined, 'bold');
@@ -2367,19 +2420,19 @@ function Subject() {
           doc.text('Sales Comparison Approach', margin, yPos);
           yPos += 8;
 
-          const activeComps = comparableSales.filter(sale => data[sale]);
+          const activeComps = comparableSales;
           const head = [['Feature', 'Subject', ...activeComps]];
           const body = salesGridRows.map(row => {
             const rowData = [row.label];
-            // Subject
-            let subjectValue = data.Subject?.[row.valueKey] || data.Subject?.[row.subjectValueKey] || '';
+            
+            let subjectValue = (data.Subject || {})[row.valueKey] || (data.Subject || {})[row.subjectValueKey] || '';
             if (row.adjustmentKey && data.Subject?.[row.adjustmentKey]) {
               subjectValue += `\n(${data.Subject[row.adjustmentKey]})`;
             }
             rowData.push(subjectValue);
-            // Comparables
+            
             activeComps.forEach(sale => {
-              let compValue = data[sale]?.[row.valueKey] || '';
+              let compValue = (data[sale] || {})[row.valueKey] || '';
               if (row.adjustmentKey && data[sale]?.[row.adjustmentKey]) {
                 compValue += `\n(${data[sale][row.adjustmentKey]})`;
               }
@@ -2397,7 +2450,7 @@ function Subject() {
             headStyles: { fillColor: [22, 160, 133], textColor: 255, fontSize: 8 },
             didDrawPage: (data) => { yPos = data.cursor.y + 10; }
           });
-        }
+       
 
         addHeaderFooter();
         doc.save('Appraisal_Report_Summary.pdf');
@@ -2408,7 +2461,7 @@ function Subject() {
       } finally {
         setIsGeneratingPdf(false);
       }
-    }, 100); // 100ms delay
+    }, 100); 
   };
 
   const handleSaveToDB = async () => {
@@ -2583,8 +2636,6 @@ function Subject() {
         setNotification({ open: true, message: "Adverse Site Conditions revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
-
-
       // =========================
       // PROJECT SITE
       // =========================
@@ -2612,7 +2663,6 @@ function Subject() {
         setNotification({ open: true, message: "FEMA Map revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
-
 
       // =========================
       // IMPROVEMENTS SECTION
@@ -3624,10 +3674,20 @@ function Subject() {
                 <Button
                   variant="outlined"
                   color="error"
-                  onClick={handleGenerateErrorLog}
+              //     onClick={handleGenerateErrorLog}
+              //     disabled={Object.keys(data).length === 0}
+              //   >
+              //     Generate Error Log
+              //   </Button>
+              // </Grid>
+              // <Grid item>
+              //   <Button
+              //     variant="outlined"
+              //     color="warning"
+                  onClick={handleGenerateValidationLog}
                   disabled={Object.keys(data).length === 0}
                 >
-                  Generate Error Log
+                  Generate Validation Log
                 </Button>
               </Grid>
               <Grid item>
@@ -3836,42 +3896,10 @@ function Subject() {
                           </Typography>
                         </Box>
                       )}
-                      {/* {!data['FHA Case No.'] && !data['ANSI'] && !data['Exposure comment'] && !data['Prior service comment'] && !isUnpaidOkLender && ( */}
-                      {/* {(!data['FHA Case No.'] || !data['ANSI'] || !data['Exposure comment'] || !data['Prior service comment'] || !isUnpaidOkLender) && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', p: 1, borderRadius: 1, bgcolor: 'error.light' }}>
-                          <ErrorOutlineIcon color="error" sx={{ mr: 1 }} />
-                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'error.dark' }}>
-                            Plz check the report
-                          </Typography>
-                        </Box>
-                      )} */}
+
                     </Stack>
                   </Paper>
-                  {/* {(() => {
-                    const assignmentType = String(data['Assignment Type'] || '').toLowerCase();
-                    return (assignmentType === 'purchase transaction' || assignmentType === 'purchase');
-                  })() && !contractExtracted && !loading && (
-                      <Dialog open={true} onClose={(event, reason) => { if (reason !== 'backdropClick') setContractExtracted(true); }}>
-                        <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
-                          <WarningIcon color="warning" sx={{ mr: 1 }} />
-                          Purchase Transaction Alert
-                        </DialogTitle>
-                        <DialogContent>
-                          <Typography>The "Contract" section has not been extracted for this purchase transaction. This is a required step.</Typography>
-                        </DialogContent>
-                        <DialogActions>
-                          <Button onClick={() => setContractExtracted(true)}>Dismiss</Button>
-                          <Button
-                            onClick={() => {
-                              handleExtract('CONTRACT');
-                              setContractExtracted(true);
-                            }}
-                            variant="contained"
-                          >
-                            Extract Contract
-                          </Button>
-                        </DialogActions>
-                      </Dialog>)} */}
+
                 </Stack>
               )}
             </Grid>

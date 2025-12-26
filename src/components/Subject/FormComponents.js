@@ -1975,18 +1975,7 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
     return (
       <div key={field} className={`subject-grid-item ${isHighlighted ? 'highlighted-field' : ''}`} style={{ ...itemStyle, ...comparisonStyle }}>
         <span className="field-label">{field}</span>
-        {/* {field === 'Assignment Type' && data[field]?.toLowerCase() === 'purchase transaction' && !contractExtracted && (
-          <Tooltip title="Extract Contract Section">
-            <IconButton
-              onClick={() => {
-                handleExtract('CONTRACT');
-                if (setContractExtracted) setContractExtracted(true);
-              }}
-              size="small"
-              sx={{ ml: 1, color: 'primary.main' }}
-            ><GetAppIcon /></IconButton>
-          </Tooltip>
-        )} */}
+
         <EditableField
           fieldPath={fieldPath}
           value={displayValue}
