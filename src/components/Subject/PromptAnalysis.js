@@ -88,6 +88,23 @@ const PromptAnalysis = ({ onPromptSubmit, loading, response, error, submittedPro
 5.  **Photo & Page Integrity:**
     a. **Photo Labeling:** Verify that every photo is properly labeled (Subject, Comp 1, Comp 2, etc.) and that there are no reused photos or mislabeled views across the entire photo section.
     b. **Page Presence:** Confirm presence of the following sections and answer only 'Present' or 'Not Present': SUPPLEMENTAL ADDENDUM, APPRAISER'S CERTIFICATION, SCOPE OF WORK, INTENDED USE, and DEFINITION OF MARKET VALUE.
+
+
+6. Please check and verify in Sales Comparison Approach
+ 
+    a.  Proximity to Subject within the 1 miles of all comparables.
+    b. Sale Price of subject Indicated Value by Sales Comparison Approach $ within the highest and lowest Sale Price of all comparables also check Indicated Value by Sales Comparison Approach $ is  10 % higher than unadjusted sales price
+    c. Sale Price/Gross Liv. Area, Data Source(s), Verification Source(s) must have values
+    d. Sales or Financing Concessions value having positive value then adjustment value negative and vise versa.
+    e. Date of Sale/Time, Sale date is Gretter than contract date also within 1 year also adjustments are present then check comment and graph
+    f. check Location adjustment, Leasehold/Fee Simple, 
+    g. Site, all comparables site is Greater than subject site then adjustment values it should be Negative otherwise Positive
+    h. Check Adjustments are consistent "View", "Design (Style)"
+    i. Check Adjustments are consistent "Quality of Construction", "Actual Age", "Condition"
+    j. Check Adjustment consistency Bdrms. and Baths
+    k. Check Adjustment consistency "Basement & Finished Rooms Below Grade", "Functional Utility", "Heating/Cooling", "Energy Efficient Items", "Garage/Carport", "Porch/Patio/Deck"
+    l. Check Adjustment "Net Adjustment (Total)" and "Adjusted Sale Price of Comparables"
+    
 `;
 
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Subject.css';
 import { GlobalStyles } from '@mui/system';
-import { Info, Warning as WarningIcon, Close as CloseIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
+import { Info, Warning as WarningIcon, Close as CloseIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon} from '@mui/icons-material';
 import { Button, Stack, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -29,6 +29,7 @@ import EscalationCheck, { ESCALATION_CHECK_PROMPT } from './EscalationCheck';
 import FhaCheck, { FHA_REQUIREMENTS_PROMPT } from './FhaCheck';
 import ADUCheck, { ADU_REQUIREMENTS_PROMPT } from './ADUCheck';
 import { lightTheme, darkTheme } from '../../theme';
+// import ChatBot from './ChatBot.js';
 import * as generalValidation from './generalValidation';
 import * as contractValidation from './contractValidation';
 import * as subjectValidation from './subjectValidation';
@@ -155,6 +156,7 @@ function Subject() {
   const [htmlFile, setHtmlFile] = useState(null);
   const [contractFile, setContractFile] = useState(null);
   const [engagementLetterFile, setEngagementLetterFile] = useState(null);
+  const [username, setUsername] = useState('');
   const [loadingSection, setLoadingSection] = useState(null);
 
   const [manualValidations, setManualValidations] = useState({});
@@ -173,6 +175,7 @@ function Subject() {
   const [engagementLetterCompareError, setEngagementLetterCompareError] = useState('');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isHtmlReviewLoading, setIsHtmlReviewLoading] = useState(false);
+  // const [isChatBotOpen, setIsChatBotOpen] = useState(false);
   const [htmlExtractionTimer, setHtmlExtractionTimer] = useState(0);
   const htmlExtractionTimerRef = useRef(null);
   const [isNotepadOpen, setIsNotepadOpen] = useState(false);
@@ -525,6 +528,28 @@ function Subject() {
       }
     };
 
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Review Details', margin, yPos);
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
+    const detailsBody = [
+        ['File Name', selectedFile?.name || 'N/A'],
+        ['User', username],
+        ['Total Time Taken', totalTime]
+    ];
+    autoTable(doc, {
+        startY: yPos,
+        body: detailsBody,
+        theme: 'plain',
+        styles: { cellPadding: 1 },
+        columnStyles: { 0: { fontStyle: 'bold' } }
+    });
+    yPos = doc.lastAutoTable.finalY + 10;
+
     const addSection = (title, head, body, headerColor = [200, 0, 0]) => {
       if (body.length === 0) return;
       if (yPos > pageHeight - 40) {
@@ -872,6 +897,10 @@ function Subject() {
     window.addEventListener('scroll', checkScrollTop);
     return () => window.removeEventListener('scroll', checkScrollTop);
   }, [showScrollTop]);
+
+  useEffect(() => {
+    setUsername(localStorage.getItem('username') || 'Unknown User');
+  }, []);
 
   const scrollTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2348,6 +2377,28 @@ function Subject() {
           }
         };
 
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('Review Details', margin, yPos);
+        yPos += 8;
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
+        const detailsBody = [
+          ['File Name', selectedFile?.name || 'N/A'],
+          ['User', username],
+          ['Total Time Taken', totalTime]
+        ];
+        autoTable(doc, {
+          startY: yPos,
+          body: detailsBody,
+          theme: 'plain',
+          styles: { cellPadding: 1 },
+          columnStyles: { 0: { fontStyle: 'bold' } }
+        });
+        yPos = doc.lastAutoTable.finalY + 10;
+
         const addSection = (title, sectionFields, sectionData, usePre = false) => {          const dataForSection = sectionData || {};
 
           if (yPos > pageHeight - 40) {
@@ -2474,7 +2525,13 @@ function Subject() {
     setNotification({ open: true, message: 'Saving data to database...', severity: 'info' });
 
     try {
+            const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
+
       const dataToSave = {
+        // ...data,
+        fileName: selectedFile?.name || 'N/A',
+        username: username,
+        totalTimeTaken: totalTime,
         ...data,
         promptAnalysis: promptAnalysisResponse
       };
@@ -2483,7 +2540,7 @@ function Subject() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        // body: JSON.stringify(data),
         body: JSON.stringify(dataToSave),
       });
 
@@ -2526,8 +2583,7 @@ function Subject() {
 
     return sections.filter(section => visibleSectionIds.includes(section.id));
   };
-
-  const renderForm = () => {
+    const renderForm = () => {
     const revisionHandlers = {
       // =========================
       // SUBJECT SECTION
@@ -3994,7 +4050,7 @@ function Subject() {
           />
 
 
-          <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Snackbar open={notification.open} autoHideDuration={3000} onClose={handleCloseNotification} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
             <Alert onClose={handleCloseNotification} severity={notification.severity} variant="filled" sx={{ width: '100%' }}>
               {notification.message}
             </Alert>
@@ -4077,6 +4133,15 @@ function Subject() {
           <NoteAltIcon />
         </Fab>
       </Tooltip>
+      {/* <Tooltip title="Open Chat Bot" placement="top">
+        <Fab color="primary" size="small" onClick={() => setIsChatBotOpen(true)} sx={{ position: 'fixed', bottom: 80, right: 16, zIndex: 1200 }}>
+          <SmartToyIcon />
+        </Fab>
+      </Tooltip> */}
+      {/* <ChatBot
+        open={isChatBotOpen}
+        onClose={() => setIsChatBotOpen(false)}
+      /> */}
       <Dialog open={isRentFormTypeMismatchDialogOpen} onClose={() => setIsRentFormTypeMismatchDialogOpen(false)}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
           <WarningIcon color="warning" sx={{ mr: 1 }} />
