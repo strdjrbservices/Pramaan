@@ -673,7 +673,8 @@ function Subject() {
 
     // Finalize PDF and notify
     addHeaderFooter();
-    doc.save('Appraisal_Review_Log.pdf');
+    const baseFileName = selectedFile?.name.replace(/\.[^/.]+$/, "") || 'Appraisal';
+    doc.save(`${baseFileName}_Validation_Log.pdf`);
     setNotification({ open: true, message: 'Combined review log generated successfully.', severity: 'success' });
   };
 
