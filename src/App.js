@@ -44,16 +44,33 @@ function App() {
     <>
       {location.pathname !== '/login' && (
         <AppBar
-          zindex={1}
+          position="sticky"
           elevation={0}
           sx={{
-            backdropFilter: 'blur(12px)',
-            // background: 'rgba(255,255,255,0.75)',
+            maxwidth: '800px !important',
+            position: 'fixed',
+            width: 800,
+            height: 64,
+            marginLeft: 30,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+            backdropFilter: 'blur(0px)',     // ✅ blur only
+            background: 'none',               // ✅ NO background
+            boxShadow: 'none',
             borderBottom: '1px solid rgba(0,0,0,0.08)',
           }}
         >
-          <Toolbar sx={{ minHeight: 64 }}>
-
+          <Toolbar
+            disableGutters
+            sx={{
+              minHeight: 64,
+              px: 2,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
             {/* Center Navigation */}
             {location.pathname !== '/' && (
               <Box
@@ -63,7 +80,6 @@ function App() {
                   mx: 'auto',
                   p: 0.5,
                   borderRadius: 3,
-                  //background: 'rgba(0,0,0,0.04)',
                 }}
               >
                 {[
@@ -83,22 +99,17 @@ function App() {
                       rel="noopener noreferrer"
                       startIcon={icon}
                       sx={{
+                        height: 40,
                         px: 2,
-                        py: 1,
                         borderRadius: 2,
                         textTransform: 'none',
                         fontWeight: 600,
                         fontSize: '0.85rem',
-                        // color: active ? 'primary.main' : 'text.secondary',
-                        background: active
-                          ? 'linear-gradient(135deg, #1976d2, #42a5f5)'
-                          : 'transparent',
-                        color: active ? '#000000ff' : 'text.secondary',
+                        background: 'none',      // ✅ NO bg
+                        color: active ? 'primary.main' : '#555',
                         transition: 'all 0.25s ease',
                         '&:hover': {
-                          background: active
-                            ? 'linear-gradient(135deg, #1565c0, #1e88e5)'
-                            : 'rgba(25,118,210,0.08)',
+                          background: 'rgba(0,0,0,0.04)',
                         },
                       }}
                     >
@@ -113,20 +124,26 @@ function App() {
             {isAuthenticated && (
               <Box
                 sx={{
+                  height: 40,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
-                  px: 2,
-                  py: 0.5,
+                  gap: 1,
+                  px: 1.5,
                   borderRadius: 99,
-                  background: 'rgba(0,0,0,0.04)',
                 }}
               >
-                <Avatar sx={{ width: 30, height: 30, bgcolor: 'primary.main' }}>
+                <Avatar
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    bgcolor: 'primary.main',
+                    fontSize: '0.85rem',
+                  }}
+                >
                   {localStorage.getItem('username')?.charAt(0).toUpperCase()}
                 </Avatar>
 
-                <Typography variant="body2" color='#000000' fontWeight={600}>
+                <Typography variant="body2" fontWeight={600} color="#000">
                   {localStorage.getItem('username')}
                 </Typography>
 
@@ -135,10 +152,10 @@ function App() {
                 </IconButton>
               </Box>
             )}
-
           </Toolbar>
         </AppBar>
       )}
+
 
 
 
