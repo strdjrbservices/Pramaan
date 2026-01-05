@@ -94,7 +94,9 @@ const Form1007 = ({
                     isMissing={extractionAttempted && (!data.Subject || !data.Subject[feature] || data.Subject[feature] === '')} isEditable={true}
                     manualValidations={manualValidations}
                     revisionHandlers={revisionHandlers}
-                    handleManualValidation={handleManualValidation}
+                    handleManualValidation={handleManualValidation} 
+                    allData={allData}
+                    saleName={'Subject'}
                   />
                 </td>
                 {comparableRents.map((rent, cidx) => (
@@ -106,7 +108,9 @@ const Form1007 = ({
                       isMissing={extractionAttempted && (!data[rent] || !data[rent][feature] || data[rent][feature] === '')} isEditable={true}
                       manualValidations={manualValidations}
                       revisionHandlers={revisionHandlers}
-                      handleManualValidation={handleManualValidation}
+                      handleManualValidation={handleManualValidation} 
+                      allData={allData}
+                      saleName={rent}
                     />
                   </td>
                 ))}

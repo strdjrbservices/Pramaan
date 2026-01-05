@@ -39,11 +39,9 @@ export const checkAssignmentTypeConsistency = (field, text, data) => {
     const assignmentType = String(text || '').trim().toLowerCase();
     const contractData = data.CONTRACT;
     const isContractSectionEmpty = !contractData || Object.values(contractData).every(value => value == null || value === '');
-
     if (assignmentType === 'purchase transaction' && isContractSectionEmpty) {
         return { isError: true, message: `Assignment Type is 'Purchase Transaction' then the Contract Section should not be empty.` };
     }
-
     if (assignmentType === 'refinance transaction' && !isContractSectionEmpty) {
         return { isError: true, message: `Assignment Type is 'Refinance Transaction' then the Contract Section should be empty.` };
     }

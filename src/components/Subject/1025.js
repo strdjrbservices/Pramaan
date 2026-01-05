@@ -91,7 +91,7 @@ const Form1025 = ({
                                         value={(data.Subject && data.Subject[feature]) || ''}
                                         onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField}
                                         isMissing={extractionAttempted && (!data.Subject || !data.Subject[feature] || data.Subject[feature] === '')}
-                                        isEditable={true}
+                                        isEditable={true} 
                                         manualValidations={manualValidations} handleManualValidation={handleManualValidation} allData={allData} />
                                 </td>
                                 {ComparableRentAdjustments.map((rent, cidx) => (
@@ -101,7 +101,7 @@ const Form1025 = ({
                                             value={(data[rent] && data[rent][feature]) || ''}
                                             onDataChange={handleDataChange}
                                             editingField={editingField} setEditingField={setEditingField}
-                                            isMissing={extractionAttempted && (!data[rent] || !data[rent][feature] || data[rent][feature] === '')}
+                                            isMissing={extractionAttempted && (!data[rent] || !data[rent][feature] || data[rent][feature] === '')} saleName={rent}
                                             isEditable={true} manualValidations={manualValidations} handleManualValidation={handleManualValidation} allData={allData}
                                         />
                                     </td>

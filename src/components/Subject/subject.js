@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Subject.css';
 import { GlobalStyles } from '@mui/system';
-import { Info, Warning as WarningIcon, Close as CloseIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon} from '@mui/icons-material';
+import { Info, Warning as WarningIcon, Close as CloseIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
 import { Button, Stack, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -208,7 +208,7 @@ function Subject() {
   const [is1007RevisionLangDialogOpen, set1007RevisionLangDialogOpen] = useState(false);
 
   const handleOpenNotepad = () => {
-    if (!notes) { 
+    if (!notes) {
       const now = new Date();
       const dateTimeString = now.toLocaleString();
       setNotes(`Date and Time: ${dateTimeString}\n\n`);
@@ -440,7 +440,22 @@ function Subject() {
       }
     });
 
-    return errors;
+    // Filter for unique errors to avoid duplicates from different data structures
+    const uniqueErrors = [];
+    const seenErrors = new Set();
+
+    for (const error of errors) {
+      // error is an array: [sectionName, fieldName, message]
+      const fieldName = error[1];
+      const message = error[2];
+      const errorKey = `${fieldName}|${message}`;
+
+      if (!seenErrors.has(errorKey)) {
+        uniqueErrors.push(error);
+        seenErrors.add(errorKey);
+      }
+    }
+    return uniqueErrors;
   };
 
   const getValidationSuccesses = () => {
@@ -537,16 +552,16 @@ function Subject() {
     doc.setFont(undefined, 'normal');
     const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
     const detailsBody = [
-        ['File Name', selectedFile?.name || 'N/A'],
-        ['User', username],
-        ['Total Time Taken', totalTime]
+      ['File Name', selectedFile?.name || 'N/A'],
+      ['User', username],
+      ['Total Time Taken', totalTime]
     ];
     autoTable(doc, {
-        startY: yPos,
-        body: detailsBody,
-        theme: 'plain',
-        styles: { cellPadding: 1 },
-        columnStyles: { 0: { fontStyle: 'bold' } }
+      startY: yPos,
+      body: detailsBody,
+      theme: 'plain',
+      styles: { cellPadding: 1 },
+      columnStyles: { 0: { fontStyle: 'bold' } }
     });
     yPos = doc.lastAutoTable.finalY + 10;
 
@@ -576,7 +591,7 @@ function Subject() {
     const validationErrors = getValidationErrors();
     const validationErrorRows = validationErrors.map(([section, field, message]) => [section, field, message]);
     if (validationErrorRows.length === 0) {
-        validationErrorRows.push(['All', 'All', 'No validation errors found.']);
+      validationErrorRows.push(['All', 'All', 'No validation errors found.']);
     }
     addSection('Validation Errors', ['Section', 'Field', 'Error Message'], validationErrorRows, [255, 165, 0]);
 
@@ -738,7 +753,7 @@ function Subject() {
         const allElements = doc.body.querySelectorAll('*');
 
         fieldsToExtract.forEach(field => {
-          extractedData[field] = 'N/A'; // Default value
+          extractedData[field] = 'N/A';
           for (let i = 0; i < allElements.length; i++) {
             const element = allElements[i];
             if (element.textContent.trim().toLowerCase().replace(/:$/, '') === field.toLowerCase()) {
@@ -1136,7 +1151,7 @@ function Subject() {
     "Source of cost data",
     "Quality rating from cost service ",
     "Effective date of cost data ",
-    "Comments on Cost Approach (gross living area calculations, depreciation, etc.) ",
+    "Comments on Cost Approach (gross living area calculations, depreciation, etc.)",
     "OPINION OF SITE VALUE = $ ................................................",
     "Dwelling",
     "Garage/Carport ",
@@ -2400,7 +2415,8 @@ function Subject() {
         });
         yPos = doc.lastAutoTable.finalY + 10;
 
-        const addSection = (title, sectionFields, sectionData, usePre = false) => {          const dataForSection = sectionData || {};
+        const addSection = (title, sectionFields, sectionData, usePre = false) => {
+          const dataForSection = sectionData || {};
 
           if (yPos > pageHeight - 40) {
             doc.addPage();
@@ -2464,45 +2480,45 @@ function Subject() {
         });
 
 
-        
-          if (yPos > pageHeight - 60) { doc.addPage(); yPos = margin; }
-          doc.setFontSize(14);
-          doc.setFont(undefined, 'bold');
-          doc.setTextColor(40);
-          doc.text('Sales Comparison Approach', margin, yPos);
-          yPos += 8;
 
-          const activeComps = comparableSales;
-          const head = [['Feature', 'Subject', ...activeComps]];
-          const body = salesGridRows.map(row => {
-            const rowData = [row.label];
-            
-            let subjectValue = (data.Subject || {})[row.valueKey] || (data.Subject || {})[row.subjectValueKey] || '';
-            if (row.adjustmentKey && data.Subject?.[row.adjustmentKey]) {
-              subjectValue += `\n(${data.Subject[row.adjustmentKey]})`;
+        if (yPos > pageHeight - 60) { doc.addPage(); yPos = margin; }
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(40);
+        doc.text('Sales Comparison Approach', margin, yPos);
+        yPos += 8;
+
+        const activeComps = comparableSales;
+        const head = [['Feature', 'Subject', ...activeComps]];
+        const body = salesGridRows.map(row => {
+          const rowData = [row.label];
+
+          let subjectValue = (data.Subject || {})[row.valueKey] || (data.Subject || {})[row.subjectValueKey] || '';
+          if (row.adjustmentKey && data.Subject?.[row.adjustmentKey]) {
+            subjectValue += `\n(${data.Subject[row.adjustmentKey]})`;
+          }
+          rowData.push(subjectValue);
+
+          activeComps.forEach(sale => {
+            let compValue = (data[sale] || {})[row.valueKey] || '';
+            if (row.adjustmentKey && data[sale]?.[row.adjustmentKey]) {
+              compValue += `\n(${data[sale][row.adjustmentKey]})`;
             }
-            rowData.push(subjectValue);
-            
-            activeComps.forEach(sale => {
-              let compValue = (data[sale] || {})[row.valueKey] || '';
-              if (row.adjustmentKey && data[sale]?.[row.adjustmentKey]) {
-                compValue += `\n(${data[sale][row.adjustmentKey]})`;
-              }
-              rowData.push(compValue);
-            });
-            return rowData;
+            rowData.push(compValue);
           });
+          return rowData;
+        });
 
-          autoTable(doc, {
-            startY: yPos,
-            head,
-            body,
-            theme: 'grid',
-            styles: { fontSize: 7, cellPadding: 1 },
-            headStyles: { fillColor: [22, 160, 133], textColor: 255, fontSize: 8 },
-            didDrawPage: (data) => { yPos = data.cursor.y + 10; }
-          });
-       
+        autoTable(doc, {
+          startY: yPos,
+          head,
+          body,
+          theme: 'grid',
+          styles: { fontSize: 7, cellPadding: 1 },
+          headStyles: { fillColor: [22, 160, 133], textColor: 255, fontSize: 8 },
+          didDrawPage: (data) => { yPos = data.cursor.y + 10; }
+        });
+
 
         addHeaderFooter();
         doc.save('Appraisal_Report_Summary.pdf');
@@ -2513,7 +2529,7 @@ function Subject() {
       } finally {
         setIsGeneratingPdf(false);
       }
-    }, 100); 
+    }, 100);
   };
 
   const handleSaveToDB = async () => {
@@ -2526,7 +2542,7 @@ function Subject() {
     setNotification({ open: true, message: 'Saving data to database...', severity: 'info' });
 
     try {
-            const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
+      const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
 
       const dataToSave = {
         // ...data,
@@ -2584,38 +2600,38 @@ function Subject() {
 
     return sections.filter(section => visibleSectionIds.includes(section.id));
   };
-    const renderForm = () => {
+  const renderForm = () => {
     const revisionHandlers = {
       // =========================
       // SUBJECT SECTION
       // =========================
       onPropertyAddressRevisionButtonClick: () => setPropertyAddressRevisionLangDialogOpen(true),
       onAssessorsParcelNumberRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Assessor's Parcel Number' field in the Subject section.";
+        const revisionText = `Please revise the 'Assessor's Parcel Number'"${data["Assessor's Parcel Number"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Assessor's Parcel Number revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONStreetRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'On Street' field in the Subject section.";
+        const revisionText = `Please revise the 'On Street' "${data["On Street"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "On Street revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onNeighborhoodNameRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Neighborhood Name' field in the Subject section.";
+        const revisionText = `Please revise the 'Neighborhood Name' "${data["Neighborhood Name"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Neighborhood Name revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onCensusTractRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Census Tract' field in the Subject section.";
+        const revisionText = `Please revise the 'Census Tract' "${data["Census Tract"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Census Tract revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONSpecialAssessmentsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Special Assessments' field in the Subject section.";
+        const revisionText = `Please revise the 'Special Assessments' "${data["Special Assessments"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Special Assessments revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -2625,61 +2641,61 @@ function Subject() {
       onDateOfContractRevisionButtonClick: () => setDateOfContractRevisionLangDialogOpen(true),
       onNeighborhoodBoundariesRevisionButtonClick: () => setNeighborhoodBoundariesRevisionLangDialogOpen(true),
       onViewRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'View' field in the Site section.";
+        const revisionText = `Please revise the 'View' "${data["View"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "View revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onDimensionsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Dimensions' field in the Site section.";
+        const revisionText = `Please revise the 'Dimensions' "${data["Dimensions"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Dimensions revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onZoningRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Zoning' field in the Site section.";
+        const revisionText = `Please revise the 'Zoning' "${data["Zoning"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Zoning revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onSpecificZoningClassificationRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Specific Zoning Classification' field in the Site section.";
+        const revisionText = `Please revise the 'Specific Zoning Classification' "${data["Specific Zoning Classification"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Specific Zoning Classification revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onShapeRevisionButtonClick: () => {
-        const revisionText = "Please revise the Shape field in the Site section.";
+        const revisionText = `Please revise the 'Shape' "${data["Shape"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Shape revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onElectricityRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Electricity' field in the Site section.";
+        const revisionText = `Please revise the 'Electricity' "${data["Electricity"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Electricity revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onWaterRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Water' field in the Site section.";
+        const revisionText = `Please revise the 'Water' "${data["Water"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Water revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onGasRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Gas' field in the Site section.";
+        const revisionText = `Please revise the 'Gas' "${data["Gas"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Gas revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFEMAMapDateRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'FEMA Map Date' field in the Site section.";
+        const revisionText = `Please revise the 'FEMA Map Date' "${data["FEMA Map Date"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "FEMA Map Date revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFEMAFloodZoneRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'FEMA Flood Zone' field in the Site section.";
+        const revisionText = `Please revise the 'FEMA Flood Zone' "${data["FEMA Flood Zone"] || '...'}" field in the Site section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "FEMA Flood Zone revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -2697,25 +2713,25 @@ function Subject() {
       // PROJECT SITE
       // =========================
       onTopographyRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Topography' field in the Project Site.";
+        const revisionText = `Please revise the 'Topography' "${data["Topography"] || '...'}" field in the Project Site.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Topography revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onSizeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Size' field in the Project Site.";
+        const revisionText = `Please revise the 'Size' "${data["Size"] || '...'}" field in the Project Site.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Size revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onDensityRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Density' field in the Project Site.";
+        const revisionText = `Please revise the 'Density' "${data["Density"] || '...'}" field in the Project Site.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Density revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONFEMAMaprevisionButtonClick: () => {
-        const revisionText = "Please revise the 'FEMA Map' field in the Project Site.";
+        const revisionText = `Please revise the 'FEMA Map' "${data["FEMA Map"] || '...'}" field in the Project Site.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "FEMA Map revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -2726,19 +2742,19 @@ function Subject() {
       // =========================
       onImprovementsRevisionButtonClick: () => setImprovementsRevisionLangDialogOpen(true),
       onDesignStyleRevisionButtonClick: () => {
-        const revisionText = "Design (Style) in Sales Grid does not match Improvements section; please revise.";
+        const revisionText = `Design (Style) "${data["Design (Style)"] || '...'}" in Sales Grid does not match Improvements section; please revise.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Design/Style revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onExteriorWallsRevisionButtonClick: () => {
-        const revisionText = "Please have the condition noted for ‘Exterior Walls’ under Improvements.";
+        const revisionText = `Please have the condition noted for ‘Exterior Walls’ "${data["Exterior Walls"] || '...'}" under Improvements.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Exterior Walls revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onSanitarySewerButtonClick: () => {
-        const revisionText = "‘Sanitary Sewer’ marked public but noted septic; please revise.";
+        const revisionText = `‘Sanitary Sewer’ "${data["Sanitary Sewer"] || '...'}" marked public but noted septic; please revise.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Sanitary Sewer revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -2776,7 +2792,7 @@ function Subject() {
       // PROPERTY RIGHTS / BORROWER / MISC
       // =========================
       onAddRevision: () => {
-        const revisionText = "Please mark that the subject is offered for sale in the subject section.";
+        const revisionText = "Please mark that the subject is offered for sale in the section.";
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -2788,218 +2804,218 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onYearBuiltRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Year Built' field in the Subject section.";
+        const revisionText = `Please revise the 'Year Built' "${data["Year Built"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Year Built revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onBasementAreaRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Basement Area sq.ft.' field in, in the Subject ) section.";
+        const revisionText = `Please revise the 'Basement Area sq.ft.' "${data["Basement Area sq.ft."] || '...'}" field in, in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Basement Area revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onGarageAreaRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Garage # of Cars' field in, in the Subject ) section.";
+        const revisionText = `Please revise the 'Garage # of Cars' "${data["Garage # of Cars"] || '...'}" field in, in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Garage # of Cars revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onEvidenceofRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Evidence of' field in the Subject section.";
+        const revisionText = `Please revise the 'Evidence of' "${data["Evidence of"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Evidence of revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFoundationTypeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Foundation Type' field in the Subject section.";
+        const revisionText = `Please revise the 'Foundation Type' "${data["Foundation Type"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Foundation Type revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       onBasementFinishRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Basement Finish sq.ft.' field in, in the Subject ) section.";
+        const revisionText = `Please revise the 'Basement Finish sq.ft.' "${data["Basement Finish sq.ft."] || '...'}" field in, in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Basement Finish revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
 
       },
       onEffectiveAgeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Effective Age' field in the Subject section.";
+        const revisionText = `Please revise the 'Effective Age' "${data["Effective Age"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Effective Age revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onRoofRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Roof' field in the Subject section.";
+        const revisionText = `Please revise the 'Roof' "${data["Roof"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Roof revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onHeatingSystemRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Heating System' field in the Subject section.";
+        const revisionText = `Please revise the 'Heating System' "${data["Heating System"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Heating System revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFoundationWallsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Foundation Walls' field in the Subject section.";
+        const revisionText = `Please revise the 'Foundation Walls' "${data["Foundation Walls"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Foundation Walls revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onGuttersDownspoutsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Gutters/Downspouts' field in the Subject section.";
+        const revisionText = `Please revise the 'Gutters/Downspouts' "${data["Gutters/Downspouts"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Gutters/Downspouts revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onWindowTypeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Window Type' field in the Subject section.";
+        const revisionText = `Please revise the 'Window Type' "${data["Window Type"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Window Type revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onWallsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Walls' field in the Subject section.";
+        const revisionText = `Please revise the 'Walls' "${data["Walls"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Walls revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ontrimRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Trim' field in the Subject section.";
+        const revisionText = `Please revise the 'Trim' "${data["Trim"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Trim revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onbsthwainscotRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Bsthwainscot' field in the Subject section.";
+        const revisionText = `Please revise the 'Bsthwainscot' "${data["Bsthwainscot"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Bsthwainscot revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onCoolingTypeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Cooling Type' field in the Subject section.";
+        const revisionText = `Please revise the 'Cooling Type' "${data["Cooling Type"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Cooling Type revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFireplaceRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Fireplace' field in the Subject section.";
+        const revisionText = `Please revise the 'Fireplace' "${data["Fireplace"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Fireplace revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onPoolRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Pool' field in the Subject section.";
+        const revisionText = `Please revise the 'Pool' "${data["Pool"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Pool revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onCarportRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Carport' field in the Subject section.";
+        const revisionText = `Please revise the 'Carport' "${data["Carport"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Carport revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onDrivewaySurfaceRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Driveway Surface' field in the Subject section.";
+        const revisionText = `Please revise the 'Driveway Surface' "${data["Driveway Surface"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Driveway Surface revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onAtticRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Attic' field in the Subject section.";
+        const revisionText = `Please revise the 'Attic' "${data["Attic"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Attic revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onGarageRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Garage' field in the Subject section.";
+        const revisionText = `Please revise the 'Garage' "${data["Garage"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Garage revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONAppliancesRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Appliances' field in the Subject section.";
+        const revisionText = `Please revise the 'Appliances' "${data["Appliances"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Appliances revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFinishedareaRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Finished Area sq.ft.' field in, in the Subject ) section.";
+        const revisionText = `Please revise the 'Finished Area sq.ft.' "${data["Finished Area sq.ft."] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Finished Area revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       ONFenceRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Fence' field in the Subject section.";
+        const revisionText = `Please revise the 'Fence' "${data["Fence"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Fence revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onSquareFeetOfGrossLivingAreaAboveGradeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Square Feet of Gross Living Area Above Grade' field in the Subject section.";
+        const revisionText = `Please revise the 'Square Feet of Gross Living Area Above Grade' "${data["Square Feet of Gross Living Area Above Grade"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Square Feet of Gross Living Area Above Grade revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onAdditionalfeaturesRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Additional Features' field in the Subject section.";
+        const revisionText = `Please revise the 'Additional Features' "${data["Additional Features"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Additional Features revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onconditionRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Condition' field in the Subject section.";
+        const revisionText = `Please revise the 'Condition' "${data["Condition"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Condition revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ontotaldollaramountRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Total Dollar Amount' field in the Subject section.";
+        const revisionText = `Please revise the 'Total Dollar Amount' "${data["Total Dollar Amount"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Total Dollar Amount revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onBuiltUpRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Built Up' field in the Subject section.";
+        const revisionText = `Please revise the 'Built Up' "${data["Built Up"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Built Up revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onPropertyValuesRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Property Values' field in the Subject section.";
+        const revisionText = `Please revise the 'Property Values' "${data["Property Values"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Property Values revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onMarketingTimeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Marketing Time' field in the Subject section.";
+        const revisionText = `Please revise the 'Marketing Time' "${data["Marketing Time"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Marketing Time revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       }, ONTwoUnitrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Two Unit' field in the Subject section.";
+        const revisionText = `Please revise the 'Two Unit' "${data["Two Unit"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Two Unit revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       }, ONMultiFamilyrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Multi Family' field in the Subject section.";
+        const revisionText = `Please revise the 'Multi Family' "${data["Multi Family"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Multi Family revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONTWOUNITAGErevisionButtonClick: () => {
-        const revisionText = "Please revise the 'one unit housing age(high,low,pred)' field in the Subject section.";
+        const revisionText = `Please revise the 'one unit housing age(high,low,pred)' "${data["one unit housing age(high,low,pred)"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Multi Family revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONMarketConditionsrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Market Conditions:";
+        const revisionText = `Please revise the 'Market Conditions:' "${data["Market Conditions:"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Market Conditions: revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3007,19 +3023,19 @@ function Subject() {
 
 
       ONNeighborhoodDescriptionrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Neighborhood Description";
+        const revisionText = `Please revise the 'Neighborhood Description' "${data["Neighborhood Description"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Neighborhood Description revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONONEUNITHOUSINGrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'One Unit Housing' field in the Subject section.";
+        const revisionText = `Please revise the 'One Unit Housing' "${data["One Unit Housing"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "One Unit Housing revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONCommercialrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Commercial' field in the Subject section.";
+        const revisionText = `Please revise the 'Commercial' "${data["Commercial"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Commercial revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3027,74 +3043,74 @@ function Subject() {
 
 
       ONOneUnitrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'One Unit' field in the Subject section.";
+        const revisionText = `Please revise the 'One Unit' "${data["One Unit"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "One Unit revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONDemandSupplyRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Demand/Supply' field in the Subject section.";
+        const revisionText = `Please revise the 'Demand/Supply' "${data["Demand/Supply"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Demand/Supply revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONGrowthRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Growth' field in the Subject section.";
+        const revisionText = `Please revise the 'Growth' "${data["Growth"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Growth revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onLocationRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Location' field in the Subject section.";
+        const revisionText = `Please revise the 'Location' "${data["Location"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Location revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       oncontractDataSourceRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Contract Data Source' field in the Subject section.";
+        const revisionText = `Please revise the 'Contract Data Source' "${data["Contract Data Source"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Contract Data Source revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       oncontractdiddidnotRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Contract Did/Did Not' field in the Subject section.";
+        const revisionText = `Please revise the 'Contract Did/Did Not' "${data["Contract Did/Did Not"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Contract Did/Did Not revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onpropertygenerallyconformRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Property Generally Conform' field in the Subject section.";
+        const revisionText = `Please revise the 'Property Generally Conform' "${data["Property Generally Conform"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Property Generally Conform revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onpropertygenerallyRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Property Generally' field in the Subject section.";
+        const revisionText = `Please revise the 'Property Generally' "${data["Property Generally"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Property Generally revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onphysicaldeficienciesRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Physical Deficiencies' field in the Subject section.";
+        const revisionText = `Please revise the 'Physical Deficiencies' "${data["Physical Deficiencies"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Physical Deficiencies revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFinishedAreaAboveGradeBathroomsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Finished Area Above Grade Bathroom(s)' field in the Subject section.";
+        const revisionText = `Please revise the 'Finished Area Above Grade Bathroom(s)' "${data["Finished Area Above Grade Bathroom(s)"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Finished Area Above Grade Bathroom(s) revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFinishedAreaAboveGradeBathsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Finished Area Above Grade Bath(s)' field in the Subject section.";
+        const revisionText = `Please revise the 'Finished Area Above Grade Bath(s)' "${data["Finished Area Above Grade Bath(s)"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Finished Area Above Grade Bath(s) revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFinishedAreaAboveGradeBedroomsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Finished Area Above Grade Bedrooms' field in the Subject section.";
+        const revisionText = `Please revise the 'Finished Area Above Grade Bedrooms' "${data["Finished Area Above Grade Bedrooms"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Finished Area Above Grade Bedrooms revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3102,62 +3118,62 @@ function Subject() {
 
 
       onDrivewayRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Driveway' field in the Subject section.";
+        const revisionText = `Please revise the 'Driveway' "${data["Driveway"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Driveway revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onCarStorageRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Car Storage' field in the Subject section.";
+        const revisionText = `Please revise the 'Car Storage' "${data["Car Storage"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Car Storage revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onPatioDeckrevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Patio/Deck' field in the Subject section.";
+        const revisionText = `Please revise the 'Patio/Deck' "${data["Patio/Deck"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Patio/Deck revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onWoodstoveRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Woodstove' field in the Subject section.";
+        const revisionText = `Please revise the 'Woodstove' "${data["Woodstove"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Woodstove revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onbathfloorRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Bath Floor (Material/Condition)' field in the Subject section.";
+        const revisionText = `Please revise the 'Bath Floor (Material/Condition)' "${data["Bath Floor (Material/Condition)"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Bath Floor revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       onFloorsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Floors' field in the Subject section.";
+        const revisionText = `Please revise the 'Floors' "${data["Floors"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Floors revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onScreensRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Screens' field in the Subject section.";
+        const revisionText = `Please revise the 'Screens' "${data["Screens"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Screens revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onStormSashInsulatedRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Storm Sash/Insulated' field in the Subject section.";
+        const revisionText = `Please revise the 'Storm Sash/Insulated' "${data["Storm Sash/Insulated"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Storm Sash/Insulated revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onWindowRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Window' field in the Subject section.";
+        const revisionText = `Please revise the 'Window' "${data["Window"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Window revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFuelRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Fuel' field in the Subject section.";
+        const revisionText = `Please revise the 'Fuel' "${data["Fuel"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Fuel revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3170,26 +3186,26 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onTypeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Type' field in the Subject section.";
+        const revisionText = `Please revise the 'Type' "${data["Type"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       onofStoriesRevisionButtonClick: () => {
-        const revisionText = "Please revise the '# of Stories' field in the Subject section.";
+        const revisionText = `Please revise the '# of Stories' "${data["# of Stories"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onAddEmptyBorrowerRevision: () => {
-        const revisionText = "Please add the borrower's to the report.";
+        const revisionText = `Please add the borrower's "${data["borrower's "] || '...'}" to the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Borrower revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onAddLegalDescRevision: () => {
-        const revisionText = "Legal Description noted as 'see attached addendum' but missing; please revise.";
+        const revisionText = "Legal Description noted as 'see attached addendum'  but missing; please revise.";
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Legal Description revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3207,7 +3223,7 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onAddParcelNumberRevision: () => {
-        const revisionText = "Please have the ‘Assessor's Parcel #’ noted in the subject section.";
+        const revisionText = `Please have the ‘Assessor's Parcel #’  "${data["Assessor's Parcel #"] || '...'}" noted in the subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Parcel Number revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3227,49 +3243,49 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONCountyRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'County' field in the Subject section.";
+        const revisionText = `Please revise the 'County' "${data["County"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "County revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONTaxYearRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Tax Year' field in the Subject section.";
+        const revisionText = `Please revise the 'Tax Year' "${data["Tax Year"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Tax Year revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONZipCodeRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Zip Code' field in the Subject section.";
+        const revisionText = `Please revise the 'Zip Code' "${data["Zip Code"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Zip Code revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONReportdataRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Report Data' field in the Subject section.";
+        const revisionText = `Please revise the 'Report Data' "${data["Report Data"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Report Data revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONPUDRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'PUD' field in the Subject section.";
+        const revisionText = `Please revise the 'PUD' "${data["PUD"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "PUD revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONOccupantRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Occupant' field in the Subject section.";
+        const revisionText = `Please revise the 'Occupant' "${data["Occupant"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Occupant revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONComparablePropertiesRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Sales Comparison Approach' field in the Subject section.";
+        const revisionText = `Please revise the 'Sales Comparison Approach' "${data["Sales Comparison Approach"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Sales Comparison Approach revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONUnitsRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Units' field in the Subject section.";
+        const revisionText = `Please revise the 'Units' "${data["Units"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Units revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3281,45 +3297,45 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONMapReferencerevisionButtonClick: () => {
-        const revisionText = "Please revise the 'Map Reference' field in the Subject section.";
+        const revisionText = `Please revise the 'Map Reference' "${data["Map Reference"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Map Reference revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       ONCityRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'City' field in the Subject section.";
+        const revisionText = `Please revise the 'City' "${data["City"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "City revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onHoaRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'HOA Dues' field in the Subject section.";
+        const revisionText = `Please revise the 'HOA Dues' "${data["HOA Dues"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "HOA Dues revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       onStateRevisionButtonClick: () => {
-        const revisionText = "Please revise the 'State' field in the Subject section.";
+        const revisionText = `Please revise the 'State' "${data["State"] || '...'}" field in the Subject section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "State revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onRETaxesRevisionButtonClick: () => {
-        const revisionText = "Please revise the R.E. Taxes $ must only contain numbers and currency symbols.";
+        const revisionText = `Please revise the R.E. Taxes $ "${data["R.E. Taxes $"] || '...'}" must only contain numbers and currency symbols.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Real Estate Taxes revision text copied to clipboard!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onFemaHazardRevisionButtonClick: () => {
-        const revisionText = "‘FEMA Special Flood Hazard Area' marked NO but Zone is AE; please revise.";
+        const revisionText = `‘FEMA Special Flood Hazard Area' "${data["FEMA Special Flood Hazard Area"] || '...'}"  marked NO but Zone is AE; please revise.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "FEMA Hazard revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onOffSiteImprovementsButtonClick: () => {
-        const revisionText = "Please check a box for 'Are the utilities/off-site improvements typical?'";
+        const revisionText = `Please check a box for 'Are the utilities/off-site improvements typical?' "${data["Are the utilities/off-site improvements typical?"] || '...'}" `;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Off-Site Improvements revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3333,7 +3349,7 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onGRID2ButtonClick: () => {
-        const revisionText = "If prior sales were revealed, 'Date of Prior Sale/Transfer' and 'Price of Prior Sale/Transfer' for the Subject must be filled.";
+        const revisionText = `If prior sales were revealed, 'Date of Prior Sale/Transfer' "${data["Date of Prior Sale/Transfer"] || '...'}" and 'Price of Prior Sale/Transfer' "${data["Price of Prior Sale/Transfer"] || '...'}" for the Subject must be filled.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "sale/transfer history revision copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
@@ -3384,119 +3400,357 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onNameButtonClick: () => {
-        const revisionText = "Name";
+        const revisionText = `Please revise the 'Name' "${data["Name"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Name", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       }, onCompanyNameButtonClick: () => {
-        const revisionText = "Company Name";
+        const revisionText = `Please revise the 'Company Name' "${data["Company Name"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Company Name", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       }, onCompanyAddressButtonClick: () => {
-        const revisionText = "Company Address";
+        const revisionText = `Please revise the 'Company Address' "${data["Company Address"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Company Address", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       }, onTelephoneNumberButtonClick: () => {
-        const revisionText = "Telephone Number";
+        const revisionText = `Please revise the 'Telephone Number' "${data["Telephone Number"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Telephone Number", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onEmailButtonClick: () => {
-        const revisionText = "Email";
+        const revisionText = `Please revise the "Email" "${data["Email"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Email", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       onDATESignatureButtonClick: () => {
-        const revisionText = "Date";
+        const revisionText = `Please revise the "Date" "${data["Date of Signature and Report"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Date", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONEffectiveDateofAppraisal: () => {
-        const revisionText = "Effective Date of Appraisal";
+        const revisionText = `Please revise the Effective Date of Appraisal "${data["Effective Date of Appraisal"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Effective Date of Appraisal", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONSTATE1ofAppraisal: () => {
-        const revisionText = "State Certification #/or State License #/or Other (describe)/State #";
+        const revisionText = `Please revise the "State Certification #/or State License #/or Other (describe)/State #" "${data["State Certification #"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "State Certification #/or State License #/or Other (describe)/State #", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONADDRESSOFPROPERTYAppraisal: () => {
-        const revisionText = "ADDRESS OF PROPERTY APPRAISED";
+        const revisionText = `Please revise the "ADDRESS OF PROPERTY APPRAISED" "${data["Address of Property Appraised"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "ADDRESS OF PROPERTY APPRAISED ", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONAPPRAISEDVALUEofAppraisal: () => {
-        const revisionText = "APPRAISED VALUE OF SUBJECT PROPERTY $";
+        const revisionText = `Please revise the "APPRAISED VALUE OF SUBJECT PROPERTY $" "${data["Appraised Value of Subject Property"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "APPRAISED VALUE OF SUBJECT PROPERTY $", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONCLIENTNameAppraisal: () => {
-        const revisionText = "LENDER/CLIENT Name";
+        const revisionText = `Please revise the "LENDER/CLIENT Name" "${data["Lender/Client Name"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "LENDER/CLIENT Name", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONCompanyName: () => {
-        const revisionText = "Lender/Client Company NAME";
+        const revisionText = `Please revise the "Lender/Client Company NAME" "${data["Lender/Client Company Name"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Lender/Client Company NAME", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       ONCompanyAddress: () => {
-        const revisionText = "Lender/Client COMPANY Address";
+        const revisionText = `Please revise the "Lender/Client COMPANY Address" "${data["Lender/Client Company Address"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Lender/Client COMPANY Address", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONEmailAddress: () => {
-        const revisionText = "Lender/Client Email Address";
+        const revisionText = `Please revise the "Lender/Client Email Address" "${data["Lender/Client Email Address"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Lender/Client Email Address", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
       ONInsurance: () => {
-        const revisionText = "Insurance COPY";
+        const revisionText = `Please revise the "Insurance COPY" "${data["Insurance Copy"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Insurance COPY", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONEXP: () => {
-        const revisionText = "Expiration Date of Certification or License";
+        const revisionText = `Please revise the "Expiration Date of Certification or License" "${data["Expiration Date of Certification or License"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Expiration Date of Certification or License", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONPPT: () => {
-        const revisionText = "Policy Period To";
+        const revisionText = `Please revise the "Policy Period To" "${data["Policy Period To"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Policy Period To", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONLVT: () => {
-        const revisionText = "License Vaild To";
+        const revisionText = `Please revise the "License Valid To" "${data["License Valid To"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
-        setNotification({ open: true, message: "License Vaild To", severity: "success" });
+        setNotification({ open: true, message: "License Valid To", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
       ONLVT1: () => {
-        const revisionText = "LICENSE/REGISTRATION/CERTIFICATION #";
+        const revisionText = `Please revise the "LICENSE/REGISTRATION/CERTIFICATION #" "${data["LICENSE/REGISTRATION/CERTIFICATION #"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "LICENSE/REGISTRATION/CERTIFICATION #", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
+      // reconciliationFields
+      ONIndicated1: () => {
+        const revisionText = `Please revise the "Indicated Value by Cost Approach $" "${data["Indicated Value by Cost Approach $"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Indicated Value by Cost Approach $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONcostApproach: () => {
+        const revisionText = `Please revise the "COST APPROACH" "${data["COST APPROACH"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "COST APPROACH", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONincomeApproach: () => {
+        const revisionText = `Please revise the "INCOME APPROACH" "${data["INCOME APPROACH"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "INCOME APPROACH", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONincomeApproach2: () => {
+        const revisionText = `Please revise the "Indicated Value by Income Approach $" "${data["Indicated Value by Income Approach $"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Indicated Value by Income Approach $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONReconciledValue: () => {
+        const revisionText = `Please revise the "RECONCILED VALUE $" "${data["RECONCILED VALUE $"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "RECONCILED VALUE $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONReconciledValue1: () => {
+        const revisionText = `Please revise the "Reconciled Value $" "${data["Reconciled Value $"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Reconciled Value $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      // Cost Approach
+
+      ONEstimated: () => {
+        const revisionText = `Please revise the "Estimated" "${data["Estimated"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Estimated", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onSourceofcostdata: () => {
+        const revisionText = `Please revise the "Source of cost data:" "${data["Source of cost data:"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Source of cost data:", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onQuality: () => {
+        const revisionText = `Please revise the "Quality rating from cost service" "${data["Quality rating from cost service"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Quality", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onEffectiveDateofcostdata: () => {
+        const revisionText = `Please revise the "Effective date of cost data" "${data["Effective date of cost data"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Effective date of cost data", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onCommentsOnCost: () => {
+        const revisionText = `Please revise the "Comments on Cost Approach" "${data["Comments on Cost Approach (gross living area calculations, depreciation, etc.)"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Comments on Cost Approach", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onOPINIONOFSITE: () => {
+        const revisionText = `Please revise the "OPINION OF SITE VALUE $" "${data["OPINION OF SITE VALUE = $ ................................................"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "OPINION OF SITE VALUE $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onDwelling: () => {
+        const revisionText = `Please revise the "Dwelling" "${data["Dwelling"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Dwelling", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },  
+      onGarageCarport: () => {
+        const revisionText = `Please revise the "Garage/Carport" "${data["Garage/Carport "] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Garage/Carport", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onEstimatedRemainingEconomicLife: () => {
+        const revisionText = `Please revise the "Estimated Remaining Economic Life" "${data["Estimated Remaining Economic Life (HUD and VA only)"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Estimated Remaining Economic Life", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONTOTALESTIMATE: () => {
+        const revisionText = `Please revise the "TOTAL ESTIMATE OF VALUE $ " "${data[" Total Estimate of Cost-New  = $ ..................."] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "TOTAL ESTIMATE OF VALUE $ ", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONDepreciation: () => {
+        const revisionText = `Please revise the "Depreciation" "${data["Depreciation"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Depreciation", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONTOTALDEDUCT: () => {
+        const revisionText = `Please revise the "TOTAL DEDUCTIONS $ " "${data["Depreciated Cost of Improvements......................................................=$ "] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "TOTAL DEDUCTIONS $ ", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onasisvalueofsiteimprovements: () => {
+        const revisionText = `Please revise the "As-is value of site improvements" "${data["As-is” Value of Site Improvements......................................................=$"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "As-is value of site improvements", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onTotalValuebyCostApproach: () => {
+        const revisionText = `Please revise the "Indicated Value By Cost Approach" "${data["Indicated Value By Cost Approach......................................................=$"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Indicated Value by Cost Approach $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+
+      // Income Approach
+      onEffectiveGrossIncome: () => {
+        const revisionText = `Please revise the "Estimated Monthly Market Rent $" "${data["Estimated Monthly Market Rent $"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Estimated Monthly Market Rent $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },  
+      onxgross: () => {
+        const revisionText = `Please revise the "X Gross Rent Multiplier" "${data["X Gross Rent Multiplier  = $"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "X Gross Rent Multiplier", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onIndicatedValuebyIncomeApproach: () => {
+        const revisionText = `Please revise the "Indicated Value by Income Approach $" "${data["Indicated Value by Income Approach"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Indicated Value by Income Approach $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onIIA: () => {
+        const revisionText = `Please revise the "Indicated Value by Income Approach" "${data["Indicated Value by Income Approach"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "INCOME APPROACH", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONSUMMARYOFINCOMEAPPROACH: () => {
+        const revisionText = `Please revise the "SUMMARY OF INCOME APPROACH" "${data["Summary of Income Approach (including support for market rent and GRM) "] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "SUMMARY OF INCOME APPROACH", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onPUDFees$: () => {
+        const revisionText = `Please revise the "PUD Fees $" "${data["PUD Fees $"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "PUD Fees $", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONPUDFeesM: () => {    
+        const revisionText = `Please revise the "PUD Fees (per month)" "${data["PUD Fees (per month)"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "PUD Fees", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONPUDFeesy: () => {    
+        const revisionText = `Please revise the "PUD Fees (per year)" "${data["PUD Fees (per year)"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "PUD Fees", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONdbha: () => {
+        const revisionText = `Please revise the "Is the developer/builder in control of the Homeowners' Association (HOA)?" "${data["Is the developer/builder in control of the Homeowners' Association (HOA)?"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Is the developer/builder in control of the Homeowners' Association (HOA)?", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      ONunittypes: () => {
+        const revisionText = `Please revise the "Unit Types" "${data["Unit type(s)"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Unit Types", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onProvideThe: () => {
+        const revisionText = `Please revise the "Provide the following information for PUDs ONLY if the developer/builder is in control of the HOA and the subject property is an attached dwelling unit." "${data["Provide the following information for PUDs ONLY if the developer/builder is in control of the HOA and the subject property is an attached dwelling unit."] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Provide the following information for PUDs ONLY if the developer/builder is in control of the HOA and the subject property is an attached dwelling unit.", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onLegalNameOfProject: () => {
+        const revisionText = `Please revise the "Legal Name of Project" "${data["Legal Name of Project"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Legal Name of Project", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onTotalNumberOfPhases: () => {
+        const revisionText = `Please revise the "Total Number of Phases" "${data["Total Number of Phases"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Total Number of Phases", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onTotalNumberOfUnits: () => {
+        const revisionText = `Please revise the "Total Number of Units" "${data["Total number of units"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Total Number of Units", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onTotalNumberOfUnitsSold: () => {
+        const revisionText = `Please revise the "Total Number of Units Sold" "${data["Total number of units sold"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Total Number of Units Sold", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },onTotalNumberOfUnitsRented: () => {
+        const revisionText = `Please revise the "Total number of units rented" "${data["Total number of units rented"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Total Number of Units Rented", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },onTotalNumberOfUnitsForSale: () => {
+        const revisionText = `Please revise the "Total number of units for sale" "${data["Total number of units for sale"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Total Number of Units for Sale", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },onDatasourcepi: () => {
+        const revisionText = `Please revise the "Data Source(s) for project information" "${data["Data source(s)"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Data Source(s) for project information", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      },
+      onprojectcreated: () => {
+        const revisionText = `Please revise the "Date Project Created" "${data["Was the project created by the conversion of existing building(s) into a PUD?"] || '...'}" in the report.`;
+        navigator.clipboard.writeText(revisionText);
+        setNotification({ open: true, message: "Date Project Created", severity: "success" });
+        setNotes(prev => `${prev}\n- ${revisionText}`);
+      }     
+
     };
+
 
     const props = {
       data, allData: data, extractionAttempted, handleDataChange, editingField, setEditingField, isEditable, highlightedSubjectFields, highlightedContractFields, highlightedSiteFields, subjectFields, contractFields, neighborhoodFields, siteFields, improvementsFields, salesGridRows, comparableSales, salesComparisonAdditionalInfoFields, salesHistoryFields, priorSaleHistoryFields, reconciliationFields, costApproachFields, incomeApproachFields, pudInformationFields, marketConditionsFields, marketConditionsRows, condoCoopProjectsRows, condoForeclosureFields, appraiserFields, supplementalAddendumFields, uniformResidentialAppraisalReportFields, appraisalAndReportIdentificationFields, projectSiteFields, projectInfoFields, projectAnalysisFields, unitDescriptionsFields, imageAnalysisFields, dataConsistencyFields, ComparableRentAdjustments, comparableRents, RentSchedulesFIELDS2, rentScheduleReconciliationFields, formType: selectedFormType, comparisonData, getComparisonStyle, SalesComparisonSection, EditableField, infoOfSalesFields, loading, stateRequirementFields, handleStateRequirementCheck, stateReqLoading, stateReqResponse, stateReqError, handleUnpaidOkCheck, unpaidOkLoading, unpaidOkResponse, unpaidOkError, handleClientRequirementCheck, clientReqLoading, clientReqResponse, clientReqError, handleFhaCheck, handleADUCheck, fhaLoading, fhaResponse, fhaError, ADULoading, handleEscalationCheck, escalationLoading, escalationResponse, escalationError, onDataChange: handleDataChange, handleExtract, manualValidations, handleManualValidation, SUBJECT_RENT_SCHEDULE, COMPARABLE_RENTAL_DATA,
@@ -3591,8 +3845,6 @@ function Subject() {
             </Typography>
           </Box>
 
-
-
           <Paper
             elevation={2}
             sx={{
@@ -3607,9 +3859,6 @@ function Subject() {
               container
               spacing={2}
               alignItems="center"
-
-
-
               sx={{ display: "flex", flexWrap: "wrap" }}
             >
               {/* Select File */}
@@ -3626,7 +3875,7 @@ function Subject() {
                     />
                   </Button>
                 </Tooltip>
-                {/* {selectedFile && <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>{selectedFile.name}</Typography>} */}
+
               </Grid>
 
               {/* Optional HTML File */}
@@ -3731,16 +3980,16 @@ function Subject() {
                 <Button
                   variant="outlined"
                   color="error"
-              //     onClick={handleGenerateErrorLog}
-              //     disabled={Object.keys(data).length === 0}
-              //   >
-              //     Generate Error Log
-              //   </Button>
-              // </Grid>
-              // <Grid item>
-              //   <Button
-              //     variant="outlined"
-              //     color="warning"
+                  //     onClick={handleGenerateErrorLog}
+                  //     disabled={Object.keys(data).length === 0}
+                  //   >
+                  //     Generate Error Log
+                  //   </Button>
+                  // </Grid>
+                  // <Grid item>
+                  //   <Button
+                  //     variant="outlined"
+                  //     color="warning"
                   onClick={handleGenerateValidationLog}
                   disabled={Object.keys(data).length === 0}
                 >
@@ -4333,7 +4582,7 @@ function Subject() {
         onClose={() => setPropertyAddressRevisionLangDialogOpen(false)}
         title="Property Address Revision Language"
         prompts={[
-          "The subject's street name should reflect as \"River Bend\" (two words); please revise.",
+          `The subject's street name should reflect as "${data['Property Address'] || '...'}", please revise.`,
           "Please revise the subject's street suffix from Cir to Dr.",
           "Please add the street suffix ‘Dr’ in the lender address."
         ]}
@@ -4352,12 +4601,11 @@ function Subject() {
         onClose={() => setLenderClientRevisionLangDialogOpen(false)}
         title="Lender/Client Revision Language"
         prompts={[
-          "Please add ‘Inc’ at the end of the lender/client name: OCMBC Inc.",
-          "Please revise the spelling of the lender name:",
-          "Please remove ‘Inc’ from the lender/client name so it reflects as JMAC Lending.",
-          "Please revise the lender/client address city name to match the order form:",
-          "Please remove ‘Trust’ from the lender/client name so it reflects as BPL Mortgage, LLC.",
-          "Please revise the lender/client name to match the order form: NQM Funding, LLC"
+          `Please add ‘Inc’ at the end of the lender/client name:"${data['Lender/Client'] || '...'}"`,
+          `Please revise the spelling of the lender name:"${data['Lender/Client'] || '...'}"`,
+          `Please remove ‘Inc’ from the lender/client name so it reflects as "${data['Lender/Client'] || '...'}".`,
+          `Please remove ‘Trust’ from the lender/client name so it reflects as "${data['Lender/Client'] || '...'}".`,
+          `Please revise the lender/client name to match the order form: "${data['Lender/Client'] || '...'}"`
         ]}
         onCopy={(text) => {
           navigator.clipboard.writeText(text);
@@ -4389,7 +4637,7 @@ function Subject() {
         onClose={() => setDateOfContractRevisionLangDialogOpen(false)}
         title="Date of Contract Revision Language"
         prompts={[
-          "The ‘Date of Contract’ noted in the contract section does not match with the purchase agreement; please revise."
+          `The ‘Date of Contract’ "${data['Date of Contract'] || '...'}" noted in the contract section does not match with the purchase agreement; please revise.`
         ]}
         onCopy={(text) => {
           navigator.clipboard.writeText(text);
@@ -4442,9 +4690,8 @@ function Subject() {
         onClose={() => setLenderClientAddressRevisionLangDialogOpen(false)}
         title="Lender/Client Address Revision Language"
         prompts={[
-          "Please revise the lender/client address on the signature card:",
-          "Please revise the lender/client address city name to match the order form:"
-        ]}
+          `Please revise the lender/client address "${data['Address (Lender/Client)'] || '...'}" on the signature card:`,
+          `Please revise the lender/client address city name "${data['Address (Lender/Client)'] || '...'}" to match the order form:`]}
         onCopy={(text) => {
           navigator.clipboard.writeText(text);
           setNotification({ open: true, message: 'Copied to clipboard!', severity: 'success' });
@@ -4460,7 +4707,7 @@ function Subject() {
         title="Contract Price Revision Language"
         prompts={[
           "The ‘Contract Price’ noted in the report does not match with the purchase agreement; please revise.",
-          "The report shows the ‘Contract Price’ as $295,000; however, the purchase agreement shows the contract price as $280,000. Please verify."
+          `The report shows the ‘Contract Price’ as "${data['Contract Price $'] || '...'}"; however, the purchase agreement shows the contract price as "${data['Contract Price $'] || '...'}". Please verify.`
         ]}
         onCopy={(text) => {
           navigator.clipboard.writeText(text);
@@ -4477,8 +4724,8 @@ function Subject() {
         title="Neighborhood Boundaries Revision Language"
         prompts={[
           "Please provide appropriate neighborhood boundaries of all directions in the Neighborhood section.",
-          "The North boundary is missing from the ‘Neighborhood Boundaries’, please provide",
-          "Please provide the south side boundary of the neighborhood and revise the north boundary which is described twice."
+          `The North boundary is missing from the ‘Neighborhood Boundaries’ "${data['Neighborhood Boundaries'] || '...'}", please provide`,
+          `Please provide the south side boundary of the neighborhood "${data['Neighborhood Boundaries'] || '...'}" and revise the north boundary which is described twice.`
         ]}
         onCopy={(text) => {
           navigator.clipboard.writeText(text);
@@ -4494,7 +4741,7 @@ function Subject() {
         onClose={() => setOtherLandUseRevisionLangDialogOpen(false)}
         title="Other Land Use Revision Language"
         prompts={[
-          "Please revise the ‘Present Land Use’ percentage as it should be 100%.",
+          `Please revise the "${data['Present Land Use'] || '...'}" ‘Present Land Use’ percentage as it should be 100%.`,
           "Please comment on 10% other land usage."
         ]}
         onCopy={(text) => {
@@ -4528,7 +4775,7 @@ function Subject() {
         onClose={() => setAreaRevisionLangDialogOpen(false)}
         title="Area Revision Language"
         prompts={[
-          "Please mention ac. or sf for site area in the site section."
+          `Please mention ac. or sf for site area "${data['Area'] || '...'}" in the site section.`
         ]}
         onCopy={(text) => {
           navigator.clipboard.writeText(text);
@@ -4544,7 +4791,7 @@ function Subject() {
         onClose={() => setFemaHazardRevisionLangDialogOpen(false)}
         title="FEMA Hazard Revision Language"
         prompts={[
-          "‘FEMA Special Flood Hazard Area' marked as ‘NO’ ; however, FEMA Flood Zone is AE; please revise."
+          `‘FEMA Special Flood Hazard Area' marked as ‘NO’ ; however, FEMA Flood Zone is "${data['FEMA Flood Zone'] || '...'}"; please revise.`
         ]}
         onCopy={(text) => {
           navigator.clipboard.writeText(text);

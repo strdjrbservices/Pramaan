@@ -5,7 +5,19 @@ body {
   color: #000000 !important;
 
 }
-
+.css-3bkptl-MuiPaper-root-MuiAppBar-root {
+  background-color: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: auto !important;
+  border-radius: none !important;
+  box-shadow: none !important;
+}
+.css-1wayox2-MuiPaper-root{
+  padding: 10px !important;
+}
 .mt-5 {
   margin-top: 1.3rem !important;
 }

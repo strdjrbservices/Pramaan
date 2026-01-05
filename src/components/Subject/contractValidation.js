@@ -56,9 +56,9 @@ export const checkFinancialAssistanceInconsistency = (field, data) => {
     const numericPart = (amountText.match(/(-?\d+(\.\d+)?)/) || [])[0];
     const amountValue = numericPart !== undefined ? parseFloat(numericPart) : NaN;
 
-    if (assistanceAnswer === 'yes' && (amountText === '' || isNaN(amountValue) || amountValue <= 0)) {
+    if (assistanceAnswer === 'yes' && (amountText === '' || isNaN(amountValue) || amountValue <= 0 || amountValue === 0)) {
         return { isError: true, message: `Financial assistance is 'Yes', but the amount is missing or not greater than 0.` };
-    } else if (assistanceAnswer === 'no' && amountText && (isNaN(amountValue) || amountValue !== 0)) {
+    } else if (assistanceAnswer === 'no' && amountText && (isNaN(amountValue))) {
         return { isError: true, message: `Financial assistance is 'No', but the amount is not '0' or blank.` };
     }
     return { isMatch: true };

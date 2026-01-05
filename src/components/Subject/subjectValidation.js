@@ -14,7 +14,6 @@ export const checkTaxYear = (field, text) => {
     }
     return { isMatch: true };
 };
-
 export const checkRETaxes = (field, text) => {
     if (field !== 'R.E. Taxes $') return null;
     const taxesValue = String(text || '').trim();
@@ -22,18 +21,12 @@ export const checkRETaxes = (field, text) => {
     if (!taxesValue) {
         return { isError: true, message: 'R.E. Taxes $ should not be blank.' };
     }
-    
     if (integerPart.length > 4) {
         return { isError: true, message: 'R.E. Taxes $ integer part should not exceed 4 digits.' };
     }
-    // Check if the value contains any alphabetic characters.
     if (/[a-zA-Z]/.test(taxesValue)) {
         return { isError: true, message: 'R.E. Taxes $ must only contain numbers and currency symbols.' };
     }
-    // const integerPart = taxesValue.split('.')[0].replace(/[^0-9]/g, '');
-    // if (integerPart.length > 4) {
-    //     return { isError: true, message: 'R.E. Taxes $ integer part should not exceed 4 digits.' };
-    // }
     return { isMatch: true };
 };
 
@@ -69,7 +62,6 @@ export const checkHOA = (field, text, data) => {
     }
     return { isMatch: true };
 };
-
 export const checkOfferedForSale = (field, text, data) => {
     if (field === 'Offered for Sale in Last 12 Months') {
         const value = String(text || '').trim().toLowerCase();
@@ -81,7 +73,6 @@ export const checkOfferedForSale = (field, text, data) => {
             if (!detailsField) {
                 return { isError: true, message: "If 'Yes', details must be provided in the data source field below." };
             }
-
             const detailsValue = String(detailsField || '').toLowerCase();
             const keywords = ['dom', 'listed', 'listing', 'mls', 'multiple listing service'];
             const hasKeyword = keywords.some(keyword => detailsValue.includes(keyword));
@@ -106,16 +97,13 @@ export const checkPropertyRightsInconsistency = (field, text, data) => {
 
 export const checkAnsi = (field, text, data) => {
     if (field !== 'ANSI') return null;
-
     const isFha = data && data['FHA Case No.'] && String(data['FHA Case No.']).trim() !== '';
     const ansiComment = String(text || '').trim();
-
     // Check for forbidden code GX001
     if (ansiComment.toUpperCase().includes('GX001')) {
         return { isError: true, message: "ANSI comment must not include code 'GX001'." };
     }
 
-    // For conventional loans, the comment is mandatory
     if (!isFha && !ansiComment) {
         return { isError: true, message: "ANSI comment is mandatory for conventional loans." };
     }
@@ -126,11 +114,10 @@ export const checkAnsi = (field, text, data) => {
 export const checkCensusTract = (field, text) => {
     if (field !== 'Census Tract') return null;
     const value = String(text || '').trim();
-    if (!value) return null; // Not blank validation, just numeric
+    if (!value) return null; 
 
     if (!/^\d+(\.\d+)?$/.test(value)) {
         return { isError: true, message: 'Census Tract must only contain numbers.' };
     }
-    
     return { isMatch: true };
 };

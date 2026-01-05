@@ -88,7 +88,7 @@ export const checkBathsAdjustment = (field, allData, saleName) => {
         if (adjustmentValue >= 0) {
             return { isError: true, message: `Warning: Comp has more baths (${compBaths}) than Subject (${subjectBaths}), so a negative adjustment is expected.` };// Negative adjustment is valid
         }
-     } else { // compBaths < subjectBaths, Comp is inferior
+    } else { // compBaths < subjectBaths, Comp is inferior
         if (adjustmentValue <= 0) {
             return { isError: true, message: `Warning: Comp has fewer baths (${compBaths}) than Subject (${subjectBaths}), so a positive adjustment is expected.` };
         }
@@ -201,17 +201,53 @@ export const checkGrossLivingAreaAdjustment = (field, allData, saleName) => {
 };
 
 export const checkSubjectAddressInconsistency = (field, text, data, fieldPath) => {
-    if ((field !== 'Property Address' && field !== 'Address') || !data?.Subject) return null;
-    if (field === 'Address' && fieldPath[0] !== 'Subject') return null;
-
-    const mainSubjectAddress = String(data['Property Address'] || '').trim();
-    const gridSubjectAddress = String(data.Subject?.['Address'] || '').trim();
-
-    if (mainSubjectAddress && gridSubjectAddress && mainSubjectAddress !== gridSubjectAddress) {
-        return { isError: true, message: `Subject Address mismatch: Subject section has '${mainSubjectAddress}', but Sales Comparison has '${gridSubjectAddress}'.` };
+    if ((field !== 'Property Address' && field !== 'Address') || !data?.Subject) {
+        return null;
     }
-    return { isMatch: true };
+
+  
+    if (field === 'Address' && fieldPath[0] !== 'Subject') {
+        return null;
+    }
+
+    const normalize = (val) =>
+        String(val || '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, ' ');
+
+    const subjectAddress = normalize(data['Property Address']);
+    const subjectCity = normalize(data.Subject?.City);
+    const subjectState = normalize(data.Subject?.State);
+    const subjectZip = normalize(data.Subject?.ZipCode);
+
+    const gridAddress = normalize(data.Subject?.Address);
+
+    if (!gridAddress || !subjectAddress) {
+        return null;
+    }
+
+    const fullSubjectAddress = normalize(
+        `${subjectAddress} ${subjectCity} ${subjectState} ${subjectZip}`
+    );
+
+    if (gridAddress === fullSubjectAddress) {
+        return { isMatch: true };
+    }
+
+    if (gridAddress === subjectAddress) {
+        return { isMatch: true };
+    }
+
+
+    return {
+        isError: true,
+        message: `Subject Address mismatch. 
+Expected '${fullSubjectAddress}' or '${subjectAddress}', 
+but Sales Grid has '${gridAddress}'.`
+    };
 };
+
 
 export const checkDesignStyleAdjustment = (field, allData, saleName) => {
     const isDesignField = field === 'Design (Style)';

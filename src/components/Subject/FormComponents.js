@@ -3,7 +3,7 @@ import { checkAssignmentTypeConsistency, checkSubjectFieldsNotBlank } from './ge
 import { checkContractFieldsMandatory, checkFinancialAssistanceInconsistency, checkContractAnalysisConsistency, checkYesNoOnly } from './contractValidation';
 import { checkTaxYear, checkRETaxes, checkSpecialAssessments, checkPUD, checkHOA, checkOfferedForSale, checkAnsi } from './subjectValidation';
 import { checkZoning, checkZoningDescription, checkSpecificZoningClassification, checkHighestAndBestUse, checkFemaInconsistency, checkFemaFieldsConsistency, checkSiteSectionBlank, checkArea, checkYesNoWithComment, checkUtilities } from './siteValidation';
-import { checkHousingPriceAndAge, checkNeighborhoodUsageConsistency, checkSingleChoiceFields, checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank } from './neighborhoodValidation';
+import { checkHousingPriceAndAge, checkNeighborhoodUsageConsistency, checkSingleChoiceFields, checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank, checkOtherLandUse } from './neighborhoodValidation';
 import { checkUnits, checkAccessoryUnit, checkNumberOfStories, checkPropertyType, checkConstructionStatusAndReconciliation, checkDesignStyle, checkYearBuilt, checkEffectiveAge, checkAdditionalFeatures, checkPropertyConditionDescription, checkPhysicalDeficienciesImprovements, checkNeighborhoodConformity, checkFoundationType, checkBasementDetails, checkEvidenceOf, checkMaterialCondition, checkHeatingFuel, checkCarStorage, checkImprovementsFieldsNotBlank } from './improvementsValidation';
 import { checkConditionAdjustment, checkBedroomsAdjustment, checkBathsAdjustment, checkQualityOfConstructionAdjustment, checkProximityToSubject, checkSiteAdjustment, checkGrossLivingAreaAdjustment, checkSubjectAddressInconsistency, checkDesignStyleAdjustment, checkFunctionalUtilityAdjustment, checkEnergyEfficientItemsAdjustment, checkPorchPatioDeckAdjustment, checkHeatingCoolingAdjustment, checkDataSourceDOM, checkActualAgeAdjustment, checkLeaseholdFeeSimpleConsistency, checkDateOfSale, checkLocationConsistency, checkSalePrice } from './salesComparisonValidation';
 import { checkFinalValueConsistency, checkCostApproachDeveloped, checkAppraisalCondition, checkAsOfDate, checkFinalValueBracketing, checkReconciliationFieldsNotBlank } from './reconciliationValidation';
@@ -11,6 +11,7 @@ import { checkLenderAddressInconsistency, checkLenderNameInconsistency, checkApp
 import { checkCostNew, checkSourceOfCostData, checkIndicatedValueByCostApproach, checkCostApproachFieldsNotBlank } from './costApproachValidation';
 import { checkResearchHistory, checkSubjectPriorSales, checkComparablePriorSales, checkDataSourceNotBlank, checkEffectiveDateIsCurrentYear, checkSubjectPriorSaleDate, checkCompPriorSaleDate } from './salesHistoryValidation';
 import { checkStateRequirements } from './stateValidation';
+import { checkLeaseDates, checkOtherBasement } from './rentScheduleValidation';
 import { checkIncomeApproachFieldsNotBlank } from './incomeApproachValidation';
 import { checkPudInformationFieldsNotBlank } from './pudInformationValidation';
 import { checkMarketConditionsFieldsNotBlank } from './marketConditionsValidation';
@@ -112,7 +113,8 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     "2-4 Unit": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
     "Multi-Family": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
     "Commercial": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
-    "Other": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
+    "Other": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank, checkOtherLandUse],
+    "Present Land Use for other": [checkOtherLandUse],
     "Neighborhood Boundaries": [checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank],
     "Built-Up": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Growth": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Property Values": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Demand/Supply": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Marketing Time": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank],
     "Neighborhood Description": [checkNeighborhoodFieldsNotBlank],
@@ -174,6 +176,11 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     'Leasehold/Fee Simple': [checkLeaseholdFeeSimpleConsistency],
     'Date of Sale/Time': [checkDateOfSale],
     'Location': [checkLocationConsistency],
+
+    // Rent Schedule Validations
+    'Date Lease Begins': [checkLeaseDates],
+    'Date Lease Expires': [checkLeaseDates],
+    'Other (e.g., basement, etc.)': [checkOtherBasement],
 
     // Reconciliation Validations
     'Indicated Value by Sales Comparison Approach $': [checkFinalValueConsistency],
@@ -242,7 +249,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
 
   const costApproachFieldsToValidate = [
     "Estimated", "Source of cost data", "Quality rating from cost service ",
-    "Effective date of cost data ", "Comments on Cost Approach (gross living area calculations, depreciation, etc.) ",
+    "Effective date of cost data ", "Comments on Cost Approach (gross living area calculations, depreciation, etc.)",
     "OPINION OF SITE VALUE = $ ................................................", "Dwelling", "Garage/Carport ",
     " Total Estimate of Cost-New  = $ ...................", "Depreciation ",
     "Depreciated Cost of Improvements......................................................=$ ",
@@ -415,15 +422,15 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     let validationResult = null;
 
     for (const fn of validationFns) {
-      // Pass all potential arguments; the function will use what it needs.
+
       const result = fn(field, text, data, fieldPath, saleName);
       if (result) {
         validationResult = result;
-        if (result.isError) break; // Stop on first error
+        if (result.isError) break;
       }
     }
     if (!validationResult && saleName) {
-      const salesFns = validationRegistry[field] || []; // Re-fetch for clarity
+      const salesFns = validationRegistry[field] || [];
       const result = salesFns.map(fn => fn(field, data, saleName)).find(r => r);
       if (result) validationResult = result;
     }
@@ -1831,7 +1838,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
             </IconButton>
           </Tooltip>
         )}
-        {
+      {
         fieldPath.includes('LICENSE/REGISTRATION/CERTIFICATION #') && revisionHandlers.ONLVT1 && (
           <Tooltip title="LICENSE/REGISTRATION/CERTIFICATION #">
             <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONLVT1(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
@@ -1839,6 +1846,351 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
             </IconButton>
           </Tooltip>
         )}
+
+      {/* End of Certification */}
+      {/* RECONCILIATION */}
+      {
+        fieldPath.includes('Indicated Value by: Sales Comparison Approach $') && revisionHandlers.ONIndicated1 && (
+          <Tooltip title="Indicated Value by: Sales Comparison Approach $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONIndicated1(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      {
+        fieldPath.includes('Cost Approach (if developed)') && revisionHandlers.ONcostApproach && (
+          <Tooltip title="Cost Approach (if developed)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONcostApproach(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      {
+        fieldPath.includes('Income Approach (if developed) $') && revisionHandlers.ONincomeApproach && (
+          <Tooltip title="Income Approach (if developed) $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONincomeApproach(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      {
+        fieldPath.includes('Income Approach (if developed) $ Comment') && revisionHandlers.ONincomeApproach2 && (
+          <Tooltip title="Income Approach (if developed) $ Comment">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONincomeApproach2(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      {
+        fieldPath.includes('This appraisal is made "as is", subject to completion per plans and specifications on the basis of a hypothetical condition that the improvements have been completed, subject to the following repairs or alterations on the basis of a hypothetical condition that the repairs or alterations have been completed, or subject to the following required inspection based on the extraordinary assumption that the condition or deficiency does not require alteration or repair:') && revisionHandlers.ONReconciledValue && (
+          <Tooltip title="as is">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONReconciledValue(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('opinion of the market value, as defined, of the real property that is the subject of this report is $') && revisionHandlers.ONReconciledValue1 && (
+          <Tooltip title="opinion of the market value, as defined, of the real property that is the subject of this report is $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONReconciledValue1(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {/* Cost Approach */}
+      {
+        fieldPath.includes('Estimated') && revisionHandlers.ONEstimated && (
+          <Tooltip title="Estimated">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONEstimated(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Source of cost data') && revisionHandlers.onSourceofcostdata && (
+          <Tooltip title="Source of cost data">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onSourceofcostdata(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Quality rating from cost service ') && revisionHandlers.onQuality && (
+          <Tooltip title="Quality rating from cost service ">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onQuality(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Effective date of cost data ') && revisionHandlers.onEffectiveDateofcostdata && (
+          <Tooltip title="Effective date of cost data ">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onEffectiveDateofcostdata(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Comments on Cost Approach (gross living area calculations, depreciation, etc.)') && revisionHandlers.onCommentsOnCost && (
+          <Tooltip title="Comments on Cost Approach (gross living area calculations, depreciation, etc.)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onCommentsOnCost(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('OPINION OF SITE VALUE = $ ................................................') && revisionHandlers.onOPINIONOFSITE && (
+          <Tooltip title="OPINION OF SITE VALUE = $ ................................................">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onOPINIONOFSITE(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Dwelling') && revisionHandlers.onDwelling && (
+          <Tooltip title="Dwelling">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDwelling(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Garage/Carport ') && revisionHandlers.onGarageCarport && (
+          <Tooltip title="Garage/Carport ">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onGarageCarport(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Estimated Remaining Economic Life (HUD and VA only)') && revisionHandlers.onEstimatedRemainingEconomicLife && (
+          <Tooltip title="Estimated Remaining Economic Life (HUD and VA only)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onEstimatedRemainingEconomicLife(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes(' Total Estimate of Cost-New  = $ ...................') && revisionHandlers.ONTOTALESTIMATE && (
+          <Tooltip title=" Total Estimate of Cost-New  = $ ...................">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONTOTALESTIMATE(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Depreciation ') && revisionHandlers.ONDepreciation && (
+          <Tooltip title="Depreciation ">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONDepreciation(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Depreciated Cost of Improvements......................................................=$ ') && revisionHandlers.ONTOTALDEDUCT && (
+          <Tooltip title="Depreciated Cost of Improvements......................................................=$ ">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONTOTALDEDUCT(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('“As-is” Value of Site Improvements......................................................=$') && revisionHandlers.onasisvalueofsiteimprovements && (
+          <Tooltip title="“As-is” Value of Site Improvements......................................................=$">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onasisvalueofsiteimprovements(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Indicated Value By Cost Approach......................................................=$') && revisionHandlers.onTotalValuebyCostApproach && (
+          <Tooltip title="Indicated Value By Cost Approach......................................................=$">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTotalValuebyCostApproach(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {/* Income Approach */}
+      {
+        fieldPath.includes('Estimated Monthly Market Rent $') && revisionHandlers.onEffectiveGrossIncome && (
+          <Tooltip title="Estimated Monthly Market Rent $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onEffectiveGrossIncome(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('X Gross Rent Multiplier  = $') && revisionHandlers.onxgross && (
+          <Tooltip title="X Gross Rent Multiplier  = $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onxgross(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Indicated Value by Income Approach') && revisionHandlers.onIndicatedValuebyIncomeApproach && (
+          <Tooltip title="Indicated Value by Income Approach">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onIndicatedValuebyIncomeApproach(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('PUD Fees $') && revisionHandlers.onPUDFees$ && (
+          <Tooltip title="PUD Fees $">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onPUDFees$(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {/* PUD Information */}
+
+      {
+        fieldPath.includes('Summary of Income Approach (including support for market rent and GRM) ') && revisionHandlers.ONSUMMARYOFINCOMEAPPROACH && (
+          <Tooltip title="Summary of Income Approach (including support for market rent and GRM) ">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONSUMMARYOFINCOMEAPPROACH(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('PUD Fees (per month)') && revisionHandlers.ONPUDFeesM && (
+          <Tooltip title="PUD Fees (per month)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONPUDFeesM(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+            {
+        fieldPath.includes('PUD Fees (per year)') && revisionHandlers.ONPUDFeesy && (
+          <Tooltip title="PUD Fees (per year)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONPUDFeesy(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes("Is the developer/builder in control of the Homeowners' Association (HOA)?") && revisionHandlers.ONdbha && (
+          <Tooltip title="Is the developer/builder in control of the Homeowners' Association (HOA)?">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONdbha(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+        
+      }
+      {
+        fieldPath.includes('Unit type(s)') && revisionHandlers.ONunittypes && (
+          <Tooltip title="Unit type(s)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONunittypes(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Provide the following information for PUDs ONLY if the developer/builder is in control of the HOA and the subject property is an attached dwelling unit.') && revisionHandlers.onProvideThe && (
+          <Tooltip title="Provide the following information for PUDs ONLY if the developer/builder is in control of the HOA and the subject property is an attached dwelling unit.">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onProvideThe(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Legal Name of Project') && revisionHandlers.onLegalNameOfProject && (
+          <Tooltip title="Legal Name of Project">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onLegalNameOfProject  (); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Total number of phases') && revisionHandlers.onTotalNumberOfPhases && (
+          <Tooltip title="Total number of phases">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTotalNumberOfPhases(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Total number of units') && revisionHandlers.onTotalNumberOfUnits && (
+          <Tooltip title="Total number of units">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTotalNumberOfUnits(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+      }
+      {
+        fieldPath.includes('Total number of units sold') && revisionHandlers.onTotalNumberOfUnitsSold && (
+          <Tooltip title="Total number of units sold">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTotalNumberOfUnitsSold(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}{
+        fieldPath.includes('Total number of units rented') && revisionHandlers.onTotalNumberOfUnitsRented && (
+          <Tooltip title="Total number of units rented">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTotalNumberOfUnitsRented(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+        }{
+        fieldPath.includes('Total number of units for sale') && revisionHandlers.onTotalNumberOfUnitsForSale && (
+          <Tooltip title="Total number of units for sale">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTotalNumberOfUnitsForSale(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+        }
+        {
+        fieldPath.includes('Data source(s)') && revisionHandlers.onDatasourcepi && (
+          <Tooltip title="Data source(s)">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDatasourcepi(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+        }
+        {
+        fieldPath.includes('Was the project created by the conversion of existing building(s) into a PUD?') && revisionHandlers.onprojectcreated && (
+          <Tooltip title="Was the project created by the conversion of existing building(s) into a PUD?">
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onprojectcreated(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+              <PlaylistAddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )
+        }
+
 
     </div>
   );
@@ -2043,6 +2395,22 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
     return <span style={totalStyle}>Total: {total}%</span>;
   };
 
+  const getDynamicFields = () => {
+    if (id !== 'site-section' || !data) return fields;
+
+    let dynamicFields = [...fields];
+    const zoningComplianceValue = data?.['Zoning Compliance'];
+    const complianceIndex = dynamicFields.indexOf('Zoning Compliance');
+
+    if (complianceIndex !== -1) {
+      if (zoningComplianceValue === 'Legal Nonconforming (Grandfathered Use)' && !dynamicFields.includes('Legal Nonconforming (Grandfathered Use) comment')) {
+        dynamicFields.splice(complianceIndex + 1, 0, 'Legal Nonconforming (Grandfathered Use) comment');
+      } else if (zoningComplianceValue === 'No Zoning' && !dynamicFields.includes('No Zoning comment')) {
+        dynamicFields.splice(complianceIndex + 1, 0, 'No Zoning comment');
+      }
+    }
+    return dynamicFields;
+  };
   const cardHeaderColors = {
     'bg-primary': 'primary.main',
     'bg-secondary': 'secondary.main',
@@ -2136,7 +2504,7 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
         <Typography variant="h6" component="h5">{title}</Typography>
         {onRevisionButtonClick && (
           <Tooltip title="Revision Language">
-            <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: 'white' }}><LibraryBooksIcon /></IconButton>
+            <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: headerColor === 'text.primary' ? 'black' : 'white' }}><LibraryBooksIcon /></IconButton>
           </Tooltip>
         )}
         {renderNeighborhoodTotal()}
@@ -2145,7 +2513,7 @@ export const GridInfoCard = ({ id, title, fields, data, cardClass = 'bg-secondar
         <Box sx={{ width: '100%' }}><LinearProgress /></Box>
       )}
       <div className="card-body subject-grid-container">
-        {fields.map(field => renderGridItem(field))}
+        {getDynamicFields().map(field => renderGridItem(field))}
       </div>
     </Paper>
   );

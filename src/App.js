@@ -8,10 +8,22 @@ import Compare from './components/Subject/Compare.js';
 import './App.css';
 import HtmlExtractor from './components/Subject/HtmlExtractor.js';
 import Form1004D from './components/Subject/1004D.js';
-import { Box, Button, Avatar, Typography } from '@mui/material';
 import Login from './components/Subject/Login';
 import ProtectedRoute from './components/ProtectedRoute.js';
+
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Avatar from '@mui/material/Avatar';
+import Typography from '@mui/material/Typography';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DescriptionIcon from '@mui/icons-material/Description';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import SearchIcon from '@mui/icons-material/Search';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,61 +43,105 @@ function App() {
   return (
     <>
       {location.pathname !== '/login' && (
-        <nav className="navbar navbar-light bg-light px-3 d-flex justify-content-between align-items-center">
-          {location.pathname !== '/' && (
-            <div className="flex-grow-1 d-flex justify-content-center">
-              <Link
-                to="/extractor"
-                className={`btn ${location.pathname === '/extractor' ? 'btn-primary' : 'btn-outline-primary'
-                  } mx-1`}
+        <AppBar
+          zindex={1}
+          elevation={0}
+          sx={{
+            backdropFilter: 'blur(12px)',
+            // background: 'rgba(255,255,255,0.75)',
+            borderBottom: '1px solid rgba(0,0,0,0.08)',
+          }}
+        >
+          <Toolbar sx={{ minHeight: 64 }}>
 
-                target="_blank" rel="noopener noreferrer"
+            {/* Center Navigation */}
+            {location.pathname !== '/' && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  mx: 'auto',
+                  p: 0.5,
+                  borderRadius: 3,
+                  //background: 'rgba(0,0,0,0.04)',
+                }}
               >
-                FULL FILE REVIEW
-              </Link>
-              <Link
-                to="/compare"
+                {[
+                  { label: 'Full Review', path: '/extractor', icon: <DescriptionIcon /> },
+                  { label: 'Revised Review', path: '/compare', icon: <CompareArrowsIcon /> },
+                  { label: 'Custom Query', path: '/query', icon: <SearchIcon /> },
+                  { label: '1004D', path: '/1004D', icon: <AssignmentTurnedInIcon /> },
+                ].map(({ label, path, icon }) => {
+                  const active = location.pathname === path;
 
-                target="_blank" rel="noopener noreferrer"
-                className={`btn ${location.pathname === '/compare' ? 'btn-primary' : 'btn-outline-primary'
-                  } mx-1`}
-              >
-                REVISED FILE REVIEW
-              </Link>
-              <Link
-                to="/query"
-                target="_blank" rel="noopener noreferrer"
-                className={`btn ${location.pathname === '/query' ? 'btn-primary' : 'btn-outline-primary'
-                  } mx-1`}
-              >
-                Custom Query
-              </Link>
-              <Link
-                to="/1004D"
-                target="_blank" rel='noopener noreferrer'
-                className={`btn ${location.pathname === '/1004D' ? 'btn-primary' : 'btn-outline-primary'
-                  } mx-1`}
-              >
-                1004D
-              </Link>
+                  return (
+                    <Button
+                      key={path}
+                      component={Link}
+                      to={path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={icon}
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        // color: active ? 'primary.main' : 'text.secondary',
+                        background: active
+                          ? 'linear-gradient(135deg, #1976d2, #42a5f5)'
+                          : 'transparent',
+                        color: active ? '#000000ff' : 'text.secondary',
+                        transition: 'all 0.25s ease',
+                        '&:hover': {
+                          background: active
+                            ? 'linear-gradient(135deg, #1565c0, #1e88e5)'
+                            : 'rgba(25,118,210,0.08)',
+                        },
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </Box>
+            )}
 
-            </div>
-          )}
-          {isAuthenticated && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32, fontSize: '1rem' }}>
-                {localStorage.getItem('username')?.charAt(0).toUpperCase()}
-              </Avatar>
-              <Typography variant="body1">
-                Welcome, {localStorage.getItem('username')}
-              </Typography>
-              <Button variant="outlined" sx={{ border: 'none', minWidth: 28, width: 28, height: 28 }} color="inherit" onClick={handleLogout} size="small">
-                <LogoutIcon sx={{ marginLeft: -2, maxWidth: 24, width: 24, height: 24 }}/>
-              </Button>
-            </Box>
-          )}
-        </nav>
+            {/* User Profile */}
+            {isAuthenticated && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 99,
+                  background: 'rgba(0,0,0,0.04)',
+                }}
+              >
+                <Avatar sx={{ width: 30, height: 30, bgcolor: 'primary.main' }}>
+                  {localStorage.getItem('username')?.charAt(0).toUpperCase()}
+                </Avatar>
+
+                <Typography variant="body2" color='#000000' fontWeight={600}>
+                  {localStorage.getItem('username')}
+                </Typography>
+
+                <IconButton size="small" onClick={handleLogout}>
+                  <LogoutIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+
+          </Toolbar>
+        </AppBar>
       )}
+
+
+
       <div className={location.pathname !== '/login' ? "main-container" : ""}> <Routes>
         <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
         <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} />}>

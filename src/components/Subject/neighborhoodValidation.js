@@ -117,17 +117,46 @@ export const checkNeighborhoodFieldsNotBlank = (field, text) => {
     return null;
 };
 
-export const checkLocation = (field, text) => {
-    if (field !== 'Location') return null;
+export const checkLocation = (field, text, section) => {
+    // Run ONLY for Neighborhood → Location
+    if (section !== 'Neighborhood' || field !== 'Location') return null;
 
     const value = String(text || '').trim().toLowerCase();
+
     if (!value) {
         return { isError: true, message: "'Location' cannot be blank." };
     }
 
     const validLocations = ['urban', 'suburban', 'rural'];
+
     if (!validLocations.some(loc => value.includes(loc))) {
-        return { isError: true, message: "Location must include one of 'Urban', 'Suburban', or 'Rural'." };
+        return {
+            isError: true,
+            message: "Location must include one of 'Urban', 'Suburban', or 'Rural'."
+        };
+    }
+
+    return { isMatch: true };
+};
+
+export const checkOtherLandUse = (field, text, allData) => {
+    // This validation applies to fields within the NEIGHBORHOOD section.
+    if (!allData.NEIGHBORHOOD) {
+        return null;
+    }
+
+    // We want this validation to run when either 'Other' or 'Present Land Use for other' changes.
+    if (field !== 'Other' && field !== 'Present Land Use for other') {
+        return null;
+    }
+
+    const otherValueText = String(allData.NEIGHBORHOOD['Other'] || '0').trim();
+    const otherValue = parseFloat(otherValueText.replace('%', '')) || 0;
+
+    const presentLandUseValue = String(allData.NEIGHBORHOOD['Present Land Use for other'] || '').trim();
+
+    if (otherValue > 0 && !presentLandUseValue) {
+        return { isError: true, message: "'Present Land Use for other' cannot be blank when 'Other' is greater than 0%." };
     }
 
     return { isMatch: true };
