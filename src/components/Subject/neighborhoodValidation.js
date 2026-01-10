@@ -161,3 +161,22 @@ export const checkOtherLandUse = (field, text, allData) => {
 
     return { isMatch: true };
 };
+
+
+export const checkOtherLandUseComment = (field, text, data) => {
+    if (field !== 'Other' || !data?.NEIGHBORHOOD) return null;
+
+    const otherValue = parseFloat(String(text || '0').replace('%', '').trim());
+    if (isNaN(otherValue) || otherValue <= 0) {
+        return { isMatch: true }; // No comment needed if 'Other' is 0 or not a number
+    }
+
+    const commentField = 'Present Land Use for other';
+    const commentValue = String(data.NEIGHBORHOOD[commentField] || '').trim();
+
+    if (!commentValue) {
+        return { isError: true, message: `A comment in '${commentField}' is required when 'Other' land use is greater than 0%.` };
+    }
+
+    return { isMatch: true };
+};

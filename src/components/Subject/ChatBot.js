@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Paper, TextField, Button, List, ListItem, ListItemText, Typography, IconButton, Avatar } from '@mui/material';
+import { Box, Paper, TextField, Button, List, ListItem, ListItemText, Typography, IconButton, Avatar, CircularProgress } from '@mui/material';
 import { SmartToy as SmartToyIcon, Close as CloseIcon } from '@mui/icons-material';
 
-const ChatBot = ({ open, onClose }) => {
+const ChatBot = ({ open, onClose, file, formType }) => {
     const [messages, setMessages] = useState([
         { sender: 'bot', text: 'Hello! How can I help you with your appraisal review today?' }
     ]);
     const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -15,20 +16,56 @@ const ChatBot = ({ open, onClose }) => {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, loading]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (input.trim()) {
             const userMessage = { sender: 'user', text: input };
             setMessages(prevMessages => [...prevMessages, userMessage]);
-
-            // Simulate bot response
-            setTimeout(() => {
-                const botResponse = { sender: 'bot', text: `I've received your message: "${input}". I'm still learning, but I'll do my best to help!` };
-                setMessages(prevMessages => [...prevMessages, botResponse]);
-            }, 1000);
-
             setInput('');
+            setLoading(true);
+
+            if (!file) {
+                setMessages(prevMessages => [...prevMessages, { sender: 'bot', text: "Please upload a PDF file first so I can assist you." }]);
+                setLoading(false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('form_type', formType || '1004');
+            formData.append('comment', userMessage.text);
+
+            try {
+                const res = await fetch('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const text = await res.text();
+                let botReply = '';
+
+                try {
+                    const data = JSON.parse(text);
+                    if (data.summary) {
+                        botReply = data.summary;
+                    } else if (data.fields && data.fields.summary) {
+                        botReply = data.fields.summary;
+                    } else if (typeof data === 'object') {
+                        botReply = JSON.stringify(data, null, 2);
+                    } else {
+                        botReply = String(data);
+                    }
+                } catch (e) {
+                    botReply = text;
+                }
+
+                setMessages(prevMessages => [...prevMessages, { sender: 'bot', text: botReply }]);
+            } catch (error) {
+                setMessages(prevMessages => [...prevMessages, { sender: 'bot', text: "Sorry, I encountered an error processing your request." }]);
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -91,12 +128,20 @@ const ChatBot = ({ open, onClose }) => {
                                     p: 1,
                                     maxWidth: '80%',
                                     bgcolor: message.sender === 'user' ? 'secondary.light' : 'grey.200',
+                                    whiteSpace: 'pre-wrap'
                                 }}
                             >
                                 <ListItemText primary={message.text} />
                             </Paper>
                         </ListItem>
                     ))}
+                    {loading && (
+                        <ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                            <Paper elevation={1} sx={{ p: 1, bgcolor: 'grey.200' }}>
+                                <CircularProgress size={20} />
+                            </Paper>
+                        </ListItem>
+                    )}
                     <div ref={messagesEndRef} />
                 </List>
             </Box>
@@ -110,8 +155,9 @@ const ChatBot = ({ open, onClose }) => {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={handleKeyPress}
+                        disabled={loading}
                     />
-                    <Button variant="contained" onClick={handleSend}>Send</Button>
+                    <Button variant="contained" onClick={handleSend} disabled={loading}>Send</Button>
                 </Box>
             </Box>
         </Paper>

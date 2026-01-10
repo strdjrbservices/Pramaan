@@ -3,7 +3,7 @@ import { checkAssignmentTypeConsistency, checkSubjectFieldsNotBlank } from './ge
 import { checkContractFieldsMandatory, checkFinancialAssistanceInconsistency, checkContractAnalysisConsistency, checkYesNoOnly } from './contractValidation';
 import { checkTaxYear, checkRETaxes, checkSpecialAssessments, checkPUD, checkHOA, checkOfferedForSale, checkAnsi } from './subjectValidation';
 import { checkZoning, checkZoningDescription, checkSpecificZoningClassification, checkHighestAndBestUse, checkFemaInconsistency, checkFemaFieldsConsistency, checkSiteSectionBlank, checkArea, checkYesNoWithComment, checkUtilities } from './siteValidation';
-import { checkHousingPriceAndAge, checkNeighborhoodUsageConsistency, checkSingleChoiceFields, checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank, checkOtherLandUse } from './neighborhoodValidation';
+import { checkHousingPriceAndAge, checkNeighborhoodUsageConsistency, checkSingleChoiceFields, checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank, checkOtherLandUseComment } from './neighborhoodValidation';
 import { checkUnits, checkAccessoryUnit, checkNumberOfStories, checkPropertyType, checkConstructionStatusAndReconciliation, checkDesignStyle, checkYearBuilt, checkEffectiveAge, checkAdditionalFeatures, checkPropertyConditionDescription, checkPhysicalDeficienciesImprovements, checkNeighborhoodConformity, checkFoundationType, checkBasementDetails, checkEvidenceOf, checkMaterialCondition, checkHeatingFuel, checkCarStorage, checkImprovementsFieldsNotBlank } from './improvementsValidation';
 import { checkConditionAdjustment, checkBedroomsAdjustment, checkBathsAdjustment, checkQualityOfConstructionAdjustment, checkProximityToSubject, checkSiteAdjustment, checkGrossLivingAreaAdjustment, checkSubjectAddressInconsistency, checkDesignStyleAdjustment, checkFunctionalUtilityAdjustment, checkEnergyEfficientItemsAdjustment, checkPorchPatioDeckAdjustment, checkHeatingCoolingAdjustment, checkDataSourceDOM, checkActualAgeAdjustment, checkLeaseholdFeeSimpleConsistency, checkDateOfSale, checkLocationConsistency, checkSalePrice } from './salesComparisonValidation';
 import { checkFinalValueConsistency, checkCostApproachDeveloped, checkAppraisalCondition, checkAsOfDate, checkFinalValueBracketing, checkReconciliationFieldsNotBlank } from './reconciliationValidation';
@@ -113,8 +113,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     "2-4 Unit": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
     "Multi-Family": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
     "Commercial": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank],
-    "Other": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank, checkOtherLandUse],
-    "Present Land Use for other": [checkOtherLandUse],
+    "Other": [checkNeighborhoodUsageConsistency, checkNeighborhoodFieldsNotBlank, checkOtherLandUseComment],
     "Neighborhood Boundaries": [checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank],
     "Built-Up": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Growth": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Property Values": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Demand/Supply": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank], "Marketing Time": [checkSingleChoiceFields, checkNeighborhoodFieldsNotBlank],
     "Neighborhood Description": [checkNeighborhoodFieldsNotBlank],
@@ -2084,7 +2083,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
           </Tooltip>
         )
       }
-            {
+      {
         fieldPath.includes('PUD Fees (per year)') && revisionHandlers.ONPUDFeesy && (
           <Tooltip title="PUD Fees (per year)">
             <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.ONPUDFeesy(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
@@ -2101,7 +2100,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
             </IconButton>
           </Tooltip>
         )
-        
+
       }
       {
         fieldPath.includes('Unit type(s)') && revisionHandlers.ONunittypes && (
@@ -2124,7 +2123,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
       {
         fieldPath.includes('Legal Name of Project') && revisionHandlers.onLegalNameOfProject && (
           <Tooltip title="Legal Name of Project">
-            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onLegalNameOfProject  (); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
+            <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onLegalNameOfProject(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
               <PlaylistAddIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -2163,7 +2162,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
             </IconButton>
           </Tooltip>
         )
-        }{
+      }{
         fieldPath.includes('Total number of units for sale') && revisionHandlers.onTotalNumberOfUnitsForSale && (
           <Tooltip title="Total number of units for sale">
             <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onTotalNumberOfUnitsForSale(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
@@ -2171,8 +2170,8 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
             </IconButton>
           </Tooltip>
         )
-        }
-        {
+      }
+      {
         fieldPath.includes('Data source(s)') && revisionHandlers.onDatasourcepi && (
           <Tooltip title="Data source(s)">
             <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onDatasourcepi(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
@@ -2180,8 +2179,8 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
             </IconButton>
           </Tooltip>
         )
-        }
-        {
+      }
+      {
         fieldPath.includes('Was the project created by the conversion of existing building(s) into a PUD?') && revisionHandlers.onprojectcreated && (
           <Tooltip title="Was the project created by the conversion of existing building(s) into a PUD?">
             <IconButton onClick={(e) => { e.stopPropagation(); revisionHandlers.onprojectcreated(); }} size="small" sx={{ padding: '2px', marginLeft: '5px' }}>
@@ -2189,7 +2188,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
             </IconButton>
           </Tooltip>
         )
-        }
+      }
 
 
     </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Subject.css';
 import { GlobalStyles } from '@mui/system';
 import { Info, Warning as WarningIcon, Close as CloseIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
-import { Button, Stack, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab } from '@mui/material';
+import { Button, Stack, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab, Autocomplete, TextField } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -21,6 +21,7 @@ import Form1004 from './1004';
 import Form1007 from './1007';
 import Form1073 from './1073';
 import Form1025 from './1025';
+import Form1004D from './1004D';
 import { EditableField, GridInfoCard } from './FormComponents';
 import StateRequirementCheck, { STATE_REQUIREMENTS_PROMPT } from './StateRequirementCheck';
 import UnpaidOkCheck, { UNPAID_OK_PROMPT } from './UnpaidOkCheck';
@@ -29,7 +30,6 @@ import EscalationCheck, { ESCALATION_CHECK_PROMPT } from './EscalationCheck';
 import FhaCheck, { FHA_REQUIREMENTS_PROMPT } from './FhaCheck';
 import ADUCheck, { ADU_REQUIREMENTS_PROMPT } from './ADUCheck';
 import { lightTheme, darkTheme } from '../../theme';
-// import ChatBot from './ChatBot.js';
 import * as generalValidation from './generalValidation';
 import * as contractValidation from './contractValidation';
 import * as subjectValidation from './subjectValidation';
@@ -175,7 +175,6 @@ function Subject() {
   const [engagementLetterCompareError, setEngagementLetterCompareError] = useState('');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isHtmlReviewLoading, setIsHtmlReviewLoading] = useState(false);
-  // const [isChatBotOpen, setIsChatBotOpen] = useState(false);
   const [htmlExtractionTimer, setHtmlExtractionTimer] = useState(0);
   const htmlExtractionTimerRef = useRef(null);
   const [isNotepadOpen, setIsNotepadOpen] = useState(false);
@@ -286,8 +285,9 @@ function Subject() {
       "One-Unit": [neighborhoodValidation.checkNeighborhoodUsageConsistency, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
       "2-4 Unit": [neighborhoodValidation.checkNeighborhoodUsageConsistency, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
       "Multi-Family": [neighborhoodValidation.checkNeighborhoodUsageConsistency, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
+
       "Commercial": [neighborhoodValidation.checkNeighborhoodUsageConsistency, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
-      "Other": [neighborhoodValidation.checkNeighborhoodUsageConsistency, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
+      "Other": [neighborhoodValidation.checkNeighborhoodUsageConsistency, neighborhoodValidation.checkNeighborhoodFieldsNotBlank, neighborhoodValidation.checkOtherLandUseComment],
       "Neighborhood Boundaries": [neighborhoodValidation.checkNeighborhoodBoundaries, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
       "Built-Up": [neighborhoodValidation.checkSingleChoiceFields, neighborhoodValidation.checkNeighborhoodFieldsNotBlank], "Growth": [neighborhoodValidation.checkSingleChoiceFields, neighborhoodValidation.checkNeighborhoodFieldsNotBlank], "Property Values": [neighborhoodValidation.checkSingleChoiceFields, neighborhoodValidation.checkNeighborhoodFieldsNotBlank], "Demand/Supply": [neighborhoodValidation.checkSingleChoiceFields, neighborhoodValidation.checkNeighborhoodFieldsNotBlank], "Marketing Time": [neighborhoodValidation.checkSingleChoiceFields, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
       "Neighborhood Description": [neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
@@ -635,7 +635,7 @@ function Subject() {
     });
     addSection('Requirement Check Issues', ['Check', 'Requirement', 'Status', 'Comment'], requirementErrors);
 
-    // 5. Prompt Analysis Issues
+
     const promptAnalysisIssues = [];
     if (promptAnalysisResponse && typeof promptAnalysisResponse === 'object' && !Array.isArray(promptAnalysisResponse)) {
       if (Array.isArray(promptAnalysisResponse.comparison_summary)) {
@@ -657,7 +657,7 @@ function Subject() {
     }
     addSection('Prompt Analysis Issues', ['Check', 'Requirement', 'Value', 'Comment'], promptAnalysisIssues);
 
-    // 6. Comparable Address Consistency
+
     const addressInconsistencies = [];
     const getFirstThreeWords = (str) => str ? str.split(/\s+/).slice(0, 3).join(' ').toLowerCase() : '';
 
@@ -686,7 +686,7 @@ function Subject() {
     });
     addSection('Comparable Address Inconsistencies', ['Comparable', 'Sales Grid Address', 'Location Map Address', 'Photo Address'], addressInconsistencies);
 
-    // Finalize PDF and notify
+
     addHeaderFooter();
     const baseFileName = selectedFile?.name.replace(/\.[^/.]+$/, "") || 'Appraisal';
     doc.save(`${baseFileName}_Validation_Log.pdf`);
@@ -826,7 +826,7 @@ function Subject() {
       }
 
       const result = await response.json();
-      setContractCompareResult(result); // This result will be an array as defined in the prompt
+      setContractCompareResult(result);
 
     } catch (error) {
       setContractCompareError(error.message);
@@ -964,7 +964,6 @@ function Subject() {
 
 
   const subjectFields = [
-
     'Property Address',
     'City',
     'County',
@@ -1012,7 +1011,7 @@ function Subject() {
         subjectFields.splice(amcIndex, 0, 'AMC License #');
       }
     }
-    if (currentState === 'CA') {
+    if (statesRequiringAmcLicense.includes(currentState === 'CA')) {
       const caFields = ["Smoke detector comment", "CO detector comment", "Water heater double-strapped comment"];
       const stateIndex = subjectFields.indexOf('State') + 1;
       let offset = 0;
@@ -1112,7 +1111,7 @@ function Subject() {
     "Units", "One with Accessory Unit", "# of Stories", "Type", "Existing/Proposed/Under Const.",
     "Design (Style)", "Year Built", "Effective Age (Yrs)", "Foundation Type",
     "Basement Area sq.ft.", "Basement Finish %",
-    "Evidence of", "Foundation Walls (Material/Condition)",
+    "Evidence of (Foundation)", "Foundation Walls (Material/Condition)",
     "Exterior Walls (Material/Condition)", "Roof Surface (Material/Condition)",
     "Gutters & Downspouts (Material/Condition)", "Window Type (Material/Condition)",
     "Storm Sash/Insulated", "Screens", "Floors (Material/Condition)", "Walls (Material/Condition)",
@@ -1414,8 +1413,8 @@ function Subject() {
     { id: 'prior-sale-history-section', title: 'Prior Sale History', category: 'PRIOR_SALE_HISTORY' },
     { id: 'site-section', title: 'Site', category: 'SITE' },
     { id: 'improvements-section', title: 'Improvements', category: 'IMPROVEMENTS' },
-    { id: 'sales-comparison', title: 'Sales Comparison & History', category: ['SALES_GRID'] },
     { id: 'info-of-sales-section', title: 'Info of Sales', category: 'INFO_OF_SALES' },
+    { id: 'sales-comparison', title: 'Sales Comparison', category: ['SALES_GRID'] },
     // { id: 'sales-comparison-additional-info', title: 'Sales Comparison Additional Info', category: 'SALES_COMPARISON_ADDITIONAL_INFO' },
     { id: 'sales-history-section', title: 'Sales History', category: 'SALES_TRANSFER' },
     { id: 'comparable-rental-data', title: 'COMPARABLE RENTAL DATA', category: 'COMPARABLE_RENTAL_DATA' },
@@ -1429,6 +1428,7 @@ function Subject() {
     { id: 'market-conditions-section', title: 'Market Conditions', category: 'MARKET_CONDITIONS' },
     { id: 'condo-coop-section', title: 'Condo/Co-op', category: ['CONDO', 'CONDO_FORECLOSURE'] },
     { id: 'appraiser-section', title: 'CERTIFICATION', category: 'CERTIFICATION' }, // This should be condo coop projects
+    { id: 'state-requirement-check', title: 'State Requirement Check' },
     { id: 'prompt-analysis-section', title: 'Prompt Analysis' },
     { id: 'raw-output', title: 'Raw Output' },
 
@@ -2277,6 +2277,12 @@ function Subject() {
   };
 
   const handleSectionClick = (section) => {
+    if (section.id === 'state-requirement-check') {
+      if (validateInputs()) {
+        handleStateRequirementCheck();
+      }
+      return;
+    }
     setActiveSection(section.id);
     const element = document.getElementById(section.id);
     if (element) {
@@ -2544,13 +2550,36 @@ function Subject() {
     try {
       const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
 
+      const cleanedData = JSON.parse(JSON.stringify(data));
+
+      const sectionsToCheck = [
+        'Subject', 'SUBJECT', 'CONTRACT', 'NEIGHBORHOOD', 'SITE', 'IMPROVEMENTS',
+        'SALES_TRANSFER', 'PRIOR_SALE_HISTORY', 'RECONCILIATION',
+        'COST_APPROACH', 'INCOME_APPROACH', 'PUD_INFO', 'MARKET_CONDITIONS',
+        'CONDO_FORECLOSURE', 'CERTIFICATION', 'INFO_OF_SALES',
+        'PROJECT_SITE', 'PROJECT_INFO', 'PROJECT_ANALYSIS', 'UNIT_DESCRIPTIONS',
+        'SUBJECT_RENT_SCHEDULE', 'RENT_SCHEDULE_GRID', 'RENT_SCHEDULE_RECONCILIATION',
+        'COMPARABLE_RENTAL_DATA'
+      ];
+
+      sectionsToCheck.forEach(section => {
+        if (cleanedData[section] && typeof cleanedData[section] === 'object') {
+          Object.keys(cleanedData[section]).forEach(key => {
+            // Check if the key exists at the root level
+            if (cleanedData.hasOwnProperty(key)) {
+              delete cleanedData[key];
+            }
+          });
+        }
+      });
+
       const dataToSave = {
-        // ...data,
         fileName: selectedFile?.name || 'N/A',
         username: username,
         totalTimeTaken: totalTime,
-        ...data,
-        promptAnalysis: promptAnalysisResponse
+        ...cleanedData,
+        promptAnalysis: promptAnalysisResponse,
+        save_option: 'update'
       };
       const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
         method: 'POST',
@@ -3592,7 +3621,7 @@ function Subject() {
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Dwelling", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
-      },  
+      },
       onGarageCarport: () => {
         const revisionText = `Please revise the "Garage/Carport" "${data["Garage/Carport "] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
@@ -3642,7 +3671,7 @@ function Subject() {
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Estimated Monthly Market Rent $", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
-      },  
+      },
       onxgross: () => {
         const revisionText = `Please revise the "X Gross Rent Multiplier" "${data["X Gross Rent Multiplier  = $"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
@@ -3673,13 +3702,13 @@ function Subject() {
         setNotification({ open: true, message: "PUD Fees $", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
-      ONPUDFeesM: () => {    
+      ONPUDFeesM: () => {
         const revisionText = `Please revise the "PUD Fees (per month)" "${data["PUD Fees (per month)"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "PUD Fees", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
-      ONPUDFeesy: () => {    
+      ONPUDFeesy: () => {
         const revisionText = `Please revise the "PUD Fees (per year)" "${data["PUD Fees (per year)"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "PUD Fees", severity: "success" });
@@ -3726,17 +3755,17 @@ function Subject() {
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Total Number of Units Sold", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
-      },onTotalNumberOfUnitsRented: () => {
+      }, onTotalNumberOfUnitsRented: () => {
         const revisionText = `Please revise the "Total number of units rented" "${data["Total number of units rented"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Total Number of Units Rented", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
-      },onTotalNumberOfUnitsForSale: () => {
+      }, onTotalNumberOfUnitsForSale: () => {
         const revisionText = `Please revise the "Total number of units for sale" "${data["Total number of units for sale"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Total Number of Units for Sale", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
-      },onDatasourcepi: () => {
+      }, onDatasourcepi: () => {
         const revisionText = `Please revise the "Data Source(s) for project information" "${data["Data source(s)"] || '...'}" in the report.`;
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Data Source(s) for project information", severity: "success" });
@@ -3747,7 +3776,7 @@ function Subject() {
         navigator.clipboard.writeText(revisionText);
         setNotification({ open: true, message: "Date Project Created", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
-      }     
+      }
 
     };
 
@@ -3780,6 +3809,9 @@ function Subject() {
         break;
       case '1025':
         formComponent = <Form1025 {...props} allData={data} />;
+        break;
+      case '1004D':
+        formComponent = <Form1004D />;
         break;
       default:
         return (
@@ -3942,23 +3974,18 @@ function Subject() {
 
               {/* Form Type Dropdown */}
               <Grid item sx={{ minWidth: 200 }}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel id="form-type-select-label">Form Type</InputLabel>
-                  <Select
-                    labelId="form-type-select-label"
-                    id="form-type-select"
-                    value={selectedFormType}
-                    label="Form Type"
-                    onChange={(e) => setSelectedFormType(e.target.value)}
-                    className="select"
-                  >
-                    {formTypes.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  id="form-type-autocomplete"
+                  options={formTypes}
+                  value={selectedFormType}
+                  onChange={(event, newValue) => {
+                    if (newValue) setSelectedFormType(newValue);
+                  }}
+                  disableClearable
+                  size="small"
+                  fullWidth
+                  renderInput={(params) => <TextField {...params} label="Form Type" />}
+                />
               </Grid>
 
               <Grid item>
@@ -4317,10 +4344,14 @@ function Subject() {
             onAddendumRevisionButtonClick={() => setAddendumRevisionLangDialogOpen(true)}
           />
 
-          {rawGemini && (
+          {(rawGemini || Object.keys(data).length > 0) && (
             <div id="raw-output" className="mt-4">
               <h5>Raw Gemini Output (Debug):</h5>
-              <pre style={{ background: '#f8f9fa', padding: '1em', borderRadius: '6px', maxHeight: '300px', overflow: 'auto' }}>{rawGemini}</pre>
+              <pre style={{ background: '#f8f9fa', padding: '1em', borderRadius: '6px', maxHeight: '300px', overflow: 'auto' }}>
+                {rawGemini}
+                {/* {'\n'}
+                {JSON.stringify(data, null, 2)} */}
+              </pre>
             </div>
           )}
 
@@ -4383,15 +4414,7 @@ function Subject() {
           <NoteAltIcon />
         </Fab>
       </Tooltip>
-      {/* <Tooltip title="Open Chat Bot" placement="top">
-        <Fab color="primary" size="small" onClick={() => setIsChatBotOpen(true)} sx={{ position: 'fixed', bottom: 80, right: 16, zIndex: 1200 }}>
-          <SmartToyIcon />
-        </Fab>
-      </Tooltip> */}
-      {/* <ChatBot
-        open={isChatBotOpen}
-        onClose={() => setIsChatBotOpen(false)}
-      /> */}
+
       <Dialog open={isRentFormTypeMismatchDialogOpen} onClose={() => setIsRentFormTypeMismatchDialogOpen(false)}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center' }}>
           <WarningIcon color="warning" sx={{ mr: 1 }} />

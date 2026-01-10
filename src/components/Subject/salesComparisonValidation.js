@@ -200,53 +200,65 @@ export const checkGrossLivingAreaAdjustment = (field, allData, saleName) => {
     return { isMatch: true };
 };
 
-export const checkSubjectAddressInconsistency = (field, text, data, fieldPath) => {
+export const checkSubjectAddressInconsistency = (
+    field,
+    text,
+    data,
+    fieldPath
+) => {
+    // Only validate Property Address or Subject > Address
     if ((field !== 'Property Address' && field !== 'Address') || !data?.Subject) {
         return null;
     }
 
-  
+    // Ensure Address is from Subject grid only
     if (field === 'Address' && fieldPath[0] !== 'Subject') {
         return null;
     }
 
+    // 🔑 Strong normalization: remove spaces, commas, dots, symbols
     const normalize = (val) =>
         String(val || '')
-            .trim()
             .toLowerCase()
-            .replace(/\s+/g, ' ');
+            .replace(/[^a-z0-9]/g, ''); // remove everything except letters & numbers
 
-    const subjectAddress = normalize(data['Property Address']);
-    const subjectCity = normalize(data.Subject?.City);
-    const subjectState = normalize(data.Subject?.State);
-    const subjectZip = normalize(data.Subject?.ZipCode);
+    const propertyAddress = normalize(data['Property Address']);
+    // const city = normalize(data.Subject?.City);
+    // const state = normalize(data.Subject?.State);
+    // const zip = normalize(data.Subject?.['Zip Code']);
+    const subjectGridAddress = normalize(data.Subject?.Address);
 
-    const gridAddress = normalize(data.Subject?.Address);
-
-    if (!gridAddress || !subjectAddress) {
+    if (!propertyAddress || !subjectGridAddress) {
         return null;
     }
 
-    const fullSubjectAddress = normalize(
-        `${subjectAddress} ${subjectCity} ${subjectState} ${subjectZip}`
+    // Case 1: Address === Property Address
+    if (subjectGridAddress === propertyAddress) {
+        return { isMatch: true };
+    }
+
+    // Case 2: Address === Property Address + City + State + Zip
+    const fullAddress = normalize(
+        `${data['Property Address']} ${data.Subject?.City} ${data.Subject?.State} ${data.Subject?.['Zip Code']}`
     );
 
-    if (gridAddress === fullSubjectAddress) {
+    if (subjectGridAddress === fullAddress) {
         return { isMatch: true };
     }
 
-    if (gridAddress === subjectAddress) {
-        return { isMatch: true };
-    }
-
-
+    // ❌ Mismatch
     return {
         isError: true,
-        message: `Subject Address mismatch. 
-Expected '${fullSubjectAddress}' or '${subjectAddress}', 
-but Sales Grid has '${gridAddress}'.`
+        message: `Subject Address mismatch.
+Expected:
+1) '${data['Property Address']}'
+OR
+2) '${data['Property Address']} ${data.Subject?.City} ${data.Subject?.State} ${data.Subject?.['Zip Code']}'
+But found '${data.Subject?.Address}'.`
     };
 };
+
+
 
 
 export const checkDesignStyleAdjustment = (field, allData, saleName) => {
@@ -279,7 +291,7 @@ export const checkLocationConsistency = (field, allData, saleName) => {
     const compLocation = String(allData[saleName]?.['Location'] || '').trim();
 
     if (!subjectLocation || !compLocation) {
-        return null; // Not enough data to compare
+        return null; 
     }
 
     if (subjectLocation === compLocation) {
@@ -419,9 +431,9 @@ export const checkActualAgeAdjustment = (field, allData, saleName) => {
 
     if (compAge === subjectAge) {
         if (adjustmentValue !== 0) return { isError: true, message: `Subject and Comp Actual Age are the same (${subjectAge}), so adjustment should be $0.` };
-    } else if (compAge > subjectAge) { // Comp is older (inferior), expect positive adjustment
+    } else if (compAge > subjectAge) {
         if (adjustmentValue <= 0) return { isError: true, message: `Comp is older (${compAge} yrs) than Subject (${subjectAge} yrs), so a positive adjustment is expected.` };
-    } else { // compAge < subjectAge: Comp is newer (superior), expect negative adjustment
+    } else {
         if (adjustmentValue >= 0) return { isError: true, message: `Comp is newer (${compAge} yrs) than Subject (${subjectAge} yrs), so a negative adjustment is expected.` };
     }
     return { isMatch: true };
@@ -492,14 +504,14 @@ export const checkSalePrice = (field, allData, saleName) => {
     const compSalePriceText = String(allData[saleName]?.['Sale Price'] || '').trim();
 
     if (!subjectSalePriceText || !compSalePriceText) {
-        return null; // Cannot compare if one is missing
+        return null;
     }
 
     const subjectPrice = parseFloat(subjectSalePriceText.replace(/[^0-9.-]+/g, ""));
     const compPrice = parseFloat(compSalePriceText.replace(/[^0-9.-]+/g, ""));
 
     if (isNaN(subjectPrice) || isNaN(compPrice) || subjectPrice === 0) {
-        return null; // Cannot compare if values are not numeric or subject price is zero
+        return null;
     }
 
     const difference = Math.abs(subjectPrice - compPrice);

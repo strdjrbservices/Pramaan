@@ -136,25 +136,63 @@ export const checkPropertyType = (field, text) => {
     return { isMatch: true };
 };
 
-export const checkConstructionStatusAndReconciliation = (field, data) => {
+export const checkConstructionStatusAndReconciliation = (
+    field,
+    text,
+    data
+) => {
     if (field !== 'Existing/Proposed/Under Const.') return null;
-    const status = ['existing', 'proposed', 'under const.'];
-    const reconciliationField = 'This appraisal is made "as is", subject to completion per plans and specifications on the basis of a hypothetical condition that the improvements have been completed, subject to the following repairs or alterations on the basis of a hypothetical condition that the repairs or alterations have been completed, or subject to the following required inspection based on the extraordinary assumption that the condition or deficiency does not require alteration or repair:';
-    const reconciliationValue = String(data[reconciliationField] || '').toLowerCase();
-    const validStatuses = ['existing', 'proposed', 'under const.'];
-    const isStatusValid = validStatuses.some(validStatus => status.includes(validStatus));
 
-    if (!status || !isStatusValid) {
-        return { isError: true, message: "Construction status must include 'Existing', 'Proposed', or 'Under Const.'." };
+    const normalize = (val) =>
+        String(val || '')
+            .toLowerCase()
+            .replace(/[^a-z]/g, '');
+
+    const statusRaw = normalize(text);
+
+    const reconciliationField =
+        'This appraisal is made "as is", subject to completion per plans and specifications on the basis of a hypothetical condition that the improvements have been completed, subject to the following repairs or alterations on the basis of a hypothetical condition that the repairs or alterations have been completed, or subject to the following required inspection based on the extraordinary assumption that the condition or deficiency does not require alteration or repair:';
+
+    const reconciliationRaw = normalize(data?.[reconciliationField]);
+
+    let status = null;
+
+    if (statusRaw.startsWith('existing')) status = 'existing';
+    else if (statusRaw.startsWith('proposed')) status = 'proposed';
+    else if (statusRaw.includes('under') && statusRaw.includes('const'))
+        status = 'under const.';
+
+    if (!status) {
+        return {
+            isError: true,
+            message:
+                "Construction status must be 'Existing', 'Proposed', or 'Under Const.'."
+        };
     }
-    if (status.includes('existing') && !reconciliationValue.includes('as is')) {
-        return { isError: true, message: "If construction status is 'Existing', reconciliation should be 'as is'." };
+
+    if (status === 'existing' && !reconciliationRaw.includes('asis')) {
+        return {
+            isError: true,
+            message:
+                "If construction status is 'Existing', reconciliation must be 'As Is'."
+        };
     }
-    if ((status.includes('proposed') || status.includes('under const.')) && !reconciliationValue.includes('subject to')) {
-        return { isError: true, message: "If status is 'Proposed' or 'Under Const.', reconciliation should be 'subject to'." };
+
+    if (
+        (status === 'proposed' || status === 'under const.') &&
+        !reconciliationRaw.includes('subjectto')
+    ) {
+        return {
+            isError: true,
+            message:
+                "If construction status is 'Proposed' or 'Under Const.', reconciliation must be 'Subject To'."
+        };
     }
-    return { isMatch: true };
+
+    return null;
 };
+
+
 
 export const checkDesignStyle = (field, text) => {
     if (field !== 'Design (Style)') return null;

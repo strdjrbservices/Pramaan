@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    Box,
+    
     Button,
     Typography,
     TextField,
@@ -17,10 +17,13 @@ import {
     ToggleButton,
     ToggleButtonGroup,
     Tooltip,
+    Stack,
 } from '@mui/material';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import successSoundFile from '../../Assets/success.mp3';
 import errorSoundFile from '../../Assets/error.mp3';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const playSound = (soundType) => {
     let soundFile;
@@ -51,6 +54,7 @@ const Form1004D = () => {
     const [promptText, setPromptText] = useState('');
     const [error, setError] = useState('');
     const [comparisonMode, setComparisonMode] = useState('pdf-vs-pdf');
+    const [successMessage, setSuccessMessage] = useState('');
     const [timer, setTimer] = useState(0);
     const timerRef = useRef(null);
 
@@ -105,6 +109,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
     const handleFileChange = (setter) => (event) => {
         setter(event.target.files[0]);
         setError('');
+        setSuccessMessage('');
         setResponse(null); // Clear previous results
         if (event.target.files[0]) playSound('upload');
     };
@@ -113,6 +118,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
         if (newMode !== null) {
             setComparisonMode(newMode);
             setResponse(null);
+            setSuccessMessage('');
             setError('');
         }
     };
@@ -126,6 +132,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
 
         setLoading(true);
         setError('');
+        setSuccessMessage('');
         setResponse(null);
         setTimer(0);
         if (timerRef.current) clearInterval(timerRef.current);
@@ -185,6 +192,100 @@ For each item, provide a JSON object in a 'details' array. Each object must have
         }
     };
 
+    const handleSaveToDB = async () => {
+        if (!response) return;
+        setLoading(true);
+        setSuccessMessage('');
+        setError('');
+        try {
+            const username = localStorage.getItem('username') || 'Unknown User';
+            const dataToSave = {
+                fileName: newPdfFile?.name || '1004D_Report.pdf',
+                username: username,
+                formType: '1004D',
+                comparisonMode: comparisonMode,
+                data: response
+            };
+
+            const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataToSave),
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to save data.');
+            }
+            setSuccessMessage('Data saved successfully!');
+            playSound('success');
+        } catch (e) {
+            setError(e.message);
+            playSound('error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGenerateValidationLog = () => {
+        if (!response) return;
+        const doc = new jsPDF();
+        const title = "1004D Validation Log";
+        doc.text(title, 14, 20);
+
+        let body = [];
+        let head = [];
+
+        const details = response.fields?.details || response.details;
+
+        if (details && Array.isArray(details)) {
+            const headers = Object.keys(details[0] || {});
+            head = [headers.map(h => h.replace(/_/g, ' ').toUpperCase())];
+            body = details.map(item => headers.map(h => {
+                const val = item[h];
+                return typeof val === 'object' ? JSON.stringify(val) : (val || '');
+            }));
+        }
+
+        if (body.length > 0) {
+            autoTable(doc, {
+                startY: 30,
+                head: head,
+                body: body,
+                theme: 'grid',
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [22, 160, 133] }
+            });
+            doc.save('1004D_Validation_Log.pdf');
+            setSuccessMessage('Validation Log generated.');
+        } else {
+            setError('No details found to generate log.');
+        }
+    };
+
+    const renderStatus = (status, comment) => {
+        const validStatuses = ['fulfilled', 'present', 'consistent', 'match'];
+        const statusLower = String(status || '').toLowerCase();
+        const isValid = validStatuses.some(s => statusLower.includes(s)) &&
+            !statusLower.includes('not') &&
+            !statusLower.includes('mismatch');
+
+        const style = isValid
+            ? { backgroundColor: '#91ff00ff', color: '#000000', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }
+            : { backgroundColor: '#ff0000', color: '#ffffff', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' };
+
+        const tooltipText = typeof comment === 'object' ? JSON.stringify(comment) : String(comment || '');
+
+        return (
+            <Tooltip title={tooltipText} arrow>
+                <span style={style}>
+                    {status || 'N/A'}
+                </span>
+            </Tooltip>
+        );
+    };
+
     const renderGenericObject = (data) => {
         const rows = [];
         const processObject = (obj, prefix = '') => {
@@ -226,7 +327,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
                             {rows.map((row, index) => (
                                 <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                     <TableCell sx={{ textTransform: 'capitalize' }}>{row.check}</TableCell>
-                                    <TableCell>{row.status}</TableCell>
+                                    <TableCell>{renderStatus(row.status, row.details)}</TableCell>
                                     <TableCell>{row.details}</TableCell>
                                 </TableRow>
                             ))}
@@ -266,7 +367,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
                                     <TableCell>{item.original_appraisal_value || 'N/A'}</TableCell>
                                     <TableCell>{item.form_1004D_value || 'N/A'}</TableCell>
                                     <TableCell>{item.comment || 'N/A'}</TableCell>
-                                    <TableCell>{item.status || 'N/A'}</TableCell>
+                                    <TableCell>{renderStatus(item.status, item.comment)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -302,7 +403,9 @@ For each item, provide a JSON object in a 'details' array. Each object must have
                             {details.map((item, index) => (
                                 <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                     {headers.map(header => (
-                                        <TableCell key={header}>{item[header] || 'N/A'}</TableCell>
+                                        <TableCell key={header}>
+                                            {header === 'status' ? renderStatus(item[header], item.comment) : (item[header] || 'N/A')}
+                                        </TableCell>
                                     ))}
                                 </TableRow>
                             ))}
@@ -382,19 +485,38 @@ For each item, provide a JSON object in a 'details' array. Each object must have
                     sx={{ mb: 3 }}
                     required
                 />
-                <Box sx={{ position: 'relative', mt: 2 }}>
+                <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                     <Button
                         type="submit"
                         variant="contained"
                         color="primary"
                         disabled={loading || !newPdfFile || !promptText.trim() || (comparisonMode === 'pdf-vs-pdf' ? !oldPdfFile : !htmlFile)}
                         fullWidth>
-                        {loading ? <CircularProgress size={24} /> : 'Run Confirmation Check'}
+                        {loading ? <CircularProgress size={24} color="inherit" /> : 'Run Confirmation Check'}
                     </Button>
-                    {loading && <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Elapsed Time: {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
-                </Box>
+                    <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={handleSaveToDB}
+                        disabled={loading || !response}
+                        fullWidth
+                    >
+                        Save to DB
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        color="success"
+                        onClick={handleGenerateValidationLog}
+                        disabled={loading || !response}
+                        fullWidth
+                    >
+                        Generate Log
+                    </Button>
+                </Stack>
+                {loading && <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Elapsed Time: {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
             </form>
             {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
+            {successMessage && <Alert severity="success" sx={{ mt: 3 }}>{successMessage}</Alert>}
             {response && comparisonMode === 'pdf-vs-pdf' && renderPdfVsPdfResponse(response)}
             {response && comparisonMode === 'html-vs-pdf' && renderHtmlVsPdfResponse(response)}
         </Paper>
