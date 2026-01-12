@@ -141,14 +141,14 @@ export const checkYesNoWithComment = (field, text, data, fieldConfig) => {
     if (field !== fieldConfig.name) return null;
 
     const value = String(text || '').trim().toLowerCase();
-  // Special handling for the adverse site conditions field
-    if (field === "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe") {
-        if (value.includes('yes')) {
-            return { isMatch: true };
-        } else {
-            return { isError: true, message: `The response for '${field}' must include 'Yes' if adverse conditions are present.` };
-        }
-    }
+//   // Special handling for the adverse site conditions field
+//     if (field === "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe") {
+//         if (value.includes('yes')) {
+//             return { isMatch: true };
+//         } else {
+//             return { isError: true, message: `The response for '${field}' must include 'Yes' if adverse conditions are present.` };
+//         }
+//     }
     if (!value) {
         return { isError: true, message: `'${field}' should not be blank.` };
     }
@@ -171,14 +171,37 @@ export const checkUtilities = (field, text, data) => {
 
     const value = String(text || '').trim();
     if (!value) {
-        return { isError: true, message: `'${field}' in the Site section cannot be blank. If not available, it should be 'None'.` };
+        return {
+            isError: true,
+            message: `'${field}' in the Site section cannot be blank. If not available, it should be 'None'.`
+        };
     }
 
+    const supplementalAddendum = String(data['SUPPLEMENTAL ADDENDUM'] || '').trim();
+
+    // ✅ Special rule for Alley
+    if (field === "Alley") {
+        // If Alley is NOT Private or None → comment required
+        if (!/^(private|none)$/i.test(value)) {
+            if (!supplementalAddendum) {
+                return {
+                    isError: true,
+                    message: `Comments are required in 'Supplemental Addendum' when 'Alley' is '${value}'.`
+                };
+            }
+        }
+        return { isMatch: true };
+    }
+
+    // ✅ Existing rule for other utilities
     if (/\b(other|private)\b/i.test(value)) {
-        const supplementalAddendum = String(data['SUPPLEMENTAL ADDENDUM'] || '').trim();
         if (!supplementalAddendum) {
-            return { isError: true, message: `Comments are required in 'Supplemental Addendum' when '${field}' is '${value}'.` };
+            return {
+                isError: true,
+                message: `Comments are required in 'Supplemental Addendum' when '${field}' is '${value}'.`
+            };
         }
     }
+
     return { isMatch: true };
 };

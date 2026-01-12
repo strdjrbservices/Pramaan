@@ -964,6 +964,7 @@ function Subject() {
 
 
   const subjectFields = [
+    'Full Address',
     'Property Address',
     'City',
     'County',
@@ -1011,7 +1012,7 @@ function Subject() {
         subjectFields.splice(amcIndex, 0, 'AMC License #');
       }
     }
-    if (statesRequiringAmcLicense.includes(currentState === 'CA')) {
+    if (currentState === 'CA') {
       const caFields = ["Smoke detector comment", "CO detector comment", "Water heater double-strapped comment"];
       const stateIndex = subjectFields.indexOf('State') + 1;
       let offset = 0;
@@ -1117,9 +1118,9 @@ function Subject() {
     "Storm Sash/Insulated", "Screens", "Floors (Material/Condition)", "Walls (Material/Condition)",
     "Trim/Finish (Material/Condition)", "Bath Floor (Material/Condition)", "Bath Wainscot (Material/Condition)",
     "Attic", "Heating Type", "Fuel", "Cooling Type",
-    "Fireplace(s) #", "Patio/Deck", "Pool", "Woodstove(s) #", "Fence", "Porch", "Other Amenities",
-    "Car Storage", "Driveway # of Cars", "Driveway Surface", "Garage # of Cars", "Carport # of Cars",
-    "Garage Att./Det./Built-in", "Appliances",
+    "Fireplace(s) #", "Patio/Deck", "Pool", "Woodstove(s) #", "Fence", "Porch", "Other in Amenities",
+    "Car Storage", "Driveway # of Cars", "Driveway Surface", "Garage # of Cars", "Carport # of Cars","Att./Det./Built-in",
+    "Appliances",
     "Finished area above grade Rooms", "Finished area above grade Bedrooms",
     "Finished area above grade Bath(s)", "Square Feet of Gross Living Area Above Grade",
     "Additional features", "Describe the condition of the property",
@@ -2631,9 +2632,7 @@ function Subject() {
   };
   const renderForm = () => {
     const revisionHandlers = {
-      // =========================
       // SUBJECT SECTION
-      // =========================
       onPropertyAddressRevisionButtonClick: () => setPropertyAddressRevisionLangDialogOpen(true),
       onAssessorsParcelNumberRevisionButtonClick: () => {
         const revisionText = `Please revise the 'Assessor's Parcel Number'"${data["Assessor's Parcel Number"] || '...'}" field in the Subject section.`;

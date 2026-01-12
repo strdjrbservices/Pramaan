@@ -108,6 +108,16 @@ export const checkNeighborhoodFieldsNotBlank = (field, text) => {
     ];
 
     if (fieldsToCheck.includes(field)) {
+        if (field === 'one unit housing price(high,low,pred)' || field === 'one unit housing age(high,low,pred)') {
+            if (typeof text === 'object' && text !== null) {
+                if (!text.high || !text.low || !text.pred) {
+                    return { isError: true, message: `'${field}' is incomplete. High, Low, and Predominant values are required.` };
+                }
+            } else if (!text || String(text).trim() === '') {
+                return { isError: true, message: `'${field}' cannot be blank.` };
+            }
+        }
+
         if (typeof text === 'object' && text !== null) {
             if (Object.values(text).every(v => !v)) return { isError: true, message: `'${field}' cannot be blank.` };
         } else if (!text || String(text).trim() === '') {
@@ -117,9 +127,9 @@ export const checkNeighborhoodFieldsNotBlank = (field, text) => {
     return null;
 };
 
-export const checkLocation = (field, text, section) => {
+export const checkLocation = (field, text, allData, path) => {
     // Run ONLY for Neighborhood → Location
-    if (section !== 'Neighborhood' || field !== 'Location') return null;
+    if (!path || path[0] !== 'NEIGHBORHOOD' || field !== 'Location') return null;
 
     const value = String(text || '').trim().toLowerCase();
 

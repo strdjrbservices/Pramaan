@@ -17,13 +17,15 @@ export const checkContractAnalysisConsistency = (field, text, data) => {
     const analysisField = "I did did not analyze the contract for sale for the subject purchase transaction. Explain the results of the analysis of the contract for sale or why the analysis was not performed.";
     const analysisValue = String(data.CONTRACT[analysisField] || '').trim().toLowerCase();
 
+    const analysisPerformed = analysisValue.includes('did') && !analysisValue.includes('did not');
+
     const fieldsToCheck = [
-        { name: "Contract Price $", required: analysisValue.startsWith('did') },
-        { name: "Date of Contract", required: analysisValue.startsWith('did') },
-        { name: "Is property seller owner of public record?", required: analysisValue.startsWith('did') },
-        { name: "Data Source(s)", required: analysisValue.startsWith('did') },
-        { name: "Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?", required: analysisValue.startsWith('did') },
-        { name: "If Yes, report the total dollar amount and describe the items to be paid", required: analysisValue.startsWith('did') && String(data.CONTRACT["Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?"] || '').trim().toLowerCase() === 'yes' }
+        { name: "Contract Price $", required: analysisPerformed },
+        { name: "Date of Contract", required: analysisPerformed },
+        { name: "Is property seller owner of public record?", required: analysisPerformed },
+        { name: "Data Source(s)", required: analysisPerformed },
+        { name: "Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?", required: analysisPerformed },
+        { name: "If Yes, report the total dollar amount and describe the items to be paid", required: analysisPerformed && String(data.CONTRACT["Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?"] || '').trim().toLowerCase().includes('yes') }
 
     ];
 
@@ -45,24 +47,53 @@ export const checkContractAnalysisConsistency = (field, text, data) => {
 };
 
 export const checkFinancialAssistanceInconsistency = (field, data) => {
-    const assistanceQuestionField = 'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?';
-    const assistanceAmountField = 'If Yes, report the total dollar amount and describe the items to be paid';
+    const assistanceQuestionField =
+        'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?';
+
+    const assistanceAmountField =
+        'If Yes, report the total dollar amount and describe the items to be paid';
 
     if (field !== assistanceQuestionField && field !== assistanceAmountField) return null;
-    if (!data.CONTRACT) return null;
+    if (!data?.CONTRACT) return null;
 
-    const assistanceAnswer = String(data.CONTRACT[assistanceQuestionField] || '').trim().toLowerCase();
-    const amountText = String(data.CONTRACT[assistanceAmountField] || '').trim();
-    const numericPart = (amountText.match(/(-?\d+(\.\d+)?)/) || [])[0];
-    const amountValue = numericPart !== undefined ? parseFloat(numericPart) : NaN;
+    const assistanceAnswer = String(
+        data.CONTRACT[assistanceQuestionField] || ''
+    ).toLowerCase();
 
-    if (assistanceAnswer === 'yes' && (amountText === '' || isNaN(amountValue) || amountValue <= 0 || amountValue === 0)) {
-        return { isError: true, message: `Financial assistance is 'Yes', but the amount is missing or not greater than 0.` };
-    } else if (assistanceAnswer === 'no' && amountText && (isNaN(amountValue))) {
-        return { isError: true, message: `Financial assistance is 'No', but the amount is not '0' or blank.` };
+    const amountText = String(
+        data.CONTRACT[assistanceAmountField] || ''
+    ).trim();
+
+    // Extract numeric value (supports $5,000 / USD 100 etc.)
+    const numericMatch = amountText.replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+    const amountValue = numericMatch ? parseFloat(numericMatch[0]) : NaN;
+
+    /* -------------------- YES CASE -------------------- */
+    if (assistanceAnswer.includes('yes')) {
+        if (amountText === '' || isNaN(amountValue) || amountValue < 0) {
+            return {
+                isError: true,
+                message:
+                    "Financial assistance is marked 'Yes', but the amount must be 0 or greater than 0."
+            };
+        }
     }
+
+    /* -------------------- NO CASE -------------------- */
+    if (assistanceAnswer.includes('no')) {
+        // If an amount is provided, it must be 0. An empty string is also acceptable.
+        if (amountText !== '' && (isNaN(amountValue) || amountValue !== 0)) {
+            return {
+                isError: true,
+                message:
+                    "Financial assistance is marked 'No', so the amount must be 0 or left blank."
+            };
+        }
+    }
+
     return { isMatch: true };
 };
+
 
 export const checkYesNoOnly = (field, text, data, fieldConfig) => {
     if (field !== fieldConfig.name) return null;

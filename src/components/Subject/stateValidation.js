@@ -27,6 +27,7 @@ const checkCaliforniaRequirements = (data) => {
     const missing = [];
 
     // Check for fields directly in the data object, as they are part of the Subject section for CA.
+        // Check for fields directly in the data object, as they are part of the Subject section for CA.
     if (!data?.['Smoke detector comment']) missing.push("Smoke detector comment");
     if (!data?.['CO detector comment']) missing.push("CO detector comment");
     if (!data?.['Water heater double-strapped comment']) missing.push("Water heater double-strapped comment");

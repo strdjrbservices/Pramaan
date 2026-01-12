@@ -23,7 +23,7 @@ const HomePage = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(-45deg, #667eea, #764ba2, #23a6d5, #23d5ab)',
+        background: 'linear-gradient(-45deg, #ea6666, #000000, #f200ff, #23d5ab)',
         backgroundSize: '400% 400%',
         animation: 'gradient 15s ease infinite',
         '@keyframes gradient': {
