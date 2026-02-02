@@ -22,8 +22,6 @@ import { GlobalStyles } from '@mui/system';
 import { lightTheme, darkTheme } from '../../theme';
 import Sidebar from '../Subject/Sidebar';
 import PremiumLogo from '../Subject/logo';
-// import { GridInfoCard } from '../Subject/FormComponents';
-// import { SalesComparisonSection } from '../Subject/tables';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -132,7 +130,6 @@ const Scenario2 = () => {
   const [editingField, setEditingField] = useState(null);
   const [loadingSection, setLoadingSection] = useState(null);
   const [extractionTime, setExtractionTime] = useState(null);
-  // const [fullExtractionTime, setFullExtractionTime] = useState(null);
   const [fileSessionTimer, setFileSessionTimer] = useState(0);
   const fileSessionTimerRef = useRef(null);
   const [activeSection, setActiveSection] = useState('value-condition');
@@ -143,14 +140,7 @@ const Scenario2 = () => {
   const [showRawData, setShowRawData] = useState(false);
 
   const [selectedFormType, setSelectedFormType] = useState({ label: 'Scenario 2', id: 'Scenario2' });
-  // const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
-  // const [htmlExtractionTimer, setHtmlExtractionTimer] = useState(0);
-  // const [isHtmlReviewLoading, setIsHtmlReviewLoading] = useState(false);
-  
-  // const [isComparisonDialogOpen, setIsComparisonDialogOpen] = useState(false);
-  // const [isContractCompareOpen, setIsContractCompareOpen] = useState(false);
-  // const [isEngagementLetterDialogOpen, setIsEngagementLetterDialogOpen] = useState(false);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
   const [isPdfMinimized, setIsPdfMinimized] = useState(false);
@@ -441,9 +431,6 @@ const Scenario2 = () => {
       const endTime = Date.now();
       const duration = ((endTime - startTime) / 1000).toFixed(2);
       setExtractionTime(duration);
-      if (!sectionId) {
-        setFullExtractionTime(duration);
-      }
       if (sectionId) {
         setLoadingSection(null);
       } else {
@@ -789,14 +776,10 @@ const Scenario2 = () => {
                       variant="contained"
                       onClick={handleGeneratePdf}
                       disabled={!Object.keys(data).length}
-                      startIcon={
-                        isGeneratingPdf
-                          ? <CircularProgress size={14} color="inherit" />
-                          : <PictureAsPdfIcon fontSize="small" />
-                      }
+                      startIcon={<PictureAsPdfIcon fontSize="small" />}
                     >
                       <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                        {isGeneratingPdf ? 'Generating' : 'PDF'}
+                        PDF
                       </Box>
                     </Button>
 
@@ -901,13 +884,8 @@ const Scenario2 = () => {
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <Typography variant="caption" sx={{ fontWeight: 'bold' }}>HTML:</Typography>
                       <Typography variant="caption">{htmlFile.name}</Typography>
-                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsComparisonDialogOpen(true)} disabled={isHtmlReviewLoading || loading}>
-                        {isHtmlReviewLoading ? (
-                          <>
-                            <CircularProgress size={14} sx={{ mr: 0.5 }} />
-                            {Math.floor(htmlExtractionTimer / 60)}m {htmlExtractionTimer % 60}s
-                          </>
-                        ) : <GetAppIcon fontSize="small" />}
+                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} disabled={loading}>
+                        <GetAppIcon fontSize="small" />
                       </Button>
                     </Stack>
                   )}
@@ -915,7 +893,7 @@ const Scenario2 = () => {
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Contract:</Typography>
                       <Typography variant="caption">{contractFile.name}</Typography>
-                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsContractCompareOpen(true)}><GetAppIcon fontSize="small" /></Button>
+                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }}><GetAppIcon fontSize="small" /></Button>
                       <IconButton size="small" onClick={() => handlePreviewPdf(contractFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
                     </Stack>
                   )}
@@ -923,7 +901,7 @@ const Scenario2 = () => {
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Engagement:</Typography>
                       <Typography variant="caption">{engagementLetterFile.name}</Typography>
-                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsEngagementLetterDialogOpen(true)}><GetAppIcon fontSize="small" /></Button>
+                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }}><GetAppIcon fontSize="small" /></Button>
                       <IconButton size="small" onClick={() => handlePreviewPdf(engagementLetterFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
                     </Stack>
                   )}
