@@ -1,3 +1,13 @@
+const checkNotBlank = (field, text, fieldName) => {
+    if (field === fieldName) {
+        if (!text || String(text).trim() === '') {
+            return { isError: true, message: `'${fieldName}' should not be blank.` };
+        }
+        return { isMatch: true };
+    }
+    return null;
+};
+
 export const checkTaxYear = (field, text) => {
     if (field !== 'Tax Year') return null;
     const taxYearValue = String(text || '').trim();
@@ -11,6 +21,49 @@ export const checkTaxYear = (field, text) => {
     const currentYear = new Date().getFullYear();
     if (taxYear > currentYear || taxYear < currentYear - 1) {
         return { isError: true, message: `Tax Year must be the current year (${currentYear}) or the previous year (${currentYear - 1}).` };
+    }
+    return { isMatch: true };
+};
+
+export const checkSubjectFieldsNotBlank = (field, text) => {
+    const fieldsToCheck = [
+        'Property Address',
+        'County',
+        'Borrower',
+        'City',
+        'Zip Code',
+        'Owner of Public Record',
+        'Legal Description',
+        "Assessor's Parcel #",
+        'Neighborhood Name',
+        'Map Reference',
+        'Census Tract',
+        'Occupant',
+        'Property Rights Appraised',
+        'Lender/Client',
+        'Address (Lender/Client)',
+        'Report data source(s) used, offering price(s), and date(s)'
+    ];
+    return checkNotBlank(field, text, fieldsToCheck.find(f => f === field));
+};
+
+export const checkAssignmentTypeConsistency = (field, text, data) => {
+    if (field !== 'Assignment Type') return null;
+    const assignmentType = String(text || '').trim().toLowerCase();
+    const contractData = data.CONTRACT;
+    const isContractSectionEmpty = !contractData || Object.values(contractData).every(value => value == null || value === '');
+    if (assignmentType === 'purchase transaction' && isContractSectionEmpty) {
+        return { isError: true, message: `Assignment Type is 'Purchase Transaction' then the Contract Section should not be empty.` };
+    }
+    if (assignmentType === 'refinance transaction') {
+        const analysisField = "I did did not analyze the contract for sale for the subject purchase transaction. Explain the results of the analysis of the contract for sale or why the analysis was not performed.";
+        const analysisValue = String(contractData?.[analysisField] || '').trim().toLowerCase();
+        if (analysisValue.includes('did not')) {
+            return { isMatch: true };
+        }
+        if (!isContractSectionEmpty) {
+            return { isError: true, message: `Assignment Type is 'Refinance Transaction' then the Contract Section should be empty.` };
+        }
     }
     return { isMatch: true };
 };
@@ -118,6 +171,26 @@ export const checkCensusTract = (field, text) => {
 
     if (!/^\d+(\.\d+)?$/.test(value)) {
         return { isError: true, message: 'Census Tract must only contain numbers.' };
+    }
+    return { isMatch: true };
+};
+
+export const checkFullAddressConsistency = (field, text) => {
+    if (field !== 'Full Address') return null;
+    const value = String(text || '').trim();
+    if (value.includes('Inconsistent')) {
+        return { isError: true, message: "Full Address is inconsistent." };
+    }
+    return { isMatch: true };
+};
+
+export const checkPresence = (field, text) => {
+    const value = String(text || '').trim();
+    if (!value) return { isError: true, message: `${field} is empty.` };
+    
+    const lowerValue = value.toLowerCase();
+    if (lowerValue.includes('not present')) {
+        return { isError: true, message: `${field} is marked as not present.` };
     }
     return { isMatch: true };
 };

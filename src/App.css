@@ -5,6 +5,7 @@ body {
   color: #000000 !important;
 
 }
+
 .css-3bkptl-MuiPaper-root-MuiAppBar-root {
   background-color: none !important;
   background: none !important;
@@ -15,11 +16,17 @@ body {
   border-radius: none !important;
   box-shadow: none !important;
 }
-.css-1wayox2-MuiPaper-root{
+
+.css-1wayox2-MuiPaper-root {
   padding: 10px !important;
 }
+
 .mt-5 {
   margin-top: 1.3rem !important;
+}
+
+.css-19cwu71-MuiTableCell-root {
+  width: 70% !important;
 }
 
 .card {
@@ -27,7 +34,8 @@ body {
   overflow-y: auto;
   margin-bottom: 2px !important;
 }
-.px-3{
+
+.px-3 {
 
   padding-left: 10px !important;
   padding-right: 10px !important;
@@ -35,9 +43,16 @@ body {
   margin-right: 20px !important;
   margin-left: 800px !important;
 }
+
 .card-header {
   background-color: #6fd3b2 !important;
   color: rgb(0, 0, 0);
+  top: 71px !important;
+}
+
+.css-1i9ubhd-MuiButtonBase-root-MuiButton-root {
+
+  color: black !important;
 }
 
 .CAR1 {
@@ -97,10 +112,12 @@ body {
   padding: 4px;
 
 }
+
 .comparison-table th {
   background-color: #cdd37c;
   font-weight: bold;
 }
+
 .sales-table-container {
   max-width: 100%;
   overflow-x: auto;
@@ -148,8 +165,9 @@ body {
   vertical-align: middle;
   margin-left: 5px;
 }
+
 .table-container {
-   
+
   max-width: 100%;
   overflow-x: auto;
 }
@@ -173,6 +191,7 @@ body {
   background-color: #cdd37c;
   font-weight: bold;
 }
+
 .animated-back-button {
   transition: transform 0.3s ease-in-out;
 }
@@ -181,24 +200,33 @@ body {
   transform: translateX(-5px);
   transition: transform 0.3s ease-in-out;
 }
+
 /* Styles for the active sidebar item */
 .sidebar-link.active {
-  background-color: #bbdefb; /* A light blue for the active state in light theme */
-  color: #1a237e; /* Dark blue text for contrast */
-  border-radius: 4px; /* Optional: adds a slight rounded corner */
-  font-weight: bold; /* Optional: makes the text bold */
+  background-color: #bbdefb;
+  /* A light blue for the active state in light theme */
+  color: #1a237e;
+  /* Dark blue text for contrast */
+  border-radius: 4px;
+  /* Optional: adds a slight rounded corner */
+  font-weight: bold;
+  /* Optional: makes the text bold */
 }
 
 /* Optional: Adjust for dark theme if you have a theme switcher */
 body[data-theme="dark"] .sidebar-link.active {
-  background-color: #1e88e5; /* A primary blue for dark theme */
-  color: #ffffff; /* White text for contrast */
+  background-color: #1e88e5;
+  /* A primary blue for dark theme */
+  color: #ffffff;
+  /* White text for contrast */
 }
-.css-zsp0bh-MuiInputBase-root-MuiOutlinedInput-root{
+
+.css-zsp0bh-MuiInputBase-root-MuiOutlinedInput-root {
   height: 250px !important;
 }
-.css-w4nesw-MuiInputBase-input-MuiOutlinedInput-input{
+
+.css-w4nesw-MuiInputBase-input-MuiOutlinedInput-input {
   height: 180px !important;
   padding: 20px !important;
-  
+
 }

@@ -132,7 +132,10 @@ export const checkQualityOfConstructionAdjustment = (field, allData, saleName) =
     return { isMatch: true };
 };
 
-export const checkProximityToSubject = (field, text, allData, saleName) => {
+export const checkProximityToSubject = (field, text, allData, arg4, arg5) => {
+    let saleName = arg4;
+    if (Array.isArray(arg4)) saleName = arg5;
+
     if (field !== 'Proximity to Subject' || !allData || !allData.Subject || !saleName || saleName === 'Subject') return null;
     const proximityText = String(text || '').trim();
     if (!proximityText) return null;
@@ -291,7 +294,7 @@ export const checkLocationConsistency = (field, allData, saleName) => {
     const compLocation = String(allData[saleName]?.['Location'] || '').trim();
 
     if (!subjectLocation || !compLocation) {
-        return null; 
+        return null;
     }
 
     if (subjectLocation === compLocation) {
@@ -394,7 +397,10 @@ export const checkHeatingCoolingAdjustment = (field, allData, saleName) => {
     return { isMatch: true };
 };
 
-export const checkDataSourceDOM = (field, text, saleName) => {
+export const checkDataSourceDOM = (field, text, arg3, arg4, arg5) => {
+    let saleName = arg3;
+    if (typeof arg3 === 'object') saleName = arg5;
+
     if (field !== 'Data Source(s)' || !saleName || saleName === 'Subject') return null;
 
     const textValue = String(text || '').trim();
@@ -440,24 +446,25 @@ export const checkActualAgeAdjustment = (field, allData, saleName) => {
 };
 
 
-export const checkLeaseholdFeeSimpleConsistency = (field, allData) => {
+export const checkLeaseholdFeeSimpleConsistency = (field, allData, saleName) => {
     if (field !== 'Leasehold/Fee Simple') return null;
-    if (!allData) return null;
+    if (!allData || !allData.Subject || !saleName || saleName === 'Subject') return null;
 
-    const comparableSaleKeys = Object.keys(allData).filter(k => k.startsWith('COMPARABLE SALE #'));
-    const allKeys = ['Subject', ...comparableSaleKeys];
+    const subjectValue = String(allData.Subject['Property Rights Appraised'] || '').trim();
+    const compValue = String(allData[saleName]?.['Leasehold/Fee Simple'] || '').trim();
+    const adjustmentText = String(allData[saleName]?.['Leasehold/Fee Simple Adjustment'] || '').trim();
 
-    const allValues = allKeys
-        .map(key => allData[key]?.['Leasehold/Fee Simple'] || (key === 'Subject' ? allData.Subject?.['Property Rights Appraised'] : null))
-        .map(val => String(val || '').trim())
-        .filter(Boolean);
 
-    if (allValues.length < 2) return null;
+    if (!subjectValue || !compValue) return null;
 
-    const uniqueValues = new Set(allValues);
 
-    if (uniqueValues.size > 1) {
-        return { isError: true, message: `Inconsistent 'Leasehold/Fee Simple' values found across Subject and Comparables.` };
+    if (subjectValue.toLowerCase() === compValue.toLowerCase()) {
+        return { isMatch: true };
+    } else {
+        const adjustmentValue = parseFloat(adjustmentText.replace(/[^0-9.-]+/g, ""));
+        if (!adjustmentText || isNaN(adjustmentValue) || adjustmentValue === 0) {
+            return { isError: true, message: `Property rights mismatch (${subjectValue} vs ${compValue}). An adjustment is required.` };
+        }
     }
     return { isMatch: true };
 };
@@ -467,7 +474,10 @@ export const checkCompDesignStyle = (field, text, allData, saleName) => {
     return null;
 };
 
-export const checkDateOfSale = (field, text, allData, saleName) => {
+export const checkDateOfSale = (field, text, allData, arg4, arg5) => {
+    let saleName = arg4;
+    if (Array.isArray(arg4)) saleName = arg5;
+
     if (field !== 'Date of Sale/Time' || !saleName || saleName === 'Subject' || !allData) return null;
 
     const compDateStr = String(text || '').trim();
@@ -519,6 +529,29 @@ export const checkSalePrice = (field, allData, saleName) => {
 
     if (percentageDifference > 25) {
         return { isError: true, message: `Warning: Comp sale price ($${compPrice.toLocaleString()}) differs from Subject sale price ($${subjectPrice.toLocaleString()}) by more than 25%.` };
+    }
+
+    return { isMatch: true };
+};
+
+export const checkSubjectAgeConsistency = (field, allData, saleName) => {
+    if (field !== 'Actual Age' || saleName !== 'Subject' || !allData) return null;
+
+    const actualAgeStr = String(allData.Subject?.['Actual Age'] || '').trim();
+    const yearBuiltStr = allData.IMPROVEMENTS?.['Year Built'] || allData['Year Built'];
+
+    if (!actualAgeStr || !yearBuiltStr) return null;
+
+    const actualAge = parseInt(actualAgeStr.replace(/[^0-9]/g, ''), 10);
+    const yearBuilt = parseInt(yearBuiltStr.replace(/[^0-9]/g, ''), 10);
+    const currentYear = new Date().getFullYear();
+
+    if (isNaN(actualAge) || isNaN(yearBuilt)) return null;
+
+    const calculatedAge = currentYear - yearBuilt;
+
+    if (Math.abs(calculatedAge - actualAge) > 1) {
+        return { isError: true, message: `Subject Actual Age (${actualAge}) in Sales Grid does not match Year Built (${yearBuilt}). Expected ~${calculatedAge}.` };
     }
 
     return { isMatch: true };

@@ -17,15 +17,17 @@ import {
   TableRow,
   Chip,
   ToggleButton,
-  Tooltip,
   ToggleButtonGroup,
+  Container,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CancelIcon from '@mui/icons-material/Cancel';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import successSoundFile from '../../Assets/success.mp3';
 import errorSoundFile from '../../Assets/error.mp3';
+import PremiumLogo from './logo';
 
 const playSound = (soundType) => {
   let soundFile;
@@ -113,9 +115,9 @@ For each item in the checklist, provide a 'yes' or 'no' answer in the 'final_out
 const Compare = () => {
   const [htmlFile, setHtmlFile] = useState(null);
   const [response, setResponse] = useState(null);
-  const [loading, setLoading] = useState(false); // This can be used for all modes
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [comparisonMode, setComparisonMode] = useState('revision'); // 'revision', 'pdf-html', or 'pdf-pdf'
+  const [comparisonMode, setComparisonMode] = useState('revision');
   const [oldPdfFile, setOldPdfFile] = useState(null);
   const [newPdfFile, setNewPdfFile] = useState(null);
   const [revisionText, setRevisionText] = useState('');
@@ -245,7 +247,7 @@ const Compare = () => {
       formData.append('file', newPdfFile);
       formData.append('form_type', '1004'); // Or make this selectable
       formData.append('revision_request', revisionText);
-      endpoint = 'https://strdjrbservices2.pythonanywhere.com/api/extract/';
+      endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/extract/';
     } else if (mode === 'checklist') {
       if (!oldPdfFile || !newPdfFile) {
         setError('Both Old and New PDF files must be provided for this check.');
@@ -255,7 +257,7 @@ const Compare = () => {
       formData.append('old_pdf_file', oldPdfFile);
       formData.append('new_pdf_file', newPdfFile);
       formData.append('revision_request', CHECKLIST_PROMPT);
-      endpoint = 'https://strdjrbservices2.pythonanywhere.com/api/compare-pdfs/';
+      endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/compare-pdfs/';
     } else if (mode === 'pdf-html') {
       if (!newPdfFile || !htmlFile) {
         setError('Both PDF and HTML files must be provided for this comparison.');
@@ -264,7 +266,7 @@ const Compare = () => {
       }
       formData.append('pdf_file', newPdfFile);
       formData.append('html_file', htmlFile);
-      endpoint = 'https://strdjrbservices2.pythonanywhere.com/api/compare/';
+      endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/compare/';
     } else { // 'pdf-pdf'
       if (!oldPdfFile || !newPdfFile) {
         setError('Both Old and New PDF files must be provided for this comparison.');
@@ -273,7 +275,7 @@ const Compare = () => {
       }
       formData.append('old_pdf_file', oldPdfFile);
       formData.append('new_pdf_file', newPdfFile);
-      endpoint = 'https://strdjrbservices2.pythonanywhere.com/api/compare-pdfs/';
+      endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/compare-pdfs/';
     }
 
     try {
@@ -330,7 +332,7 @@ const Compare = () => {
       setComparisonMode(newMode);
       setResponse(null);
       setOldPdfPageCount(null);
-      setNewPdfPageCount(null);      
+      setNewPdfPageCount(null);
       setRevisionText('');
       // Directly start the comparison process.
       startComparison(newMode);
@@ -514,120 +516,129 @@ const Compare = () => {
     );
   };
 
+  const showOldPdf = comparisonMode === 'checklist' || comparisonMode === 'pdf-pdf';
+  const showNewPdf = true;
+  const showHtml = comparisonMode === 'revision' || comparisonMode === 'pdf-html';
+
   return (
-    <Paper elevation={3} sx={{ p: 4, m: 2 }}>
-      {/* <Typography variant="h5" gutterBottom>
-        File Comparison
-      </Typography>
-      <ToggleButtonGroup
-        color="primary"
-        value={comparisonMode}
-        exclusive
-        onChange={handleModeChange}
-        aria-label="Comparison Mode"
-        sx={{ mb: 3 }}
-      >
-        <ToggleButton value="checklist">Confirmation Checklist</ToggleButton>
-        <ToggleButton value="revision">Revision Verification</ToggleButton>
-        <ToggleButton value="pdf-html">PDF/HTML</ToggleButton>
-        <ToggleButton value="pdf-pdf">PDF/PDF</ToggleButton>
-      </ToggleButtonGroup> */}
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 2,
-          my: 2,
+          mb: 5,
         }}
       >
-        <Box
-          component="img"
-          src={process.env.PUBLIC_URL + '/logo.png'}
-          alt="logo"
-          sx={{ height: { xs: 60, md: 80 }, width: 'auto' }}
-        />
-        <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.8rem', md: '2.5rem' } }}>
+        <PremiumLogo size={70} fullScreen={false} />
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(45deg, #1976d2, #9c27b0)', backgroundClip: 'text', textFillColor: 'transparent', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           REVISED FILE REVIEW
         </Typography>
       </Box>
 
+      <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 4, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Stack spacing={3} alignItems="center">
+          <ToggleButtonGroup
+            color="primary"
+            value={comparisonMode}
+            exclusive
+            onChange={handleModeChange}
+            aria-label="Comparison Mode"
+            size="medium"
+            sx={{
+              '& .MuiToggleButton-root': {
+                px: 3,
+                py: 1,
+                borderRadius: 2,
+                mx: 0.5,
+                border: '1px solid rgba(0, 0, 0, 0.12) !important',
+                '&.Mui-selected': {
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                  }
+                }
+              }
+            }}
+          >
+            <ToggleButton value="revision">Revision Verification</ToggleButton>
+            <ToggleButton value="checklist">Confirmation Checklist</ToggleButton>
+            <ToggleButton value="pdf-html">PDF/HTML</ToggleButton>
+            <ToggleButton value="pdf-pdf">PDF/PDF</ToggleButton>
+          </ToggleButtonGroup>
 
+          <Divider flexItem sx={{ width: '100%', maxWidth: 800, mx: 'auto !important' }} />
 
-      {/* Unified File Upload Section */}
-      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Upload Files</Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Tooltip title="Click to upload the old/original PDF file">
-              <Button variant="outlined" component="label" fullWidth>
-                Upload Old/Original PDF
-                <input type="file" hidden accept=".pdf,application/pdf" onChange={handleOldPdfFileChange} />
-              </Button>
-            </Tooltip>
-            {oldPdfFile && <Typography variant="body2" noWrap sx={{ mt: 1 }}>Selected: {oldPdfFile.name}</Typography>}
+          <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: 1000 }}>
+            {showOldPdf && (
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: oldPdfFile ? 'success.main' : 'divider', bgcolor: oldPdfFile ? 'success.lighter' : 'transparent' }}>
+                  <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
+                    Upload Old PDF
+                    <input type="file" hidden accept=".pdf,application/pdf" onChange={handleOldPdfFileChange} />
+                  </Button>
+                  <Typography variant="caption" display="block" noWrap color={oldPdfFile ? "success.main" : "text.secondary"}>
+                    {oldPdfFile ? oldPdfFile.name : "No file selected"}
+                  </Typography>
+                </Paper>
+              </Grid>
+            )}
+            {showNewPdf && (
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: newPdfFile ? 'success.main' : 'divider', bgcolor: newPdfFile ? 'success.lighter' : 'transparent' }}>
+                  <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
+                    Upload New PDF
+                    <input type="file" hidden accept=".pdf,application/pdf" onChange={handleNewPdfFileChange} />
+                  </Button>
+                  <Typography variant="caption" display="block" noWrap color={newPdfFile ? "success.main" : "text.secondary"}>
+                    {newPdfFile ? newPdfFile.name : "No file selected"}
+                  </Typography>
+                </Paper>
+              </Grid>
+            )}
+            {showHtml && (
+              <Grid item xs={12} sm={6} md={4}>
+                <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: htmlFile ? 'success.main' : 'divider', bgcolor: htmlFile ? 'success.lighter' : 'transparent' }}>
+                  <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
+                    Upload HTML
+                    <input type="file" hidden accept=".html,text/html" onChange={handleHtmlFileChange} />
+                  </Button>
+                  <Typography variant="caption" display="block" noWrap color={htmlFile ? "success.main" : "text.secondary"}>
+                    {htmlFile ? htmlFile.name : "No file selected"}
+                  </Typography>
+                </Paper>
+              </Grid>
+            )}
           </Grid>
-          <Grid item xs={12} md={4}>
-            <Tooltip title="Click to upload the new/revised PDF file">
-              <Button variant="outlined" component="label" fullWidth>
-                Upload New/Revised PDF
-                <input type="file" hidden accept=".pdf,application/pdf" onChange={handleNewPdfFileChange} />
-              </Button>
-            </Tooltip>
-            {newPdfFile && <Typography variant="body2" noWrap sx={{ mt: 1 }}>Selected: {newPdfFile.name}</Typography>}
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Tooltip title="Click to upload the HTML file">
-              <Button variant="outlined" component="label" fullWidth>
-                Upload HTML File
-                <input type="file" hidden accept=".html,text/html" onChange={handleHtmlFileChange} />
-              </Button>
-            </Tooltip>
-            {htmlFile && <Typography variant="body2" noWrap sx={{ mt: 1 }}>Selected: {htmlFile.name}</Typography>}
-          </Grid>
-        </Grid>
+        </Stack>
       </Paper>
-
-      <ToggleButtonGroup
-        color="primary"
-        value={comparisonMode}
-        exclusive
-        onChange={handleModeChange}
-        aria-label="Comparison Mode"
-        sx={{ mb: 3 }}
-      >
-        <ToggleButton value="revision">Revision Verification</ToggleButton>
-        <ToggleButton value="checklist">Confirmation Checklist</ToggleButton>
-        <ToggleButton value="pdf-html">PDF/HTML</ToggleButton>
-        <ToggleButton value="pdf-pdf">PDF/PDF</ToggleButton>
-      </ToggleButtonGroup>
 
       <form onSubmit={handleSubmit}>
         {comparisonMode === 'revision' && (
-          <>
+          <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="subtitle2" gutterBottom fontWeight="bold">Revision Request Details</Typography>
             <TextField
-              label="Extracted Revision Request"
+              placeholder="Enter or extract revision request details..."
               multiline
-              rows={6}
+              rows={4}
               value={revisionText}
               onChange={(e) => setRevisionText(e.target.value)}
               spellCheck="true"
               variant="outlined"
               fullWidth
-              sx={{ mb: 3 }}
+              sx={{ bgcolor: 'background.paper' }}
             />
-          </>
+          </Paper>
         )}
-        {/* The file upload sections for each mode are now removed, as they are handled by the unified uploader */}
-        {comparisonMode === 'pdf-html' && ( <Box mt={2} /> )}
-        {comparisonMode === 'pdf-pdf' && ( <Box mt={2} /> )}
-        {comparisonMode === 'checklist' && ( <Box mt={2} /> )}
 
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
           <LoadingButton
             type="submit"
             variant="contained"
             color="primary"
+            size="large"
             loading={loading}
             disabled={
               (comparisonMode === 'revision' && (!newPdfFile || !revisionText)) ||
@@ -635,144 +646,138 @@ const Compare = () => {
               (comparisonMode === 'pdf-pdf' && (!oldPdfFile || !newPdfFile)) ||
               (comparisonMode === 'checklist' && (!oldPdfFile || !newPdfFile))
             }
-            fullWidth
+            sx={{ px: 6, py: 1.5, borderRadius: 3, fontSize: '1.1rem', fontWeight: 'bold', boxShadow: 4 }}
           >
             {comparisonMode === 'revision' ? 'Verify Revisions' : (comparisonMode === 'checklist' ? 'Run Confirmation Check' : 'Compare')}
           </LoadingButton>
-          {loading && <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Elapsed Time: {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
         </Box>
+        {loading && <Typography variant="body2" sx={{ mt: -2, mb: 3, textAlign: 'center', color: 'text.secondary' }}>Processing... {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
       </form>
 
-      {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
-      {response && comparisonMode === 'revision' && renderRevisionResponse(response)}
-      {response && comparisonMode === 'checklist' && renderChecklistResponse(response)}
-      {response && comparisonMode === 'pdf-pdf' && renderPdfToPdfResponse(response)}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
-      {response && comparisonMode === 'pdf-html' && (
-        <>
-          {response.comparison_results && (
-            <Paper elevation={1} sx={{ p: 2, mt: 3, bgcolor: 'background.default' }}>
-              <Typography variant="h6" gutterBottom>Comparison Result</Typography>
-              {response.comparison_results.length > 0 ? (
-                <TableContainer>
-                  <Table stickyHeader aria-label="comparison results table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Field</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Value from HTML</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Value from PDF</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }} align="center">Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {comparisonData.map((item, index) => {
-                        // Ensure we are working with strings, defaulting null/undefined to empty string.
-                        const htmlValue = (item.html_value === null || item.html_value === undefined) ? '' : String(item.html_value);
-                        const pdfValue = (item.pdf_value === null || item.pdf_value === undefined) ? '' : String(item.pdf_value);
+      <Box sx={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+        {response && comparisonMode === 'revision' && renderRevisionResponse(response)}
+        {response && comparisonMode === 'checklist' && renderChecklistResponse(response)}
+        {response && comparisonMode === 'pdf-pdf' && renderPdfToPdfResponse(response)}
 
-                        // Start with the status from the backend.
-                        let isMatch = item.status === 'Match';
+        {response && comparisonMode === 'pdf-html' && (
+          <>
+            {response.comparison_results && (
+              <Paper elevation={2} sx={{ p: 3, mt: 3, borderRadius: 3 }}>
+                <Typography variant="h6" gutterBottom fontWeight="bold" color="primary">Comparison Result</Typography>
+                {response.comparison_results.length > 0 ? (
+                  <TableContainer sx={{ maxHeight: 600 }}>
+                    <Table stickyHeader aria-label="comparison results table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 'bold', bgcolor: 'background.paper' }}>Field</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', bgcolor: 'background.paper' }}>Value from HTML</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', bgcolor: 'background.paper' }}>Value from PDF</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', bgcolor: 'background.paper' }} align="center">Status</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {comparisonData.map((item, index) => {
+                          // Ensure we are working with strings, defaulting null/undefined to empty string.
+                          const htmlValue = (item.html_value === null || item.html_value === undefined) ? '' : String(item.html_value);
+                          const pdfValue = (item.pdf_value === null || item.pdf_value === undefined) ? '' : String(item.pdf_value);
 
-                        // Normalize strings for robust comparison.
-                        const normalize = (str) => {
-                          if (typeof str !== 'string') {
-                            return '';
-                          }
+                          // Start with the status from the backend.
+                          let isMatch = item.status === 'Match';
 
-                          let normalizedStr = str.toLowerCase();
+                          // Normalize strings for robust comparison.
+                          const normalize = (str) => {
+                            if (typeof str !== 'string') {
+                              return '';
+                            }
 
-                          // 1. Unicode normalization (e.g., to handle accented characters)
-                          // Convert to NFD (Canonical Decomposition) and remove diacritics
-                          normalizedStr = normalizedStr.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                            let normalizedStr = str.toLowerCase();
 
-                          // 2. Replace common address abbreviations using word boundaries
-                          const abbreviations = {
-                            'ave': 'avenue', 'st': 'street', 'rd': 'road', 'dr': 'drive',
-                            'blvd': 'boulevard', 'ln': 'lane', 'pl': 'place',
-                            'cir': 'circle', 'pkwy': 'parkway', 'ter': 'terrace',
-                            // State abbreviations
-                            'al': 'alabama', 'ak': 'alaska', 'az': 'arizona', 'ar': 'arkansas', 'ca': 'california',
-                            'co': 'colorado', 'ct': 'connecticut', 'de': 'delaware', 'fl': 'florida', 'ga': 'georgia',
-                            'hi': 'hawaii', 'id': 'idaho', 'il': 'illinois', 'in': 'indiana', 'ia': 'iowa',
-                            'ks': 'kansas', 'ky': 'kentucky', 'la': 'louisiana', 'me': 'maine', 'md': 'maryland',
-                            'ma': 'massachusetts', 'mi': 'michigan', 'mn': 'minnesota', 'ms': 'mississippi',
-                            'mo': 'missouri', 'mt': 'montana', 'ne': 'nebraska', 'nv': 'nevada', 'nh': 'newhampshire',
-                            'nj': 'newjersey', 'nm': 'newmexico', 'ny': 'newyork', 'nc': 'northcarolina',
-                            'nd': 'northdakota', 'oh': 'ohio', 'ok': 'oklahoma', 'or': 'oregon', 'pa': 'pennsylvania',
-                            'ri': 'rhodeisland', 'sc': 'southcarolina', 'sd': 'southdakota', 'tn': 'tennessee',
-                            'tx': 'texas', 'ut': 'utah', 'vt': 'vermont', 'va': 'virginia', 'wa': 'washington',
-                            'wv': 'westvirginia', 'wi': 'wisconsin', 'wy': 'wyoming',
-                            // Other common terms
-                            'apt': 'apartment', 'bldg': 'building', 'dept': 'department',
-                            'ste': 'suite', 'unit': 'unit'
+                            // 1. Unicode normalization (e.g., to handle accented characters)
+                            // Convert to NFD (Canonical Decomposition) and remove diacritics
+                            normalizedStr = normalizedStr.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                            // 2. Replace common address abbreviations using word boundaries
+                            const abbreviations = {
+                              'ave': 'avenue', 'st': 'street', 'rd': 'road', 'dr': 'drive',
+                              'blvd': 'boulevard', 'ln': 'lane', 'pl': 'place',
+                              'cir': 'circle', 'pkwy': 'parkway', 'ter': 'terrace',
+                              // State abbreviations
+                              'al': 'alabama', 'ak': 'alaska', 'az': 'arizona', 'ar': 'arkansas', 'ca': 'california',
+                              'co': 'colorado', 'ct': 'connecticut', 'de': 'delaware', 'fl': 'florida', 'ga': 'georgia',
+                              'hi': 'hawaii', 'id': 'idaho', 'il': 'illinois', 'in': 'indiana', 'ia': 'iowa',
+                              'ks': 'kansas', 'ky': 'kentucky', 'la': 'louisiana', 'me': 'maine', 'md': 'maryland',
+                              'ma': 'massachusetts', 'mi': 'michigan', 'mn': 'minnesota', 'ms': 'mississippi',
+                              'mo': 'missouri', 'mt': 'montana', 'ne': 'nebraska', 'nv': 'nevada', 'nh': 'newhampshire',
+                              'nj': 'newjersey', 'nm': 'newmexico', 'ny': 'newyork', 'nc': 'northcarolina',
+                              'nd': 'northdakota', 'oh': 'ohio', 'ok': 'oklahoma', 'or': 'oregon', 'pa': 'pennsylvania',
+                              'ri': 'rhodeisland', 'sc': 'southcarolina', 'sd': 'southdakota', 'tn': 'tennessee',
+                              'tx': 'texas', 'ut': 'utah', 'vt': 'vermont', 'va': 'virginia', 'wa': 'washington',
+                              'wv': 'westvirginia', 'wi': 'wisconsin', 'wy': 'wyoming',
+                              // Other common terms
+                              'apt': 'apartment', 'bldg': 'building', 'dept': 'department',
+                              'ste': 'suite', 'unit': 'unit'
+                            };
+                            // Replace abbreviations using word boundaries to avoid replacing parts of words
+                            for (const [abbr, full] of Object.entries(abbreviations)) {
+                              normalizedStr = normalizedStr.replace(new RegExp(`\\b${abbr}\\b`, 'g'), full);
+                            }
+                            // Remove all spaces and non-alphanumeric characters
+                            return normalizedStr.replace(/[\s\W_]/g, '');
                           };
-                          // Replace abbreviations using word boundaries to avoid replacing parts of words
-                          for (const [abbr, full] of Object.entries(abbreviations)) {
-                            normalizedStr = normalizedStr.replace(new RegExp(`\\b${abbr}\\b`, 'g'), full);
+
+                          const normalizedHtml = normalize(htmlValue);
+                          const normalizedPdf = normalize(pdfValue);
+
+                          if (item.field === 'Property Address') {
+                            // Special check for Property Address: match if the first word/number is the same.
+                            const getFirstWord = (str) => (str || '').toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/)[0] || '';
+                            const htmlFirstWord = getFirstWord(htmlValue);
+                            const pdfFirstWord = getFirstWord(pdfValue);
+                            // Match if both have a first word and they are identical.
+                            isMatch = htmlFirstWord && pdfFirstWord && htmlFirstWord === pdfFirstWord;
+                          } else {
+                            // For other fields, check for an exact match or if one contains the other.
+                            isMatch = normalizedHtml === normalizedPdf || normalizedHtml.includes(normalizedPdf) || normalizedPdf.includes(normalizedHtml);
                           }
-                          // Remove all spaces and non-alphanumeric characters
-                          return normalizedStr.replace(/[\s\W_]/g, '');
-                        };
 
-                        const normalizedHtml = normalize(htmlValue);
-                        const normalizedPdf = normalize(pdfValue);
+                          const handleDataChange = (path, newValue) => {
+                            setComparisonData(prevData => {
+                              const newData = [...prevData];
+                              newData[path[0]][path[1]] = newValue;
+                              return newData;
+                            });
+                          };
 
-                        if (item.field === 'Property Address') {
-                          // Special check for Property Address: match if the first word/number is the same.
-                          const getFirstWord = (str) => (str || '').toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/)[0] || '';
-                          const htmlFirstWord = getFirstWord(htmlValue);
-                          const pdfFirstWord = getFirstWord(pdfValue);
-                          // Match if both have a first word and they are identical.
-                          isMatch = htmlFirstWord && pdfFirstWord && htmlFirstWord === pdfFirstWord;
-                        } else {
-                          // For other fields, check for an exact match or if one contains the other.
-                          isMatch = normalizedHtml === normalizedPdf || normalizedHtml.includes(normalizedPdf) || normalizedPdf.includes(normalizedHtml);
-                        }
-
-                        const handleDataChange = (path, newValue) => {
-                          setComparisonData(prevData => {
-                            const newData = [...prevData];
-                            newData[path[0]][path[1]] = newValue;
-                            return newData;
-                          });
-                        };
-
-                        return (
-                          <TableRow key={index} hover>
-                            <TableCell><SimpleEditableField fieldPath={[index, 'field']} value={item.field} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={true} /></TableCell>
-                            <TableCell><SimpleEditableField fieldPath={[index, 'html_value']} value={item.html_value} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={true} /></TableCell>
-                            <TableCell><SimpleEditableField fieldPath={[index, 'pdf_value']} value={item.pdf_value} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={true} /></TableCell>
-                            <TableCell align="center">
-                              {isMatch ? (
-                                <Chip icon={<CheckCircleIcon />} label="Match" color="success" size="small" />
-                              ) : (
-                                <Chip icon={<CancelIcon />} label="Mismatch" color="error" size="small" />
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                <Alert severity="success" sx={{ mt: 2 }}>
-                  No differences found between the two documents.
-                </Alert>
-              )}
-            </Paper>)}
-        </>
-      )}
-      {/* {response && !response.comparison_results && (
-        <Paper elevation={1} sx={{ p: 2, mt: 3, bgcolor: 'background.default' }}>
-          <Typography variant="h6" gutterBottom>Comparison Result</Typography>
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            The comparison result was not in the expected format. Raw response:
-            <pre>{JSON.stringify(response, null, 2)}</pre>
-          </Alert>
-        </Paper>
-      )} */}
-    </Paper>
+                          return (
+                            <TableRow key={index} hover>
+                              <TableCell><SimpleEditableField fieldPath={[index, 'field']} value={item.field} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={true} /></TableCell>
+                              <TableCell><SimpleEditableField fieldPath={[index, 'html_value']} value={item.html_value} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={true} /></TableCell>
+                              <TableCell><SimpleEditableField fieldPath={[index, 'pdf_value']} value={item.pdf_value} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={true} /></TableCell>
+                              <TableCell align="center">
+                                {isMatch ? (
+                                  <Chip icon={<CheckCircleIcon />} label="Match" color="success" size="small" variant="outlined" />
+                                ) : (
+                                  <Chip icon={<CancelIcon />} label="Mismatch" color="error" size="small" variant="outlined" />
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                ) : (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    No differences found between the two documents.
+                  </Alert>
+                )}
+              </Paper>)}
+          </>
+        )}
+      </Box>
+    </Container>
   );
 };
 

@@ -23,3 +23,17 @@ export const checkProjectInfoFieldsNotBlank = (field, text) => {
     }
     return null;
 };
+
+export const checkCondoCoopProjectsTableFields = (field, text) => {
+    if (!text || String(text).trim() === '') {
+        return { isError: true, message: `'${field}' should not be blank.` };
+    }
+    return null;
+};
+
+export const checkCondoForeclosureFieldsNotBlank = (field, text) => {
+    if (!text || String(text).trim() === '') {
+        return { isError: true, message: `'${field}' should not be blank.` };
+    }
+    return null;
+};

@@ -1,11 +1,10 @@
 import React from 'react';
-import { checkAssignmentTypeConsistency, checkSubjectFieldsNotBlank } from './generalValidation';
 import { checkContractFieldsMandatory, checkFinancialAssistanceInconsistency, checkContractAnalysisConsistency, checkYesNoOnly } from './contractValidation';
-import { checkTaxYear, checkRETaxes, checkSpecialAssessments, checkPUD, checkHOA, checkOfferedForSale, checkAnsi } from './subjectValidation';
+import { checkTaxYear, checkRETaxes, checkSpecialAssessments, checkPUD, checkHOA, checkOfferedForSale, checkAnsi, checkFullAddressConsistency, checkPresence, checkAssignmentTypeConsistency, checkSubjectFieldsNotBlank } from './subjectValidation';
 import { checkZoning, checkZoningDescription, checkSpecificZoningClassification, checkHighestAndBestUse, checkFemaInconsistency, checkFemaFieldsConsistency, checkSiteSectionBlank, checkArea, checkYesNoWithComment, checkUtilities } from './siteValidation';
 import { checkHousingPriceAndAge, checkNeighborhoodUsageConsistency, checkSingleChoiceFields, checkNeighborhoodBoundaries, checkNeighborhoodFieldsNotBlank, checkOtherLandUseComment } from './neighborhoodValidation';
 import { checkUnits, checkAccessoryUnit, checkNumberOfStories, checkPropertyType, checkConstructionStatusAndReconciliation, checkDesignStyle, checkYearBuilt, checkEffectiveAge, checkAdditionalFeatures, checkPropertyConditionDescription, checkPhysicalDeficienciesImprovements, checkNeighborhoodConformity, checkFoundationType, checkBasementDetails, checkEvidenceOf, checkMaterialCondition, checkHeatingFuel, checkCarStorage, checkImprovementsFieldsNotBlank } from './improvementsValidation';
-import { checkConditionAdjustment, checkBedroomsAdjustment, checkBathsAdjustment, checkQualityOfConstructionAdjustment, checkProximityToSubject, checkSiteAdjustment, checkGrossLivingAreaAdjustment, checkSubjectAddressInconsistency, checkDesignStyleAdjustment, checkFunctionalUtilityAdjustment, checkEnergyEfficientItemsAdjustment, checkPorchPatioDeckAdjustment, checkHeatingCoolingAdjustment, checkDataSourceDOM, checkActualAgeAdjustment, checkLeaseholdFeeSimpleConsistency, checkDateOfSale, checkLocationConsistency, checkSalePrice } from './salesComparisonValidation';
+import { checkConditionAdjustment, checkBedroomsAdjustment, checkBathsAdjustment, checkQualityOfConstructionAdjustment, checkProximityToSubject, checkSiteAdjustment, checkGrossLivingAreaAdjustment, checkSubjectAddressInconsistency, checkDesignStyleAdjustment, checkFunctionalUtilityAdjustment, checkEnergyEfficientItemsAdjustment, checkPorchPatioDeckAdjustment, checkHeatingCoolingAdjustment, checkDataSourceDOM, checkActualAgeAdjustment, checkLeaseholdFeeSimpleConsistency, checkDateOfSale, checkLocationConsistency, checkSalePrice, checkSubjectAgeConsistency } from './salesComparisonValidation';
 import { checkFinalValueConsistency, checkCostApproachDeveloped, checkAppraisalCondition, checkAsOfDate, checkFinalValueBracketing, checkReconciliationFieldsNotBlank } from './reconciliationValidation';
 import { checkLenderAddressInconsistency, checkLenderNameInconsistency, checkAppraiserFieldsNotBlank, checkLicenseNumberConsistency as checkAppraiserLicenseConsistency, checkDateGreaterThanToday, checkClientNameHtmlConsistency } from './appraiserLenderValidation';
 import { checkCostNew, checkSourceOfCostData, checkIndicatedValueByCostApproach, checkCostApproachFieldsNotBlank } from './costApproachValidation';
@@ -14,14 +13,14 @@ import { checkStateRequirements } from './stateValidation';
 import { checkLeaseDates, checkOtherBasement } from './rentScheduleValidation';
 import { checkIncomeApproachFieldsNotBlank } from './incomeApproachValidation';
 import { checkPudInformationFieldsNotBlank } from './pudInformationValidation';
-import { checkMarketConditionsFieldsNotBlank } from './marketConditionsValidation';
-import { checkProjectInfoFieldsNotBlank } from './form1073Validation';
+import { checkMarketConditionsFieldsNotBlank, checkMarketConditionsTableFields } from './marketConditionsValidation';
+import { checkProjectInfoFieldsNotBlank, checkCondoForeclosureFieldsNotBlank } from './form1073Validation';
 import { checkProjectAnalysisFieldsNotBlank } from './projectAnalysisValidation';
 import { checkUnitDescriptionsFieldsNotBlank } from './unitDescriptionsValidation';
 import { checkProjectSiteFieldsNotBlank } from './projectSiteValidation';
 import { checkPriorSaleHistoryFieldsNotBlank } from './priorSaleHistoryValidation';
 import { checkInfoOfSalesFieldsNotBlank } from './infoOfSalesValidation';
-import { Tooltip, Box, LinearProgress, Paper, Typography, IconButton } from '@mui/material';
+import { Tooltip, Box, LinearProgress, Paper, Typography, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import { ThumbUp as ThumbUpIcon, PlaylistAdd as PlaylistAddIcon } from '@mui/icons-material';
 
@@ -46,7 +45,7 @@ const HighlightKeywords = ({ text, keywords }) => {
   );
 };
 
-export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation, revisionHandlers = {} }) => {
+export const EditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, usePre, isMissing, inputClassName, inputStyle, isEditable, isAdjustment, allData, saleName, manualValidations, handleManualValidation, revisionHandlers = {}, customValidation }) => {
   const isEditing = isEditable && editingField && JSON.stringify(editingField) === JSON.stringify(fieldPath);
 
   const handleKeyDown = (e) => {
@@ -84,6 +83,11 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     "Electricity": [checkUtilities], "Gas": [checkUtilities], "Water": [checkUtilities], "Sanitary Sewer": [checkUtilities], "Street": [checkUtilities], "Alley": [checkUtilities],
 
     // Subject Validations
+    'Full Address': [checkFullAddressConsistency],
+    'Exposure comment': [checkPresence],
+    'Prior service comment': [checkPresence],
+    'ADU File Check': [checkPresence],
+    'FHA Case No.': [checkPresence],
     'Tax Year': [checkTaxYear],
     'R.E. Taxes $': [checkRETaxes],
     'Special Assessments $': [checkSpecialAssessments],
@@ -170,7 +174,8 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     'Porch/Patio/Deck': [checkPorchPatioDeckAdjustment], 'Porch/Patio/Deck Adjustment': [checkPorchPatioDeckAdjustment],
     'Heating/Cooling': [checkHeatingCoolingAdjustment], 'Heating/Cooling Adjustment': [checkHeatingCoolingAdjustment],
     'Data Source(s)': [checkDataSourceDOM],
-    'Actual Age': [checkActualAgeAdjustment], 'Actual Age Adjustment': [checkActualAgeAdjustment],
+    // 'Actual Age': [checkActualAgeAdjustment], 'Actual Age Adjustment': [checkActualAgeAdjustment],
+    'Actual Age': [checkActualAgeAdjustment, checkSubjectAgeConsistency], 'Actual Age Adjustment': [checkActualAgeAdjustment],
     'Sale Price': [checkSalePrice],
     'Leasehold/Fee Simple': [checkLeaseholdFeeSimpleConsistency],
     'Date of Sale/Time': [checkDateOfSale],
@@ -237,7 +242,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
 
   validationRegistry['Lender/Client Company Address'].push(checkLenderAddressInconsistency);
   validationRegistry['LENDER/CLIENT Name'].push(checkLenderNameInconsistency, checkClientNameHtmlConsistency);
-  validationRegistry['LICENSE/REGISTRATION/CERTIFICATION #'] = [checkAppraiserLicenseConsistency]; // Corrected this line
+  validationRegistry['LICENSE/REGISTRATION/CERTIFICATION #'] = [checkAppraiserLicenseConsistency]; 
   validationRegistry['Policy Period To'] = [checkDateGreaterThanToday];
   validationRegistry['License Vaild To'] = [checkDateGreaterThanToday];
 
@@ -416,16 +421,31 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     }
     validationRegistry[field].push(checkInfoOfSalesFieldsNotBlank);
   });
+
+  const condoForeclosureFieldsToValidate = [
+    "Are foreclosure sales (REO sales) a factor in the project?",
+    "If yes, indicate the number of REO listings and explain the trends in listings and sales of foreclosed properties.",
+    "Summarize the above trends and address the impact on the subject unit and project."
+  ];
+  condoForeclosureFieldsToValidate.forEach(field => {
+    if (!validationRegistry[field]) validationRegistry[field] = [];
+    validationRegistry[field].push(checkCondoForeclosureFieldsNotBlank);
+  });
   const getValidationInfo = (field, text, data, fieldPath, saleName, manualValidations) => {
-    const validationFns = validationRegistry[field] || [];
     let validationResult = null;
 
-    for (const fn of validationFns) {
+    if (customValidation) {
+      validationResult = customValidation(field, text, data);
+    }
 
-      const result = fn(field, text, data, fieldPath, saleName);
-      if (result) {
-        validationResult = result;
-        if (result.isError) break;
+    if (!validationResult) {
+      const validationFns = validationRegistry[field] || [];
+      for (const fn of validationFns) {
+        const result = fn(field, text, data, fieldPath, saleName);
+        if (result) {
+          validationResult = result;
+          if (result.isError) break;
+        }
       }
     }
     if (!validationResult && saleName) {
@@ -2206,25 +2226,38 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
 };
 
 export const FieldTable = ({ id, title, fields, data, cardClass = 'bg-primary', usePre = false, extractionAttempted, onDataChange, editingField, setEditingField, allData }) => {
-  return (
-    <div id={id} style={{ marginBottom: '1rem', marginTop: '1rem' }} className="card shadow mb-4">
-      <div className={`card-header CAR1 ${cardClass} text-white`} style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <strong style={{ flexGrow: 1, textAlign: 'center' }}>{title}</strong>
-      </div>
-      <div className="card-body p-0 table-container">
-        <table className="table table-hover table-striped mb-0" style={{ fontSize: '0.8rem' }}>
-          <tbody>
-            {fields.map((field, index) => {
+  const cardHeaderColors = {
+    'bg-primary': 'primary.main',
+    'bg-secondary': 'secondary.main',
+    'bg-info': 'info.main',
+    'bg-warning': 'warning.main',
+    'bg-success': 'success.main',
+    'bg-danger': 'error.main',
+    'bg-dark': 'grey.900',
+  };
+  const headerBgColor = cardHeaderColors[cardClass] || 'primary.main';
+  const headerColor = cardClass === 'bg-warning' ? 'text.primary' : 'common.white';
 
+  return (
+    <Paper id={id} elevation={3} sx={{ mb: 4, mt: 4, borderRadius: 2, overflow: 'hidden' }}>
+      {title && (
+        <Box sx={{ bgcolor: headerBgColor, color: headerColor, px: 2, py: 1.5, position: 'sticky', top: 0, zIndex: 10 }}>
+          <Typography variant="subtitle1" fontWeight="bold" align="center">{title}</Typography>
+        </Box>
+      )}
+      <TableContainer>
+        <Table size="small" aria-label={title || "data table"}>
+          <TableBody>
+            {fields.map((field, index) => {
               const fieldLabel = typeof field === 'object' && field !== null ? `${field.choice} ${field.comment || ''}`.trim() : field;
               const value = data[fieldLabel];
               const isMissing = extractionAttempted && (value === undefined || value === null || value === '');
               return (
-                <tr key={index}>
-                  <td style={{ width: usePre ? '35%' : '50%' }}>
+                <TableRow key={index} hover>
+                  <TableCell sx={{ width: usePre ? '35%' : '50%', fontWeight: 'medium' }}>
                     {typeof field === 'object' && field !== null ? `${field.choice} ${field.comment || ''}`.trim() : field}
-                  </td>
-                  <td style={isMissing ? { border: '2px solid red' } : {}}>
+                  </TableCell>
+                  <TableCell sx={isMissing ? { border: '2px solid red' } : {}}>
                     <EditableField
                       fieldPath={[fieldLabel]}
                       value={value || ''}
@@ -2236,46 +2269,46 @@ export const FieldTable = ({ id, title, fields, data, cardClass = 'bg-primary', 
                     />
                     {/* Passing manual validation props */}
                     <EditableField manualValidations={allData.manualValidations} handleManualValidation={allData.handleManualValidation} />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 };
 
-export const MarketConditionsTable = ({ id, title, data, onDataChange, editingField, setEditingField, marketConditionsRows = [], manualValidations, handleManualValidation }) => {
+export const MarketConditionsTable = ({ id, title, data, onDataChange, editingField, setEditingField, marketConditionsRows = [], manualValidations, handleManualValidation, isEditable }) => {
   const timeframes = ["Prior 7-12 Months", "Prior 4-6 Months", "Current-3 Months", "Overall Trend"];
 
   return (
-    <div id={id} style={{ marginBottom: '1rem', marginTop: '1rem' }} className="card shadow mb-4">
-      <div className="card-header CAR1 bg-warning text-dark " style={{ marginBottom: "20px", position: 'sticky', top: 0, zIndex: 10, marginTop: '-25px' }}>
-        <strong>{title}</strong>
-      </div>
-      <div className="card-body  table-container">
-        <table className="table table-hover table-striped " style={{ fontSize: '0.8rem' }}>
-          <thead className="table-light">
-            <tr>
-              <th className="border border-gray-400 p-1 bg-gray-200" style={{ marginTop: "20px", width: '30%' }}>Inventory Analysis</th>
-              {timeframes.map(tf => <th key={tf} className="border border-gray-400 p-1 bg-gray-200">{tf}</th>)}
-            </tr>
-          </thead>
-          <tbody>
+    <Paper id={id} elevation={3} sx={{ mb: 4, mt: 4, borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ bgcolor: 'warning.main', color: 'black', px: 2, py: 1.5, position: 'sticky', top: 0, zIndex: 10 }}>
+        <Typography variant="subtitle1" fontWeight="bold">{title}</Typography>
+      </Box>
+      <TableContainer>
+        <Table size="small" aria-label="market conditions table">
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 'bold', width: '30%', backgroundColor: 'action.hover' }}>Inventory Analysis</TableCell>
+              {timeframes.map(tf => <TableCell key={tf} align="center" sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>{tf}</TableCell>)}
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {marketConditionsRows.map(row => (
-              <tr key={row.label}>
-                <td className="border border-gray-400 p-1 font-medium" style={{ width: '40%' }}>{row.label}</td>
+              <TableRow key={row.label} hover>
+                <TableCell component="th" scope="row" sx={{ fontWeight: 'medium' }}>{row.label}</TableCell>
                 {timeframes.map(tf => {
                   const fieldName = `${row.fullLabel} (${tf})`;
                   const marketData = data?.MARKET_CONDITIONS ?? {};
                   const value = marketData[fieldName] || '';
 
                   return (
-                    <td key={tf} className="border border-gray-400 p-1">
+                    <TableCell key={tf} align="center" sx={{ border: '1px solid rgba(224, 224, 224, 1)' }}>
                       <EditableField
-                        fieldPath={[fieldName]}
+                        fieldPath={['MARKET_CONDITIONS', fieldName]}
                         value={value}
                         onDataChange={(path, val) => onDataChange(path, val)}
                         editingField={editingField}
@@ -2283,16 +2316,18 @@ export const MarketConditionsTable = ({ id, title, data, onDataChange, editingFi
                         isMissing={!value}
                         manualValidations={manualValidations}
                         handleManualValidation={handleManualValidation}
+                        customValidation={checkMarketConditionsTableFields}
+                        isEditable={isEditable}
                       />
-                    </td>
+                    </TableCell>
                   );
                 })}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 };
 
@@ -2324,7 +2359,7 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
     }
 
     return (
-      <div key={field} className={`subject-grid-item ${isHighlighted ? 'highlighted-field' : ''}`} style={{ ...itemStyle, ...comparisonStyle }}>
+      <div key={field} className={`subject-grid-item ${isHighlighted ? 'highlighted-field' : ''}`} style={{ ...itemStyle, ...comparisonStyle, color: 'inherit' }}>
         <span className="field-label">{field}</span>
 
         <EditableField
@@ -2344,19 +2379,19 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
   };
 
   return (
-    <div id={id} className="card shadow mb-4 subject-info-card">
-      <div className="card-header CAR1 bg-secondary text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-        <strong style={{ fontSize: '1.1rem' }}>{title}</strong>
+    <Paper id={id} elevation={3} sx={{ mb: 4, borderRadius: 2, overflow: 'hidden' }} className="subject-info-card">
+      <Box sx={{ bgcolor: 'secondary.main', color: 'white', px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+        <Typography variant="h6" component="div" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{title}</Typography>
         {onRevisionButtonClick && (
           <Tooltip title="Revision Language">
             <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: 'white', float: 'right' }}><LibraryBooksIcon /></IconButton>
           </Tooltip>
         )}
-      </div>
+      </Box>
       {loading && loadingSection === id && (
         <Box sx={{ width: '100%' }}><LinearProgress /></Box>
       )}
-      <div className="card-body subject-grid-container">
+      <Box className="card-body subject-grid-container" sx={{ p: 2 }}>
         {fields
           .filter(field =>
             field !== 'HOA(per month)' &&
@@ -2366,8 +2401,8 @@ export const SubjectInfoCard = ({ id, title, fields, data, extractionAttempted, 
           )
           .map(field => renderGridItem(field))
         }
-      </div>
-    </div>
+      </Box>
+    </Paper>
   );
 };
 

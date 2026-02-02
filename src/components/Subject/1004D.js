@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    
+    Box,
     Button,
     Typography,
     TextField,
-    CircularProgress,
     Paper,
     Alert,
     Grid,
@@ -18,12 +17,20 @@ import {
     ToggleButtonGroup,
     Tooltip,
     Stack,
+    Container,
+    Divider,
 } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import SaveIcon from '@mui/icons-material/Save';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import successSoundFile from '../../Assets/success.mp3';
 import errorSoundFile from '../../Assets/error.mp3';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import PremiumLogo from './logo';
 
 const playSound = (soundType) => {
     let soundFile;
@@ -150,7 +157,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
             formData.append('old_pdf_file', oldPdfFile);
             formData.append('new_pdf_file', newPdfFile);
             formData.append('revision_request', promptText);
-            endpoint = 'https://strdjrbservices2.pythonanywhere.com/api/compare-pdfs/';
+            endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/compare-pdfs/';
         } else { // html-vs-pdf
             if (!htmlFile || !newPdfFile) {
                 setError('Please provide both the HTML and New PDF files.');
@@ -160,7 +167,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
             formData.append('html_file', htmlFile);
             formData.append('pdf_file', newPdfFile);
             formData.append('comment', promptText);
-            endpoint = 'https://strdjrbservices2.pythonanywhere.com/api/htmlpdf/';
+            endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/htmlpdf/';
         }
 
         try {
@@ -200,11 +207,13 @@ For each item, provide a JSON object in a 'details' array. Each object must have
         try {
             const username = localStorage.getItem('username') || 'Unknown User';
             const dataToSave = {
-                fileName: newPdfFile?.name || '1004D_Report.pdf',
-                username: username,
-                formType: '1004D',
-                comparisonMode: comparisonMode,
-                data: response
+                file_name: newPdfFile?.name || '1004D_Report.pdf',
+                user_name: username,
+                report_data: {
+                    formType: '1004D',
+                    comparisonMode: comparisonMode,
+                    data: response
+                }
             };
 
             const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
@@ -312,8 +321,8 @@ For each item, provide a JSON object in a 'details' array. Each object must have
         if (rows.length === 0) return null;
 
         return (
-            <Paper elevation={1} sx={{ p: 2, mt: 3 }}>
-                <Typography variant="h6" gutterBottom>Comparison Results</Typography>
+            <Paper elevation={2} sx={{ p: 3, mt: 3, borderRadius: 3 }}>
+                <Typography variant="h6" gutterBottom fontWeight="bold" color="primary">Comparison Results</Typography>
                 <TableContainer>
                     <Table sx={{ minWidth: 650 }} aria-label="comparison table">
                         <TableHead>
@@ -345,8 +354,8 @@ For each item, provide a JSON object in a 'details' array. Each object must have
         }
 
         return (
-            <Paper elevation={1} sx={{ p: 2, mt: 3 }}>
-                <Typography variant="h6" gutterBottom>Comparison Results</Typography>
+            <Paper elevation={2} sx={{ p: 3, mt: 3, borderRadius: 3 }}>
+                <Typography variant="h6" gutterBottom fontWeight="bold" color="primary">Comparison Results</Typography>
                 <TableContainer>
                     <Table sx={{ minWidth: 650 }} aria-label="pdf-vs-pdf comparison table">
                         <TableHead>
@@ -386,8 +395,8 @@ For each item, provide a JSON object in a 'details' array. Each object must have
         const headers = Object.keys(details[0] || {});
 
         return (
-            <Paper elevation={1} sx={{ p: 2, mt: 3 }}>
-                <Typography variant="h6" gutterBottom>Comparison Results</Typography>
+            <Paper elevation={2} sx={{ p: 3, mt: 3, borderRadius: 3 }}>
+                <Typography variant="h6" gutterBottom fontWeight="bold" color="primary">Comparison Results</Typography>
                 <TableContainer>
                     <Table sx={{ minWidth: 650 }} aria-label="html-vs-pdf comparison table">
                         <TableHead>
@@ -419,107 +428,179 @@ For each item, provide a JSON object in a 'details' array. Each object must have
 
 
     return (
-        <Paper elevation={3} sx={{ p: 4, m: 2 }}>
-            <Typography variant="h5" gutterBottom>1004D Confirmation</Typography>
-            <ToggleButtonGroup
-                color="primary"
-                value={comparisonMode}
-                exclusive
-                onChange={handleModeChange}
-                aria-label="Comparison Mode"
-                sx={{ mb: 3 }}
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 2,
+                    mb: 5,
+                }}
             >
-                <ToggleButton value="pdf-vs-pdf">PDF vs. PDF</ToggleButton>
-                <ToggleButton value="html-vs-pdf">HTML vs. PDF</ToggleButton>
-            </ToggleButtonGroup>
-            <form onSubmit={handleSubmit}>
-                <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-                    <Typography variant="h6" gutterBottom>Upload Files</Typography>
-                    <Grid container spacing={3}>
+                <PremiumLogo size={70} fullScreen={false} />
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(45deg, #1976d2, #9c27b0)', backgroundClip: 'text', textFillColor: 'transparent', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    1004D REVIEW
+                </Typography>
+            </Box>
+
+            <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 4, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+                <Stack spacing={3} alignItems="center">
+                    <ToggleButtonGroup
+                        color="primary"
+                        value={comparisonMode}
+                        exclusive
+                        onChange={handleModeChange}
+                        aria-label="Comparison Mode"
+                        size="medium"
+                        sx={{
+                            '& .MuiToggleButton-root': {
+                                px: 3,
+                                py: 1,
+                                borderRadius: 2,
+                                mx: 0.5,
+                                border: '1px solid rgba(0, 0, 0, 0.12) !important',
+                                '&.Mui-selected': {
+                                    bgcolor: 'primary.main',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: 'primary.dark',
+                                    }
+                                }
+                            }
+                        }}
+                    >
+                        <ToggleButton value="pdf-vs-pdf">PDF vs. PDF</ToggleButton>
+                        <ToggleButton value="html-vs-pdf">HTML vs. PDF</ToggleButton>
+                    </ToggleButtonGroup>
+
+                    <Divider flexItem sx={{ width: '100%', maxWidth: 800, mx: 'auto !important' }} />
+
+                    <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: 1000 }}>
                         {comparisonMode === 'pdf-vs-pdf' && (
                             <>
-                                <Grid item xs={12} md={6}>
-                                    <Tooltip title="Click to upload the old/original PDF file">
-                                        <Button variant="outlined" component="label" fullWidth>
+                                <Grid item xs={12} sm={6} md={5}>
+                                    <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: oldPdfFile ? 'success.main' : 'divider', bgcolor: oldPdfFile ? 'success.lighter' : 'transparent' }}>
+                                        <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
                                             Upload Old/Original PDF
                                             <input type="file" hidden accept=".pdf,application/pdf" onChange={handleFileChange(setOldPdfFile)} />
                                         </Button>
-                                    </Tooltip>
-                                    {oldPdfFile && <Typography variant="body2" noWrap sx={{ mt: 1 }}>Selected: {oldPdfFile.name}</Typography>}
+                                        <Typography variant="caption" display="block" noWrap color={oldPdfFile ? "success.main" : "text.secondary"}>
+                                            {oldPdfFile ? oldPdfFile.name : "No file selected"}
+                                        </Typography>
+                                    </Paper>
                                 </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <Tooltip title="Click to upload the 1004D PDF file">
-                                        <Button variant="outlined" component="label" fullWidth>Upload 1004D PDF<input type="file" hidden accept=".pdf" onChange={handleFileChange(setNewPdfFile)} /></Button>
-                                    </Tooltip>
-                                    {newPdfFile && <Typography variant="body2" noWrap sx={{ mt: 1 }}>Selected: {newPdfFile.name}</Typography>}
+                                <Grid item xs={12} sm={6} md={5}>
+                                    <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: newPdfFile ? 'success.main' : 'divider', bgcolor: newPdfFile ? 'success.lighter' : 'transparent' }}>
+                                        <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
+                                            Upload 1004D PDF
+                                            <input type="file" hidden accept=".pdf,application/pdf" onChange={handleFileChange(setNewPdfFile)} />
+                                        </Button>
+                                        <Typography variant="caption" display="block" noWrap color={newPdfFile ? "success.main" : "text.secondary"}>
+                                            {newPdfFile ? newPdfFile.name : "No file selected"}
+                                        </Typography>
+                                    </Paper>
                                 </Grid>
                             </>
                         )}
                         {comparisonMode === 'html-vs-pdf' && (
                             <>
-                                <Grid item xs={12} md={6}>
-                                    <Tooltip title="Click to upload the HTML file">
-                                        <Button variant="outlined" component="label" fullWidth>Upload HTML File<input type="file" hidden accept=".html,text/html" onChange={handleFileChange(setHtmlFile)} /></Button>
-                                    </Tooltip>
-                                    {htmlFile && <Typography variant="body2" noWrap sx={{ mt: 1 }}>Selected: {htmlFile.name}</Typography>}
+                                <Grid item xs={12} sm={6} md={5}>
+                                    <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: htmlFile ? 'success.main' : 'divider', bgcolor: htmlFile ? 'success.lighter' : 'transparent' }}>
+                                        <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
+                                            Upload HTML File
+                                            <input type="file" hidden accept=".html,text/html" onChange={handleFileChange(setHtmlFile)} />
+                                        </Button>
+                                        <Typography variant="caption" display="block" noWrap color={htmlFile ? "success.main" : "text.secondary"}>
+                                            {htmlFile ? htmlFile.name : "No file selected"}
+                                        </Typography>
+                                    </Paper>
                                 </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <Tooltip title="Click to upload the 1004D PDF file">
-                                        <Button variant="outlined" component="label" fullWidth>Upload 1004D PDF<input type="file" hidden accept=".pdf" onChange={handleFileChange(setNewPdfFile)} /></Button>
-                                    </Tooltip>
-                                    {newPdfFile && <Typography variant="body2" noWrap sx={{ mt: 1 }}>Selected: {newPdfFile.name}</Typography>}
+                                <Grid item xs={12} sm={6} md={5}>
+                                    <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: newPdfFile ? 'success.main' : 'divider', bgcolor: newPdfFile ? 'success.lighter' : 'transparent' }}>
+                                        <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
+                                            Upload 1004D PDF
+                                            <input type="file" hidden accept=".pdf,application/pdf" onChange={handleFileChange(setNewPdfFile)} />
+                                        </Button>
+                                        <Typography variant="caption" display="block" noWrap color={newPdfFile ? "success.main" : "text.secondary"}>
+                                            {newPdfFile ? newPdfFile.name : "No file selected"}
+                                        </Typography>
+                                    </Paper>
                                 </Grid>
                             </>
                         )}
                     </Grid>
+                </Stack>
+            </Paper>
+
+            <form onSubmit={handleSubmit}>
+                <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight="bold">Checklist / Prompt Details</Typography>
+                    <TextField
+                        placeholder="Enter custom prompt or checklist..."
+                        multiline
+                        value={promptText}
+                        onChange={(e) => setPromptText(e.target.value)}
+                        variant="outlined"
+                        spellCheck="true"
+                        fullWidth
+                        rows={6}
+                        required
+                        sx={{
+                            bgcolor: 'background.paper',
+                            '& .MuiInputBase-input': {
+                                resize: 'vertical',
+                            },
+                        }}
+                    />
                 </Paper>
-                <TextField
-                    label="Custom Prompt / Checklist"
-                    multiline
-                    value={promptText}
-                    onChange={(e) => setPromptText(e.target.value)}
-                    variant="outlined"
-                    spellCheck="true"
-                    fullWidth
-                    rows={10}
-                    sx={{ mb: 3 }}
-                    required
-                />
-                <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                    <Button
+
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+                    <LoadingButton
                         type="submit"
                         variant="contained"
                         color="primary"
-                        disabled={loading || !newPdfFile || !promptText.trim() || (comparisonMode === 'pdf-vs-pdf' ? !oldPdfFile : !htmlFile)}
-                        fullWidth>
-                        {loading ? <CircularProgress size={24} color="inherit" /> : 'Run Confirmation Check'}
-                    </Button>
+                        size="large"
+                        loading={loading}
+                        disabled={!newPdfFile || !promptText.trim() || (comparisonMode === 'pdf-vs-pdf' ? !oldPdfFile : !htmlFile)}
+                        startIcon={<PlayArrowIcon />}
+                        sx={{ px: 4, py: 1.5, borderRadius: 3, fontSize: '1rem', fontWeight: 'bold', boxShadow: 4 }}
+                    >
+                        Run Check
+                    </LoadingButton>
                     <Button
                         variant="outlined"
                         color="secondary"
+                        size="large"
                         onClick={handleSaveToDB}
                         disabled={loading || !response}
-                        fullWidth
+                        startIcon={<SaveIcon />}
+                        sx={{ px: 3, py: 1.5, borderRadius: 3 }}
                     >
                         Save to DB
                     </Button>
                     <Button
                         variant="outlined"
                         color="success"
+                        size="large"
                         onClick={handleGenerateValidationLog}
                         disabled={loading || !response}
-                        fullWidth
+                        startIcon={<AssessmentIcon />}
+                        sx={{ px: 3, py: 1.5, borderRadius: 3 }}
                     >
                         Generate Log
                     </Button>
-                </Stack>
-                {loading && <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Elapsed Time: {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
+                </Box>
+                {loading && <Typography variant="body2" sx={{ mt: -2, mb: 3, textAlign: 'center', color: 'text.secondary' }}>Processing... {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
             </form>
-            {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
-            {successMessage && <Alert severity="success" sx={{ mt: 3 }}>{successMessage}</Alert>}
-            {response && comparisonMode === 'pdf-vs-pdf' && renderPdfVsPdfResponse(response)}
-            {response && comparisonMode === 'html-vs-pdf' && renderHtmlVsPdfResponse(response)}
-        </Paper>
+
+            <Box sx={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+                {successMessage && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>{successMessage}</Alert>}
+                {response && comparisonMode === 'pdf-vs-pdf' && renderPdfVsPdfResponse(response)}
+                {response && comparisonMode === 'html-vs-pdf' && renderHtmlVsPdfResponse(response)}
+            </Box>
+        </Container>
     );
 };
 

@@ -4,21 +4,24 @@ import {
   Button,
   TextField,
   Typography,
-  CircularProgress,
   Paper,
   Alert,
-  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
+  Container,
+  Grid,
 } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import SearchIcon from '@mui/icons-material/Search';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import successSoundFile from '../../Assets/success.mp3';
 import errorSoundFile from '../../Assets/error.mp3';
+import PremiumLogo from './logo';
 
 const playSound = (soundType) => {
   let soundFile;
@@ -41,7 +44,7 @@ const playSound = (soundType) => {
 };
 
 const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-  const timeout = 60000; // 60 seconds timeout
+  const timeout = 60000;
   for (let i = 0; i < retries; i++) {
     try {
       const controller = new AbortController();
@@ -62,7 +65,7 @@ const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
     }
     if (i < retries - 1) {
       await new Promise(resolve => setTimeout(resolve));
-      delay *= 2; // Exponential backoff
+      delay *= 2; 
     }
   }
   throw new Error(`Failed to fetch from ${url} after ${retries} attempts.`);
@@ -130,7 +133,7 @@ const CustomQuery = () => {
     formData.append('comment', comment);
 
     try {
-      const res = await fetchWithRetry('https://strdjrbservices2.pythonanywhere.com/api/extract/', {
+      const res = await fetchWithRetry('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -170,7 +173,7 @@ const CustomQuery = () => {
 
     if (response.rawText) {
       return (
-        <Paper elevation={1} sx={{ p: 2, mt: 3, whiteSpace: 'pre-wrap', bgcolor: 'grey.100' }}>
+        <Paper elevation={1} sx={{ p: 3, mt: 3, whiteSpace: 'pre-wrap', bgcolor: 'grey.50', borderRadius: 3 }}>
           <Typography variant="body1">{response.rawText}</Typography>
         </Paper>
       );
@@ -207,10 +210,10 @@ const CustomQuery = () => {
 
     if (dataToRender.length > 0) {
       return (
-        <Paper elevation={1} sx={{ p: 2, mt: 3 }}>
+        <Paper elevation={2} sx={{ p: 3, mt: 3, borderRadius: 3 }}>
           {summary && (
-            <Paper elevation={2} sx={{ p: 2, mb: 3, bgcolor: 'action.hover' }}>
-              <Typography variant="h6" gutterBottom>Summary</Typography>
+            <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: 'action.hover', borderRadius: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}>
+              <Typography variant="h6" gutterBottom color="primary">Summary</Typography>
               <Typography variant="body1">{summary}</Typography>
             </Paper>
           )}
@@ -242,51 +245,51 @@ const CustomQuery = () => {
 
     // Fallback for other object structures
     return (
-      <Paper elevation={1} sx={{ p: 2, mt: 3, whiteSpace: 'pre-wrap', bgcolor: 'grey.100' }}>
+      <Paper elevation={1} sx={{ p: 3, mt: 3, whiteSpace: 'pre-wrap', bgcolor: 'grey.50', borderRadius: 3 }}>
         <pre>{JSON.stringify(response, null, 2)}</pre>
       </Paper>
     );
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 4, m: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        Custom PDF Query
-      </Typography>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+          mb: 5,
+        }}
+      >
+        <PremiumLogo size={70} fullScreen={false} />
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(45deg, #1976d2, #9c27b0)', backgroundClip: 'text', textFillColor: 'transparent', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          CUSTOM QUERY
+        </Typography>
+      </Box>
+
       <form onSubmit={handleSubmit}>
-        <Stack spacing={3}>
-          <Tooltip title="Click to upload the revised/updated PDF file">
-            <Button
-              variant="contained"
-              component="label"
-            >
-              Upload Revised / Updated PDF
-              <input
-                type="file"
-                hidden
-                accept=".pdf"
-                onChange={handleFileChange}
-              />
-            </Button>
-          </Tooltip>
-          {file && <Typography variant="body2">Selected: {file.name}</Typography>}
+        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 4, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+          <Grid container spacing={3} justifyContent="center">
+            <Grid item xs={12} md={6}>
+              <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: file ? 'success.main' : 'divider', bgcolor: file ? 'success.lighter' : 'transparent' }}>
+                <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
+                  Upload PDF File
+                  <input type="file" hidden accept=".pdf" onChange={handleFileChange} />
+                </Button>
+                <Typography variant="caption" display="block" noWrap color={file ? "success.main" : "text.secondary"}>
+                  {file ? file.name : "No file selected"}
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
 
-          {/* <FormControl fullWidth>
-            <InputLabel id="form-type-label">Form Type</InputLabel>
-            <Select
-              labelId="form-type-label"
-              value={formType}
-              label="Form Type"
-              onChange={handleFormTypeChange}
-            >
-              <MenuItem value="1004">1004</MenuItem>
-              <MenuItem value="1073">1073</MenuItem>
-              <MenuItem value="1007">1007</MenuItem>
-            </Select>
-          </FormControl> */}
-
+        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="subtitle2" gutterBottom fontWeight="bold">Query Details</Typography>
           <TextField
             label="Enter your query or comment"
+            placeholder="e.g., Extract the borrower's name and property address..."
             multiline
             rows={4}
             value={comment}
@@ -295,41 +298,33 @@ const CustomQuery = () => {
             spellCheck="true"
             fullWidth
             required
+            sx={{ bgcolor: 'background.paper' }}
           />
+        </Paper>
 
-          <Box sx={{ position: 'relative' }}>
-            <Button
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+          <LoadingButton
               type="submit"
               variant="contained"
               color="primary"
-              disabled={loading || !file}
-              fullWidth
+              size="large"
+              loading={loading}
+              disabled={!file || !comment.trim()}
+              startIcon={<SearchIcon />}
+              sx={{ px: 6, py: 1.5, borderRadius: 3, fontSize: '1.1rem', fontWeight: 'bold', boxShadow: 4 }}
             >
-              Extract Information
-            </Button>
-            {loading && (
-              <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Elapsed Time: {Math.floor(timer / 60)}m {timer % 60}s</Typography>
-            )}
-            {loading && (
-              <CircularProgress
-                size={24}
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  marginTop: '-12px',
-                  marginLeft: '-12px',
-                }}
-              />
-            )}
-          </Box>
-        </Stack>
+              Run Query
+          </LoadingButton>
+        </Box>
+        {loading && <Typography variant="body2" sx={{ mt: -2, mb: 3, textAlign: 'center', color: 'text.secondary' }}>Processing... {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
       </form>
 
-      {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
-      {response && renderResponse()}
-    </Paper>
+      <Box sx={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+        {response && renderResponse()}
+      </Box>
+    </Container>
   );
 };
 

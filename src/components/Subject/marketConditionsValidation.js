@@ -11,3 +11,10 @@ export const checkMarketConditionsFieldsNotBlank = (field, text) => {
     }
     return null;
 };
+
+export const checkMarketConditionsTableFields = (field, text) => {
+    if (!text || String(text).trim() === '') {
+        return { isError: true, message: `'${field}' should not be blank.` };
+    }
+    return null;
+};

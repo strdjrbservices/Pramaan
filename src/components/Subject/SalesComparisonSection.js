@@ -1,6 +1,6 @@
-
+import React from 'react';
 import { EditableField } from './FormComponents';
-import { Tooltip, IconButton } from '@mui/material';
+import { Tooltip, IconButton, Paper, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 
 
@@ -19,37 +19,36 @@ const SalesComparisonSection = ({
   allData,
   manualValidations,
   handleManualValidation,
-  onRevisionButtonClick,revisionHandlers
+  onRevisionButtonClick,
+  revisionHandlers
 }) => {
 
   return (
     <>
-      <div id="sales-comparison" style={{ marginBottom: '1rem', marginTop: '1rem' }} className="card shadow mb-4">
-        <div className="card-header CAR1 bg-primary text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <strong>Sales Comparison Approach</strong>
+      <Paper id="sales-comparison" elevation={3} sx={{ mb: 4, mt: 4, borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: 'primary.main', color: 'white', px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+            <Typography variant="subtitle1" fontWeight="bold">Sales Comparison Approach</Typography>
             {onRevisionButtonClick && (
               <Tooltip title="Revision Language">
                 <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: 'white' }}><LibraryBooksIcon /></IconButton>
               </Tooltip>
             )}
-          </div>
-        </div>
-        <div className="card-body p-0 table-container">
-          <table className="table table-hover table-striped mb-0" style={{ fontSize: '0.8rem' }}>
-            <thead className="table-light">
-              <tr>
-                <th className="border border-gray-400 p-1 bg-gray-200">Feature</th>
-                <th className="border border-gray-400 p-1 bg-gray-200">Subject</th>
+        </Box>
+        <TableContainer>
+          <Table size="small" aria-label="sales comparison table" className="sales-comparison-table">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', minWidth: '200px', backgroundColor: 'action.hover' }}>Feature</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', minWidth: '200px', backgroundColor: 'action.hover' }}>Subject</TableCell>
                 {comparableSales.map((sale, idx) => (
-                  <th key={idx} className="border border-gray-400 p-1 bg-gray-200">{sale}</th>
+                  <TableCell key={idx} sx={{ fontWeight: 'bold', minWidth: '200px', backgroundColor: 'action.hover' }}>{sale}</TableCell>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {salesGridRows.map((row, idx) => {
                 const isHighlighted = row.label === 'Date of Sale/Time';
-                const rowClass = isHighlighted ? 'highlighted-field' : '';
+                // const rowClass = isHighlighted ? 'highlighted-field' : '';
 
                 // let mostCommonSource = null;
                 // let verificationSourcesInconsistent = false;
@@ -98,9 +97,9 @@ const SalesComparisonSection = ({
                 }
 
                 return (
-                  <tr key={idx} className={rowClass}>
-                    <td className="border border-gray-400 p-1 font-medium" style={{ backgroundColor: 'var(--background-color-light)' }}>{row.label}</td>
-                    <td className="border border-gray-400 p-1" style={subjectStyle}>
+                  <TableRow key={idx} sx={isHighlighted ? { backgroundColor: 'action.selected' } : {}}>
+                    <TableCell sx={{ fontWeight: 'medium', borderRight: '1px solid rgba(224, 224, 224, 1)' }}>{row.label}</TableCell>
+                    <TableCell sx={{ borderRight: '1px solid rgba(224, 224, 224, 1)', ...subjectStyle }}>
                       {data.Subject && !row.isAdjustmentOnly && (
                         <EditableField
                           fieldPath={row.subjectValueKey ? [row.subjectValueKey] : ['Subject', row.valueKey]}
@@ -124,7 +123,7 @@ const SalesComparisonSection = ({
                           handleManualValidation={handleManualValidation}
                         />
                       )}
-                    </td>
+                    </TableCell>
                     {comparableSales.map((sale, cidx) => {
                       const compValue = data[sale]?.[row.valueKey] || '';
                       const adjValue = data[sale]?.[row.adjustmentKey] || '';
@@ -134,7 +133,7 @@ const SalesComparisonSection = ({
                       }
 
                       return (
-                        <td key={cidx} className="border border-gray-400 p-1" style={cellStyle}>
+                        <TableCell key={cidx} sx={{ borderRight: '1px solid rgba(224, 224, 224, 1)', ...cellStyle }}>
                           {!row.isAdjustmentOnly && (
                             <EditableField
                               fieldPath={[sale, row.valueKey]}
@@ -162,31 +161,28 @@ const SalesComparisonSection = ({
                               handleManualValidation={handleManualValidation}
                             />
                           )}
-                        </td>
+                        </TableCell>
                       );
                     })}
-                  </tr>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
-      <div className="card shadow mb-10">
-        <div className="card-header CAR1 bg-info text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-          <strong>Sales or Transfer History</strong>
-        </div>
-        <div className="card-body p-0">
-          <table className="table table-hover table-striped mb-0">
-            <thead className="table-light">
-              <tr></tr>
-            </thead>
-            <tbody className="table-group-divider">
+      <Paper elevation={3} sx={{ mb: 4, borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: 'info.main', color: 'white', px: 2, py: 1.5, position: 'sticky', top: 0, zIndex: 10 }}>
+          <Typography variant="subtitle1" fontWeight="bold">Sales or Transfer History</Typography>
+        </Box>
+        <TableContainer>
+          <Table size="small">
+            <TableBody>
               {salesComparisonAdditionalInfoFields.map((field, index) => (
-                <tr key={index}>
-                  <td style={{ width: '50%' }}>{field}</td>
-                  <td>
+                <TableRow key={index} hover>
+                  <TableCell sx={{ width: '50%' }}>{field}</TableCell>
+                  <TableCell>
                     <EditableField
                       fieldPath={[field]}
                       value={data[field] || ''}
@@ -198,35 +194,35 @@ const SalesComparisonSection = ({
                       handleManualValidation={handleManualValidation}
                       revisionHandlers={revisionHandlers}
                     />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
 
-      <div id="prior-sale-history-grid" style={{ marginBottom: '1rem', marginTop: '1rem' }} className="card shadow mb-4">
-        <div className="card-header CAR1 bg-dark text-white" style={{ position: 'sticky', top: 0, zIndex: 10 }}><strong>Prior Sale History of Subject and Comparables</strong></div>
-        <div className="card-body p-0 table-container">
-          <table className="table table-hover table-striped mb-0" style={{ fontSize: '0.8rem' }}>
-            <thead className="table-light">
-              <tr>
-                <th className="border border-gray-400 p-1 bg-gray-200">Feature</th>
-                <th className="border border-gray-400 p-1 bg-gray-200">
-                  Subject
-                </th>
+      <Paper id="prior-sale-history-grid" elevation={3} sx={{ mb: 4, mt: 4, borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: 'grey.900', color: 'white', px: 2, py: 1.5, position: 'sticky', top: 0, zIndex: 10 }}>
+          {/* <Typography variant="subtitle1" fontWeight="bold">Prior Sale History of Subject and Comparables</Typography> */}
+        </Box>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Feature</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Subject</TableCell>
                 {comparableSales.map((sale, idx) => (
-                  <th key={idx} className="border border-gray-400 p-1 bg-gray-200">{sale}</th>
+                  <TableCell key={idx} sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>{sale}</TableCell>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {salesHistoryFields.map((feature, idx) => (
-                <tr key={idx}>
-                  <td className="border border-gray-400 p-1 font-medium">{feature}</td>
-                  <td className="border border-gray-400 p-1">
+                <TableRow key={idx} hover>
+                  <TableCell sx={{ fontWeight: 'medium' }}>{feature}</TableCell>
+                  <TableCell>
                     <EditableField
                       fieldPath={['Subject', feature]}
                       value={data.Subject?.[feature] || ''}
@@ -237,9 +233,9 @@ const SalesComparisonSection = ({
                       manualValidations={manualValidations}
                       handleManualValidation={handleManualValidation}
                     />
-                  </td>
+                  </TableCell>
                   {comparableSales.map((sale, cidx) => (
-                    <td key={cidx} className="border border-gray-400 p-1">
+                    <TableCell key={cidx}>
                       <EditableField
                         fieldPath={[sale, feature]}
                         value={data[sale]?.[feature] || ''}
@@ -250,14 +246,14 @@ const SalesComparisonSection = ({
                         manualValidations={manualValidations}
                         handleManualValidation={handleManualValidation}
                       />
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
     </>
   );
 };

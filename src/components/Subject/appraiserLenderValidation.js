@@ -1,4 +1,12 @@
-import { checkNotBlank } from './generalValidation';
+const checkNotBlank = (field, text, fieldName) => {
+    if (field === fieldName) {
+        if (!text || String(text).trim() === '') {
+            return { isError: true, message: `'${fieldName}' should not be blank.` };
+        }
+        return { isMatch: true };
+    }
+    return null;
+};
 
 export const checkLenderAddressInconsistency = (field, data) => {
     const relevantFields = ['Address (Lender/Client)', 'Lender/Client Company Address'];

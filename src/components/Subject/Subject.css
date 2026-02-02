@@ -13,11 +13,16 @@ html {
 .CAR1.bg-warning,
 .CAR1.bg-success,
 .CAR1.bg-danger,
-.CAR1.bg-dark,
+.CAR1.bg-dark,.css-tfoe9d,.css-1rw6vrz,.css-jbrgrs,.css-5lvkaa,.css-mqnnnq,.css-abus5f,
 .CAR1.bg-light {
   background-color: #0288d1 !important;
+  border-radius: 7px !important;
+  color: white !important
 }
-
+.css-2pdupx-MuiPaper-root{
+  margin-bottom: 1px !important;
+  border-radius: 5px !important;
+}
 .css-1b5khid-MuiButtonBase-root-MuiFab-root{
   position: fixed !important;
   bottom: 40px !important;
@@ -127,6 +132,7 @@ html {
   display: flex;
   flex-direction: row;
   background-color: var(--bg-color);
+  margin-top: -43px !important;
 }
 
 .refresh {
@@ -146,18 +152,32 @@ html {
   flex-direction: column;
   overflow-y: auto;
   z-index: 1000;
-  transition: width 0.3s ease, transform 0.3s ease;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border-right: 1px solid var(--sidebar-border);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
 }
 
+.css-paubs, .css-u02cfj-MuiPaper-root,.css-8x6w4i-MuiPaper-root{
+  margin-bottom: 2px !important;
+}
+.css-7yn9vh-MuiAutocomplete-root .MuiOutlinedInput-root.MuiInputBase-sizeSmall{
+  /* margin-top: 2px !important; */
+  margin-bottom: 5px !important;
+}
+.css-1sazv7p-MuiStack-root>:not(style)~:not(style){
+  margin-bottom: 3px !important;
+  margin-top: 4px !important;
+}
 .sidebar.open {
   width: 240px;
   transform: translateX(0);
 }
 
+.css-jikghp-MuiStack-root>:not(style)~:not(style){
+     margin-top: 0px !important;
+}
 .sidebar.closed {
-  width: 40px;
+  width: 60px;
   overflow-x: hidden;
 }
 
@@ -225,6 +245,7 @@ html {
   width: 32px;
   height: 32px;
   margin-right: 1rem;
+  transition: margin 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar.closed .sidebar-logo {
@@ -273,6 +294,29 @@ html {
   color: var(--sidebar-hover-text);
 }
 
+.sidebar .MuiListItemIcon-root {
+  min-width: 36px !important;
+  color: inherit;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.sidebar .sidebar-link.MuiListItemButton-root:hover .MuiListItemIcon-root {
+  color: var(--sidebar-hover-text);
+  transform: scale(1.2);
+}
+
+.sidebar.closed .MuiListItemIcon-root {
+  min-width: auto !important;
+  justify-content: center;
+  margin-right: 0 !important;
+}
+
+.sidebar.closed .MuiListItemButton-root {
+  justify-content: center;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
 .sidebar-footer {
   padding: 1rem;
   font-size: 0.8rem;
@@ -281,32 +325,39 @@ html {
   border-top: 1px solid var(--sidebar-border);
 }
 
-/* --- Main Content Styles --- */
+
 .main-content {
-  margin-left: 40px;
-  width: calc(100% - 40px);
-  padding: 20px 30px;
-  transition: margin-left 0.3s ease, width 0.3s ease;
+  margin-left: 40px ;
+  width: calc(100% - 40px) ;
+  padding: 20px 20px 10px 30px ;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1), width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-content.sidebar-open {
   margin-left: 240px;
   width: calc(100% - 240px);
+  
 }
 
+.css-1a6ey11-MuiPaper-root{
+  margin-bottom: 10px !important;
+}
+
+.css-2qxpy4-MuiPaper-root{
+  margin-top: 0px !important;
+  margin-bottom: 10px !important;
+}
 .form-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 1.5rem;
 }
 
-/* --- Card and Header Styles --- */
 .grid-info-header {
   color: white;
   padding: 0.75rem 1.25rem;
   border-bottom: 0;
   background-color: #005A9C !important;
-  /* Primary color */
 }
 
 .grid-info-title {
@@ -392,12 +443,17 @@ html {
   margin: 0;
   font-family: inherit;
 }
+.FhaCheckStyle{
+  width: auto !important;
+  height: auto !important;
+}
+
 
 .editable-field-container {
   position: relative;
   display: flex;
   align-items: center;
-  width: 100%;
+  width: 100% !important;
   min-height: 24px;
 }
 
@@ -487,7 +543,6 @@ html {
   opacity: 1;
 }
 
-/* --- Specific Card Header Colors (Now unified) --- */
 .CAR1.bg-primary,
 .CAR1.bg-secondary,
 .CAR1.bg-info,
@@ -511,7 +566,6 @@ html {
   color: var(--text-primary) !important;
 }
 
-/* --- Percentage Indicator --- */
 .percentage-indicator-container {
   width: 100%;
   background-color: var(--color-border);

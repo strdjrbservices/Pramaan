@@ -1,13 +1,55 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Subject.css';
 import { GlobalStyles } from '@mui/system';
-import { Info, Warning as WarningIcon, Close as CloseIcon, KeyboardArrowUp as KeyboardArrowUpIcon, NoteAlt as NoteAltIcon } from '@mui/icons-material';
-import { Button, Stack, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, ThemeProvider, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab, Autocomplete, TextField } from '@mui/material';
+import {
+  Info,
+  Warning as WarningIcon,
+  Close as CloseIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
+  NoteAlt as NoteAltIcon,
+  CloudUpload as CloudUploadIcon,
+  Description as DescriptionIcon,
+  Assignment as AssignmentIcon,
+  PictureAsPdf as PictureAsPdfIcon,
+  Save as SaveIcon,
+  Assessment as AssessmentIcon,
+  Remove as RemoveIcon,
+  Home as HomeIcon,
+  Gavel as GavelIcon,
+  LocationCity as LocationCityIcon,
+  Terrain as TerrainIcon,
+  Analytics as AnalyticsIcon,
+  MeetingRoom as MeetingRoomIcon,
+  History as HistoryIcon,
+  Build as BuildIcon,
+  MonetizationOn as MonetizationOnIcon,
+  CompareArrows as CompareArrowsIcon,
+  RequestQuote as RequestQuoteIcon,
+  TableChart as TableChartIcon,
+  MergeType as MergeTypeIcon,
+  Balance as BalanceIcon,
+  Calculate as CalculateIcon,
+  AttachMoney as AttachMoneyIcon,
+  Domain as DomainIcon,
+  TrendingUp as TrendingUpIcon,
+  Business as BusinessIcon,
+  VerifiedUser as VerifiedUserIcon,
+  FactCheck as FactCheckIcon,
+  Psychology as PsychologyIcon,
+  Code as CodeIcon,
+  Apartment as ApartmentIcon,
+  FileDownload as FileDownloadIcon,
+  DeleteForever as DeleteForeverIcon
+} from '@mui/icons-material';
+import VisibilityTwoToneIcon from '@mui/icons-material/VisibilityTwoTone';
+import { Button, Stack, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, useTheme, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab, Autocomplete, TextField } from '@mui/material';
 import jsPDF from 'jspdf';
+import GetAppIcon from '@mui/icons-material/GetApp';
 import autoTable from 'jspdf-autotable';
-
 import Sidebar from './Sidebar.js';
 import PromptAnalysis from './PromptAnalysis.js';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import {
   ContractComparisonDialog,
   RevisionLanguageDialog,
@@ -29,8 +71,7 @@ import ClientRequirementCheck, { CLIENT_REQUIREMENT_PROMPT } from './ClientRequi
 import EscalationCheck, { ESCALATION_CHECK_PROMPT } from './EscalationCheck';
 import FhaCheck, { FHA_REQUIREMENTS_PROMPT } from './FhaCheck';
 import ADUCheck, { ADU_REQUIREMENTS_PROMPT } from './ADUCheck';
-import { lightTheme, darkTheme } from '../../theme';
-import * as generalValidation from './generalValidation';
+
 import * as contractValidation from './contractValidation';
 import * as subjectValidation from './subjectValidation';
 import * as siteValidation from './siteValidation';
@@ -40,8 +81,20 @@ import * as salesComparisonValidation from './salesComparisonValidation';
 import * as reconciliationValidation from './reconciliationValidation';
 import * as rentScheduleValidation from './rentScheduleValidation';
 import * as appraiserLenderValidation from './appraiserLenderValidation';
+import * as marketConditionsValidation from './marketConditionsValidation';
+import * as form1073Validation from './form1073Validation';
+import * as pudInformationValidation from './pudInformationValidation';
+import * as unitDescriptionsValidation from './unitDescriptionsValidation';
+import * as projectAnalysisValidation from './projectAnalysisValidation';
+import * as projectSiteValidation from './projectSiteValidation';
+import * as incomeApproachValidation from './incomeApproachValidation';
+import * as priorSaleHistoryValidation from './priorSaleHistoryValidation';
+import * as infoOfSalesValidation from './infoOfSalesValidation';
 
+import PremiumLogo from './logo';
 import { SUBJECT_REVISION_PROMPTS, CONTRACT_REVISION_PROMPTS, NEIGHBORHOOD_REVISION_PROMPTS, SITE_REVISION_PROMPTS, IMPROVEMENTS_REVISION_PROMPTS, SALES_GRID_REVISION_PROMPTS, RECONCILIATION_REVISION_PROMPTS, COST_APPROACH_REVISION_PROMPTS, CERTIFICATION_REVISION_PROMPTS, ADDENDUM_GENERAL_REVISION_PROMPTS, FORM_1007_REVISION_PROMPTS } from './revisionPrompts';
+import { useThemeContext } from '../../context/ThemeContext';
+import Footer from './Footer';
 
 const TooltipStyles = () => (
   <GlobalStyles styles={{
@@ -63,6 +116,13 @@ const TooltipStyles = () => (
       whiteSpace: 'nowrap',
       zIndex: 1000,
       marginBottom: '5px',
+    },
+    '@keyframes eyeBlink': {
+      '5%, 100%': { transform: 'scaleY(1)' },
+      '50%': { transform: 'scaleY(0.2)' },
+    },
+    '.animated-eye': {
+      animation: 'eyeBlink 3s infinite',
     },
   }} />
 );
@@ -102,12 +162,15 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
   }, [open, result, handleCompare]);
 
 
-};;
+};
 
 function Subject() {
+  const { themeMode, toggleTheme: handleThemeChange } = useThemeContext();
+  const activeTheme = useTheme();
   const [data, setData] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
-  const [loading, setLoading] = useState(false); const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [timer, setTimer] = useState(0);
   const [selectedFormType, setSelectedFormType] = useState('1004');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -120,9 +183,9 @@ function Subject() {
   const contractFileInputRef = useRef(null);
   const engagementLetterFileInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const sidebarLeaveTimerRef = useRef(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [editingField, setEditingField] = useState(null);
-  const [themeMode, setThemeMode] = useState('light');
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [isComparisonDialogOpen, setIsComparisonDialogOpen] = useState(false);
   const [comparisonData, setComparisonData] = useState({});
@@ -206,6 +269,49 @@ function Subject() {
   const [isLenderClientAddressRevisionLangDialogOpen, setLenderClientAddressRevisionLangDialogOpen] = useState(false);
   const [is1007RevisionLangDialogOpen, set1007RevisionLangDialogOpen] = useState(false);
 
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+  const [isHtmlDataMinimized, setIsHtmlDataMinimized] = useState(false);
+  const [isValidationSectionMinimized, setIsValidationSectionMinimized] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
+  const [isPdfMinimized, setIsPdfMinimized] = useState(false);
+  const [pdfPosition, setPdfPosition] = useState({ x: 50, y: 50 });
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e) => {
+    isDraggingRef.current = true;
+    dragStartRef.current = {
+      x: e.clientX - pdfPosition.x,
+      y: e.clientY - pdfPosition.y
+    };
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isDraggingRef.current) {
+        setPdfPosition({
+          x: e.clientX - dragStartRef.current.x,
+          y: e.clientY - dragStartRef.current.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+
+    if (pdfPreviewOpen) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [pdfPreviewOpen]);
+
   const handleOpenNotepad = () => {
     if (!notes) {
       const now = new Date();
@@ -258,6 +364,11 @@ function Subject() {
       "Electricity": [siteValidation.checkUtilities], "Gas": [siteValidation.checkUtilities], "Water": [siteValidation.checkUtilities], "Sanitary Sewer": [siteValidation.checkUtilities], "Street": [siteValidation.checkUtilities], "Alley": [siteValidation.checkUtilities],
 
       // Subject Validations
+      'Full Address': [subjectValidation.checkFullAddressConsistency, subjectValidation.checkSubjectFieldsNotBlank],
+      'Exposure comment': [subjectValidation.checkPresence],
+      'Prior service comment': [subjectValidation.checkPresence],
+      'ADU File Check': [subjectValidation.checkPresence],
+      'FHA Case No.': [subjectValidation.checkPresence],
       'Tax Year': [subjectValidation.checkTaxYear],
       'R.E. Taxes $': [subjectValidation.checkRETaxes],
       'Special Assessments $': [subjectValidation.checkSpecialAssessments],
@@ -265,19 +376,19 @@ function Subject() {
       'HOA $': [subjectValidation.checkHOA],
       'Offered for Sale in Last 12 Months': [subjectValidation.checkOfferedForSale],
       'ANSI': [subjectValidation.checkAnsi],
-      'Property Address': [generalValidation.checkSubjectFieldsNotBlank, salesComparisonValidation.checkSubjectAddressInconsistency],
-      'County': [generalValidation.checkSubjectFieldsNotBlank],
-      'Borrower': [generalValidation.checkSubjectFieldsNotBlank],
-      'Owner of Public Record': [generalValidation.checkSubjectFieldsNotBlank],
-      'Legal Description': [generalValidation.checkSubjectFieldsNotBlank],
-      "Assessor's Parcel #": [generalValidation.checkSubjectFieldsNotBlank],
-      'Neighborhood Name': [generalValidation.checkSubjectFieldsNotBlank],
-      'Map Reference': [generalValidation.checkSubjectFieldsNotBlank],
-      'Census Tract': [generalValidation.checkSubjectFieldsNotBlank, subjectValidation.checkCensusTract],
-      'Occupant': [generalValidation.checkSubjectFieldsNotBlank],
-      'Property Rights Appraised': [generalValidation.checkSubjectFieldsNotBlank],
-      'Lender/Client': [generalValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderNameInconsistency],
-      'Address (Lender/Client)': [generalValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderAddressInconsistency],
+      'Property Address': [subjectValidation.checkSubjectFieldsNotBlank, salesComparisonValidation.checkSubjectAddressInconsistency],
+      'County': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Borrower': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Owner of Public Record': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Legal Description': [subjectValidation.checkSubjectFieldsNotBlank],
+      "Assessor's Parcel #": [subjectValidation.checkSubjectFieldsNotBlank],
+      'Neighborhood Name': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Map Reference': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Census Tract': [subjectValidation.checkSubjectFieldsNotBlank, subjectValidation.checkCensusTract],
+      'Occupant': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Property Rights Appraised': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Lender/Client': [subjectValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderNameInconsistency],
+      'Address (Lender/Client)': [subjectValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderAddressInconsistency],
 
       // Neighborhood Validations
       'one unit housing price(high,low,pred)': [neighborhoodValidation.checkHousingPriceAndAge, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
@@ -333,7 +444,8 @@ function Subject() {
       'Porch/Patio/Deck': [salesComparisonValidation.checkPorchPatioDeckAdjustment], 'Porch/Patio/Deck Adjustment': [salesComparisonValidation.checkPorchPatioDeckAdjustment],
       'Heating/Cooling': [salesComparisonValidation.checkHeatingCoolingAdjustment], 'Heating/Cooling Adjustment': [salesComparisonValidation.checkHeatingCoolingAdjustment],
       'Data Source(s)': [salesComparisonValidation.checkDataSourceDOM],
-      'Actual Age': [salesComparisonValidation.checkActualAgeAdjustment], 'Actual Age Adjustment': [salesComparisonValidation.checkActualAgeAdjustment],
+      // 'Actual Age': [salesComparisonValidation.checkActualAgeAdjustment], 'Actual Age Adjustment': [salesComparisonValidation.checkActualAgeAdjustment],
+      'Actual Age': [salesComparisonValidation.checkActualAgeAdjustment, salesComparisonValidation.checkSubjectAgeConsistency], 'Actual Age Adjustment': [salesComparisonValidation.checkActualAgeAdjustment],
       'Sale Price': [salesComparisonValidation.checkSalePrice],
       'Leasehold/Fee Simple': [salesComparisonValidation.checkLeaseholdFeeSimpleConsistency],
       'Date of Sale/Time': [salesComparisonValidation.checkDateOfSale],
@@ -348,9 +460,7 @@ function Subject() {
       'This appraisal is made "as is", subject to completion per plans and specifications on the basis of a hypothetical condition that the improvements have been completed, subject to the following repairs or alterations on the basis of a hypothetical condition that the repairs or alterations have been completed, or subject to the following required inspection based on the extraordinary assumption that the condition or deficiency does not require alteration or repair:': [reconciliationValidation.checkAppraisalCondition],
       'as of': [reconciliationValidation.checkAsOfDate],
       'final value': [reconciliationValidation.checkFinalValueBracketing, reconciliationValidation.checkReconciliationFieldsNotBlank, reconciliationValidation.checkFinalValueConsistency],
-
-      // General Validations
-      'Assignment Type': [generalValidation.checkAssignmentTypeConsistency],
+      'Assignment Type': [subjectValidation.checkAssignmentTypeConsistency],
 
       // Contract Validations
       "I did did not analyze the contract for sale for the subject purchase transaction. Explain the results of the analysis of the contract for sale or why the analysis was not performed.": [contractValidation.checkContractFieldsMandatory, contractValidation.checkContractAnalysisConsistency],
@@ -361,6 +471,63 @@ function Subject() {
       "Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?": [contractValidation.checkContractAnalysisConsistency, (field, text, data) => contractValidation.checkYesNoOnly(field, text, data, { name: 'Is there any financial assistance (loan charges, sale concessions, gift or downpayment assistance, etc.) to be paid by any party on behalf of the borrower?' }), contractValidation.checkFinancialAssistanceInconsistency],
       "If Yes, report the total dollar amount and describe the items to be paid": [contractValidation.checkFinancialAssistanceInconsistency, contractValidation.checkContractAnalysisConsistency],
     };
+
+    marketConditionsFields.forEach(field => {
+      registry[field] = [marketConditionsValidation.checkMarketConditionsFieldsNotBlank];
+    });
+
+    const timeframes = ["Prior 7-12 Months", "Prior 4-6 Months", "Current-3 Months", "Overall Trend"];
+    marketConditionsRows.forEach(row => {
+      timeframes.forEach(tf => {
+        const fieldName = `${row.fullLabel} (${tf})`;
+        registry[fieldName] = [marketConditionsValidation.checkMarketConditionsTableFields];
+      });
+    });
+
+    condoForeclosureFields.forEach(field => {
+      registry[field] = [form1073Validation.checkCondoForeclosureFieldsNotBlank];
+    });
+
+    const condoTimeframes = ["Prior 7–12 Months", "Prior 4–6 Months", "Current – 3 Months", "Overall Trend"];
+    condoCoopProjectsRows.forEach(row => {
+      condoTimeframes.forEach(tf => {
+        const fieldName = `${row.fullLabel} (${tf})`;
+        registry[fieldName] = [form1073Validation.checkCondoCoopProjectsTableFields];
+      });
+    });
+
+    pudInformationFields.forEach(field => {
+      registry[field] = [pudInformationValidation.checkPudInformationFieldsNotBlank];
+    });
+
+    unitDescriptionsFields.forEach(field => {
+      registry[field] = [unitDescriptionsValidation.checkUnitDescriptionsFieldsNotBlank];
+    });
+
+    projectAnalysisFields.forEach(field => {
+      registry[field] = [projectAnalysisValidation.checkProjectAnalysisFieldsNotBlank];
+    });
+
+    projectSiteFields.forEach(field => {
+      registry[field] = [projectSiteValidation.checkProjectSiteFieldsNotBlank];
+    });
+
+    incomeApproachFields.forEach(field => {
+      registry[field] = [incomeApproachValidation.checkIncomeApproachFieldsNotBlank];
+    });
+
+    priorSaleHistoryFields.forEach(field => {
+      registry[field] = [priorSaleHistoryValidation.checkPriorSaleHistoryFieldsNotBlank];
+    });
+
+    infoOfSalesFields.forEach(field => {
+      registry[field] = [infoOfSalesValidation.checkInfoOfSalesFieldsNotBlank];
+    });
+
+    projectInfoFields.forEach(field => {
+      registry[field] = [form1073Validation.checkProjectInfoFieldsNotBlank];
+    });
+
     return registry;
   };
 
@@ -382,7 +549,14 @@ function Subject() {
       const validationFns = customRegistry[fieldName] || [];
       for (const fn of validationFns) {
         try {
-          const result = fn(fieldName, value, allData, path, saleName);
+          let result = fn(fieldName, value, allData, path, saleName);
+
+          if (!result && saleName) {
+            try {
+              const res2 = fn(fieldName, allData, saleName);
+              if (res2) result = res2;
+            } catch (e) { }
+          }
 
           if (result && result.isError) {
             errors.push([sectionName, `${fieldName}${saleName ? ` (${saleName})` : ''}`, result.message]);
@@ -406,7 +580,7 @@ function Subject() {
         // For root level fields
         const value = allData[sectionKey];
         const path = [sectionKey];
-        runChecksForField('General', sectionKey, value, path);
+        runChecksForField('Subject', sectionKey, value, path);
       }
     });
 
@@ -420,7 +594,7 @@ function Subject() {
       }
     });
 
-    // Special handling for Rent Schedule Grid
+  
     comparableRents.forEach(rentName => {
       if (allData[rentName]) {
         Object.keys(allData[rentName]).forEach(fieldKey => {
@@ -440,12 +614,10 @@ function Subject() {
       }
     });
 
-    // Filter for unique errors to avoid duplicates from different data structures
     const uniqueErrors = [];
     const seenErrors = new Set();
 
     for (const error of errors) {
-      // error is an array: [sectionName, fieldName, message]
       const fieldName = error[1];
       const message = error[2];
       const errorKey = `${fieldName}|${message}`;
@@ -470,16 +642,24 @@ function Subject() {
     const runChecksForField = (sectionName, fieldName, value, path, saleName = null, customRegistry = validationRegistry) => {
       const validationFns = customRegistry[fieldName] || [];
       if (validationFns.length === 0) {
-        return; // No validation rules for this field, so no success to log.
+        return;
       }
 
       let hasError = false;
       for (const fn of validationFns) {
         try {
-          const result = fn(fieldName, value, allData, path, saleName);
+          let result = fn(fieldName, value, allData, path, saleName);
+
+          if (!result && saleName) {
+            try {
+              const res2 = fn(fieldName, allData, saleName);
+              if (res2) result = res2;
+            } catch (e) { }
+          }
+
           if (result && result.isError) {
             hasError = true;
-            break; // An error was found, so it's not a success.
+            break; 
           }
         } catch (e) {
           hasError = true;
@@ -493,6 +673,9 @@ function Subject() {
     };
 
     Object.keys(allData).forEach(sectionKey => {
+      if (comparableSales.includes(sectionKey) || comparableRents.includes(sectionKey) || ComparableRentAdjustments.includes(sectionKey)) {
+        return;
+      }
       const sectionData = allData[sectionKey];
       if (typeof sectionData === 'object' && sectionData !== null) {
         Object.keys(sectionData).forEach(fieldKey => {
@@ -503,7 +686,7 @@ function Subject() {
       } else {
         const value = allData[sectionKey];
         const path = [sectionKey];
-        runChecksForField('General', sectionKey, value, path);
+        runChecksForField('Subject', sectionKey, value, path);
       }
     });
 
@@ -517,7 +700,21 @@ function Subject() {
       }
     });
 
-    return successes;
+    const uniqueSuccesses = [];
+    const seenSuccesses = new Set();
+
+    for (const success of successes) {
+      const fieldName = success[1];
+      const status = success[2];
+      const key = `${fieldName}|${status}`;
+
+      if (!seenSuccesses.has(key)) {
+        uniqueSuccesses.push(success);
+        seenSuccesses.add(key);
+      }
+    }
+
+    return uniqueSuccesses;
   };
 
   const handleGenerateErrorLog = () => {
@@ -587,7 +784,6 @@ function Subject() {
       yPos = doc.lastAutoTable.finalY + 10;
     };
 
-    // 1. Validation Errors
     const validationErrors = getValidationErrors();
     const validationErrorRows = validationErrors.map(([section, field, message]) => [section, field, message]);
     if (validationErrorRows.length === 0) {
@@ -595,7 +791,6 @@ function Subject() {
     }
     addSection('Validation Errors', ['Section', 'Field', 'Error Message'], validationErrorRows, [255, 165, 0]);
 
-    // 2. Validation Successes
     const validationSuccesses = getValidationSuccesses();
     const validationSuccessRows = validationSuccesses.map(([section, field, message]) => [section, field, message]);
     if (validationSuccessRows.length === 0) {
@@ -603,7 +798,6 @@ function Subject() {
     }
     addSection('Successful Validations', ['Section', 'Field', 'Status'], validationSuccessRows, [34, 139, 34]);
 
-    // 3. Data Consistency Errors
     const consistencyErrors = getDataConsistencyErrors(data);
     if (consistencyErrors.length > 0) {
       const consistencyBody = consistencyErrors.map(([item, improvements, grid, photo, floorplan]) =>
@@ -615,7 +809,6 @@ function Subject() {
       );
     }
 
-    // 4. Requirement Check Errors
     const requirementErrors = [];
     const checks = [
       { name: 'Client Requirements', response: clientReqResponse },
@@ -627,8 +820,15 @@ function Subject() {
     checks.forEach(check => {
       if (check.response && Array.isArray(check.response.details)) {
         check.response.details.forEach(item => {
-          if (item.status === 'Not Fulfilled' || item.status === 'Needs Review') {
-            requirementErrors.push([check.name, item.requirement, item.status, item.value_or_comment]);
+          let isIssue = item.status === 'Not Fulfilled' || item.status === 'Needs Review' || item.status === 'Needs Escalation';
+          if (check.name === 'State Requirements' && item.status === 'Not Applicable') {
+            isIssue = true;
+          }
+          if (isIssue) {
+            const comment = (typeof item.value_or_comment === 'object' && item.value_or_comment !== null)
+              ? (item.value_or_comment.value || JSON.stringify(item.value_or_comment))
+              : item.value_or_comment;
+            requirementErrors.push([check.name, item.requirement, item.status, comment]);
           }
         });
       }
@@ -710,6 +910,15 @@ function Subject() {
   };
 
   const fileUploadTimerRef = useRef(null);
+
+  const handlePreviewPdf = (file) => {
+    if (file) {
+      const fileURL = URL.createObjectURL(file);
+      setPdfPreviewUrl(fileURL);
+      setPdfPreviewOpen(true);
+      setIsPdfMinimized(false);
+    }
+  };
 
   const handleDataChange = (path, value) => {
     setData(prevData => {
@@ -922,14 +1131,6 @@ function Subject() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleThemeChange = () => {
-    setThemeMode(prevMode => (prevMode === 'light' ? 'dark' : 'light'));
-  };
-
-  useEffect(() => {
-    document.body.setAttribute('data-theme', themeMode);
-  }, [themeMode]);
-
   useEffect(() => {
     return () => {
       localStorage.removeItem('fileUploadStartTime');
@@ -983,6 +1184,7 @@ function Subject() {
     'Special Assessments $',
     'PUD',
     'HOA $',
+    'HOA(per year)', 'HOA(per month)',
     'Property Rights Appraised',
     'Assignment Type',
     'Lender/Client',
@@ -1108,6 +1310,28 @@ function Subject() {
       siteFields.splice(siteFields.indexOf('Zoning Compliance') + 1, 0, 'No Zoning comment');
     }
   }
+
+  const utilityComments = [
+    { field: "Electricity", commentField: "Electricity comment" },
+    { field: "Gas", commentField: "Gas comment" },
+    { field: "Water", commentField: "Water comment" },
+    { field: "Sanitary Sewer", commentField: "Sanitary Sewer comment" },
+    { field: "Street", commentField: "Street comment" },
+    { field: "Alley", commentField: "Alley comment" },
+  ];
+
+  utilityComments.forEach(({ field, commentField }) => {
+    if (data?.SITE?.[commentField]) {
+      if (!siteFields.includes(commentField)) {
+        const index = siteFields.indexOf(field);
+        if (index !== -1) {
+          siteFields.splice(index + 1, 0, commentField);
+        }
+      }
+    }
+  });
+
+
   const improvementsFields = [
     "Units", "One with Accessory Unit", "# of Stories", "Type", "Existing/Proposed/Under Const.",
     "Design (Style)", "Year Built", "Effective Age (Yrs)", "Foundation Type",
@@ -1119,7 +1343,7 @@ function Subject() {
     "Trim/Finish (Material/Condition)", "Bath Floor (Material/Condition)", "Bath Wainscot (Material/Condition)",
     "Attic", "Heating Type", "Fuel", "Cooling Type",
     "Fireplace(s) #", "Patio/Deck", "Pool", "Woodstove(s) #", "Fence", "Porch", "Other in Amenities",
-    "Car Storage", "Driveway # of Cars", "Driveway Surface", "Garage # of Cars", "Carport # of Cars","Att./Det./Built-in",
+    "Car Storage", "Driveway # of Cars", "Driveway Surface", "Garage # of Cars", "Carport # of Cars", "Att./Det./Built-in",
     "Appliances",
     "Finished area above grade Rooms", "Finished area above grade Bedrooms",
     "Finished area above grade Bath(s)", "Square Feet of Gross Living Area Above Grade",
@@ -1156,7 +1380,7 @@ function Subject() {
     "Dwelling",
     "Garage/Carport ",
     "Estimated Remaining Economic Life (HUD and VA only)",
-    " Total Estimate of Cost-New  = $ ...................",
+    "Total Estimate of Cost-New = $ ...................",
     "Depreciation ",
     "Depreciated Cost of Improvements......................................................=$ ",
     "“As-is” Value of Site Improvements......................................................=$",
@@ -1248,7 +1472,6 @@ function Subject() {
     { label: "Total # of Comparable Sales (Settled)", fullLabel: "Inventory Analysis Total # of Comparable Sales (Settled)" },
     { label: "Absorption Rate (Total Sales/Months)", fullLabel: "Inventory Analysis Absorption Rate (Total Sales/Months)" },
     { label: "Total # of Comparable Active Listings", fullLabel: "Inventory Analysis Total # of Comparable Active Listings" },
-    { label: "Months of Housing Supply", fullLabel: "Inventory Analysis Months of Housing Supply (Total Listings/Ab.Rate)" },
     { label: "Median Comparable Sale Price", fullLabel: "Median Sale & List Price, DOM, Sale/List % Median Comparable Sale Price" },
     { label: "Median Comparable Sales Days on Market", fullLabel: "Median Sale & List Price, DOM, Sale/List % Median Comparable Sales Days on Market" },
     { label: "Median Comparable List Price", fullLabel: "Median Sale & List Price, DOM, Sale/List % Median Comparable List Price" },
@@ -1262,7 +1485,6 @@ function Subject() {
     "Data Source(s) for prior sale",
     "Effective Date of Data Source(s) for prior sale"
   ];
-
   const COMPARABLE_RENTAL_DATA = ["Address", "Proximity to Subject", "Current Monthly Rent", "Rent/Gross Bldg. Area", "Rent Control", "Data Source(s)", "Date of Lease(s)", "Location", "Actual Age", "Condition", "Gross Building Area", "Unit Breakdown Rm Count Tot Unit # 1", "Unit Breakdown Rm Count Br Unit # 1", "Unit Breakdown Rm Count Ba Unit # 1", "Unit Breakdown Rm Count Tot Unit # 2", "Unit Breakdown Rm Count Br Unit # 2", "Unit Breakdown Rm Count Ba Unit # 2", "Unit Breakdown Rm Count Tot Unit # 3", "Unit Breakdown Rm Count Br Unit # 3", "Unit Breakdown Rm Count Ba Unit # 3", "Unit Breakdown Rm Count Tot Unit # 4", "Unit Breakdown Rm Count Br Unit # 4", "Unit Breakdown Rm Count Ba Unit # 4", "Utilities Included"];
   const SUBJECT_RENT_SCHEDULE = ["Unit # Lease Date Begin Date 1", "Unit # Lease Date Begin Date 2", "Unit # Lease Date Begin Date 3", "Unit # Lease Date  Begin Date 4",
     "Unit # Lease Date End Date 1", "Unit # Lease Date End Date 2", "Unit # Lease Date End Date 3", "Unit # Lease Date End Date 4",
@@ -1295,23 +1517,17 @@ function Subject() {
   const condoForeclosureFields = [
     "Are foreclosure sales (REO sales) a factor in the project?", "If yes, indicate the number of REO listings and explain the trends in listings and sales of foreclosed properties.", "Summarize the above trends and address the impact on the subject unit and project.",
   ];
-
-
-
   const condoCoopProjectsRows = [
     { label: "Total # of Comparable Sales (Settled)", fullLabel: "Subject Project Data Total # of Comparable Sales (Settled)" },
     { label: "Absorption Rate (Total Sales/Months)", fullLabel: "Subject Project Data Absorption Rate (Total Sales/Months)" },
     { label: "Total # of Comparable Active Listings", fullLabel: "Subject Project Data Total # of Comparable Active Listings" },
     { label: "Months of Unit Supply (Total Listings/Ab.Rate)", fullLabel: "Subject Project Data Months of Unit Supply (Total Listings/Ab.Rate)" },
   ];
-
-
   const imageAnalysisFields = [
     "include bedroom, bed, bathroom, bath, half bath, kitchen, lobby, foyer, living room count with label and photo,please explan and match the floor plan with photo and improvement section, GLA",
     "please match comparable address in sales comparison approach and comparable photos, please make sure comp phto are not same, also find front, rear, street photo and make sure it is not same, capture any additionbal photo for adu according to check mark",
     "please match comparable address in sales comparison approach and comparable photos, please make sure comp phto are not same, also find front, rear, street photo and make sure it is not same, capture any additionbal photo for adu according to check mark, please match the same in location map, areial map should have subject address, please check signature section details of appraiser in appraiser license copy for accuracy"
   ];
-
   const projectSiteFields = [
     "Topography", "Size", "Density", "View", "Specific Zoning Classification", "Zoning Description",
     "Zoning Compliance", "Is the highest and best use of subject property as improved (or as proposed per plans and specifications) the present use?",
@@ -1320,7 +1536,6 @@ function Subject() {
     "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)?",
     "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe",
   ];
-
   const projectInfoFields = [
     "Data source(s) for project information", "Project Description", "# of Stories",
     "# of Elevators", "Existing/Proposed/Under Const.", "Year Built",
@@ -1341,7 +1556,6 @@ function Subject() {
     "If Yes, $ per year (describe terms and conditions)",
     "Are the parking facilities adequate for the project size and type?", "If No, describe and comment on the effect on value and marketability."
   ];
-
   const projectAnalysisFields = [
     "I did did not analyze the condominium project budget for the current year. Explain the results of the analysis of the budget (adequacy of fees, reserves, etc.), or why the analysis was not performed.",
     "Are there any other fees (other than regular HOA charges) for the use of the project facilities?",
@@ -1351,7 +1565,6 @@ function Subject() {
     "Are there any special or unusual characteristics of the project (based on the condominium documents, HOA meetings, or other information) known to the appraiser?",
     "If Yes, describe and explain the effect on value and marketability.",
   ];
-
   const unitDescriptionsFields = [
     "Unit Charge$", " per month X 12 = $", "per year",
     "Annual assessment charge per year per square feet of gross living area = $",
@@ -1399,44 +1612,40 @@ function Subject() {
       'Floorplan': 'TOTAL Bathroom Floorplan Count',
     },
     'GLA': { 'Improvements': 'GLA Improvements Count', 'Grid': 'GLA Sales Comparison Approach Count', 'Photo': 'GLA Photo Count', 'Floorplan': 'GLA Floorplan Count' }
-  }; const formTypes = ['1004', '1004C', '1004D', '1025', '1073', '2090', '203k-FHA', '2055', '1075', '2095', '1007', '216', '1025 + 1007', '1073 + 1007'];
+  };
+  const formTypes = ['1004', '1004C', '1004D', '1025', '1073', '2090', '203k-FHA', '2055', '1075', '2095', '1007', '216', '1025 + 1007', '1073 + 1007'];
 
   const sections = useMemo(() => [
-    { id: 'subject-info', title: 'Subject', category: 'SUBJECT' },
-    // { id: 'html-data-section', title: 'HTML Data' },
-    { id: 'contract-section', title: 'Contract', category: 'CONTRACT' },
-    { id: 'neighborhood-section', title: 'Neighborhood', category: 'NEIGHBORHOOD' },
+    { id: 'subject-info', title: 'Subject', category: 'SUBJECT', icon: <HomeIcon /> },
+    { id: 'contract-section', title: 'Contract', category: 'CONTRACT', icon: <GavelIcon /> },
+    { id: 'neighborhood-section', title: 'Neighborhood', category: 'NEIGHBORHOOD', icon: <LocationCityIcon /> },
 
-    { id: 'project-site-section', title: 'Project Site', category: 'PROJECT_SITE' },
-    { id: 'project-info-section', title: 'Project Information', category: 'PROJECT_INFO' },
-    { id: 'project-analysis-section', title: 'Project Analysis', category: 'PROJECT_ANALYSIS' },
-    { id: 'unit-descriptions-section', title: 'Unit Descriptions', category: 'UNIT_DESCRIPTIONS' },
-    { id: 'prior-sale-history-section', title: 'Prior Sale History', category: 'PRIOR_SALE_HISTORY' },
-    { id: 'site-section', title: 'Site', category: 'SITE' },
-    { id: 'improvements-section', title: 'Improvements', category: 'IMPROVEMENTS' },
-    { id: 'info-of-sales-section', title: 'Info of Sales', category: 'INFO_OF_SALES' },
-    { id: 'sales-comparison', title: 'Sales Comparison', category: ['SALES_GRID'] },
-    // { id: 'sales-comparison-additional-info', title: 'Sales Comparison Additional Info', category: 'SALES_COMPARISON_ADDITIONAL_INFO' },
-    { id: 'sales-history-section', title: 'Sales History', category: 'SALES_TRANSFER' },
-    { id: 'comparable-rental-data', title: 'COMPARABLE RENTAL DATA', category: 'COMPARABLE_RENTAL_DATA' },
-    { id: 'subject-rent-schedule', title: 'SUBJECT RENT SCHEDULE', category: 'SUBJECT_RENT_SCHEDULE' },
-    { id: 'rent-schedule-section', title: 'Comparable Rent Schedule', category: 'RENT_SCHEDULE_GRID' },
-    { id: 'rent-schedule-reconciliation-section', title: 'Rent Schedule Reconciliation', category: 'RENT_SCHEDULE_RECONCILIATION' },
-    { id: 'reconciliation-section', title: 'Reconciliation', category: 'RECONCILIATION' },
-    { id: 'cost-approach-section', title: 'Cost Approach', category: 'COST_APPROACH' },
-    { id: 'income-approach-section', title: 'Income Approach', category: 'INCOME_APPROACH' },
-    { id: 'pud-info-section', title: 'PUD Information', category: 'PUD_INFO' },
-    { id: 'market-conditions-section', title: 'Market Conditions', category: 'MARKET_CONDITIONS' },
-    { id: 'condo-coop-section', title: 'Condo/Co-op', category: ['CONDO', 'CONDO_FORECLOSURE'] },
-    { id: 'appraiser-section', title: 'CERTIFICATION', category: 'CERTIFICATION' }, // This should be condo coop projects
-    { id: 'state-requirement-check', title: 'State Requirement Check' },
-    { id: 'prompt-analysis-section', title: 'Prompt Analysis' },
-    { id: 'raw-output', title: 'Raw Output' },
-
+    { id: 'project-site-section', title: 'Project Site', category: 'PROJECT_SITE', icon: <TerrainIcon /> },
+    { id: 'project-info-section', title: 'Project Information', category: 'PROJECT_INFO', icon: <Info /> },
+    { id: 'project-analysis-section', title: 'Project Analysis', category: 'PROJECT_ANALYSIS', icon: <AnalyticsIcon /> },
+    { id: 'unit-descriptions-section', title: 'Unit Descriptions', category: 'UNIT_DESCRIPTIONS', icon: <MeetingRoomIcon /> },
+    { id: 'prior-sale-history-section', title: 'Prior Sale History', category: 'PRIOR_SALE_HISTORY', icon: <HistoryIcon /> },
+    { id: 'site-section', title: 'Site', category: 'SITE', icon: <TerrainIcon /> },
+    { id: 'improvements-section', title: 'Improvements', category: 'IMPROVEMENTS', icon: <BuildIcon /> },
+    { id: 'info-of-sales-section', title: 'Sales Comparison Approach', category: 'INFO_OF_SALES', icon: <MonetizationOnIcon /> },
+    { id: 'sales-comparison', title: 'Sales GRID Section', category: ['SALES_GRID'], icon: <CompareArrowsIcon /> },
+    { id: 'sales-history-section', title: 'Sales History', category: 'SALES_TRANSFER', icon: <HistoryIcon /> },
+    { id: 'comparable-rental-data', title: 'COMPARABLE RENTAL DATA', category: 'COMPARABLE_RENTAL_DATA', icon: <ApartmentIcon /> },
+    { id: 'subject-rent-schedule', title: 'SUBJECT RENT SCHEDULE', category: 'SUBJECT_RENT_SCHEDULE', icon: <RequestQuoteIcon /> },
+    { id: 'rent-schedule-section', title: 'Comparable Rent Schedule', category: 'RENT_SCHEDULE_GRID', icon: <TableChartIcon /> },
+    { id: 'rent-schedule-reconciliation-section', title: 'Rent Schedule Reconciliation', category: 'RENT_SCHEDULE_RECONCILIATION', icon: <MergeTypeIcon /> },
+    { id: 'reconciliation-section', title: 'Reconciliation', category: 'RECONCILIATION', icon: <BalanceIcon /> },
+    { id: 'cost-approach-section', title: 'Cost Approach', category: 'COST_APPROACH', icon: <CalculateIcon /> },
+    { id: 'income-approach-section', title: 'Income Approach', category: 'INCOME_APPROACH', icon: <AttachMoneyIcon /> },
+    { id: 'pud-info-section', title: 'PUD Information', category: 'PUD_INFO', icon: <DomainIcon /> },
+    { id: 'market-conditions-section', title: 'Market Conditions', category: 'MARKET_CONDITIONS', icon: <TrendingUpIcon /> },
+    { id: 'condo-coop-section', title: 'Condo/Co-op', category: ['CONDO', 'CONDO_FORECLOSURE'], icon: <BusinessIcon /> },
+    { id: 'appraiser-section', title: 'CERTIFICATION', category: 'CERTIFICATION', icon: <VerifiedUserIcon /> }, // This should be condo coop projects
+    { id: 'prompt-analysis', title: 'Prompt Analysis', category: 'PROMPT_ANALYSIS', icon: <PsychologyIcon /> },
+    { id: 'raw-output', title: 'Raw Output', icon: <CodeIcon /> },
   ], []);
 
   const salesGridRows = [
-
     { label: "Address", valueKey: "Address", subjectValueKey: "Property Address" },
     { label: "Proximity to Subject", valueKey: "Proximity to Subject", subjectValueKey: "" },
     { label: "Sale Price", valueKey: "Sale Price" },
@@ -1510,20 +1719,18 @@ function Subject() {
     "COMPARABLE SALE #7",
     "COMPARABLE SALE #8",
     "COMPARABLE SALE #9",
-
-
   ];
 
   const comparableRents = [
-    "COMPARABLE NO. 1",
-    "COMPARABLE NO. 2",
-    "COMPARABLE NO. 3",
-    "COMPARABLE NO. 4",
-    "COMPARABLE NO. 5",
-    "COMPARABLE NO. 6",
-    "COMPARABLE NO. 7",
-    "COMPARABLE NO. 8",
-    "COMPARABLE NO. 9",
+    "COMPARABLE No. 1",
+    "COMPARABLE No. 2",
+    "COMPARABLE No. 3",
+    "COMPARABLE No. 4",
+    "COMPARABLE No. 5",
+    "COMPARABLE No. 6",
+    "COMPARABLE No. 7",
+    "COMPARABLE No. 8",
+    "COMPARABLE No. 9",
   ];
 
   const ComparableRentAdjustments = [
@@ -1538,10 +1745,28 @@ function Subject() {
     "COMPARABLE RENTAL NO. 9",
   ]
 
-  const onFileChange = (e) => {
-    const file = e.target.files && e.target.files[0];
+  const handleExportJSON = () => {
+    if (Object.keys(data).length === 0) {
+      setNotification({ open: true, message: 'No data to export.', severity: 'warning' });
+      return;
+    }
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${selectedFile?.name.replace('.pdf', '') || 'appraisal_data'}_export.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setNotification({ open: true, message: 'Data exported to JSON.', severity: 'success' });
+  };
 
-    // Reset all relevant states when a new file is selected
+  const handleClearFiles = () => {
+    setSelectedFile(null);
+    setHtmlFile(null);
+    setContractFile(null);
+    setEngagementLetterFile(null);
     setData({});
     setExtractionAttempted(false);
     setLastExtractionTime(null);
@@ -1555,7 +1780,39 @@ function Subject() {
     setADUResponse(null);
     setActiveSection(null);
     setModalContent(null);
-    // setContractExtracted(false);
+    setComparisonData({});
+    setContractCompareResult(null);
+    setEngagementLetterCompareResult(null);
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (htmlFileInputRef.current) htmlFileInputRef.current.value = '';
+    if (contractFileInputRef.current) contractFileInputRef.current.value = '';
+    if (engagementLetterFileInputRef.current) engagementLetterFileInputRef.current.value = '';
+
+    setNotification({ open: true, message: 'All files cleared.', severity: 'info' });
+  };
+
+  const confirmClearFiles = () => {
+    handleClearFiles();
+    setIsClearDialogOpen(false);
+  };
+
+  const onFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+
+    setData({});
+    setExtractionAttempted(false);
+    setLastExtractionTime(null);
+    setRawGemini('');
+    setPromptAnalysisResponse(null);
+    setSubmittedPrompt('');
+    setStateReqResponse(null);
+    setUnpaidOkResponse(null);
+    setClientReqResponse(null);
+    setFhaResponse(null);
+    setADUResponse(null);
+    setActiveSection(null);
+    setModalContent(null);
 
     if (file) {
       setSelectedFile(file);
@@ -1565,13 +1822,12 @@ function Subject() {
       });
       setFileUploadTimer(0);
       setIsTimerRunning(true);
-      extractInitialSections(); // Trigger initial extraction
+      extractInitialSections(); 
 
     }
   };
 
   useEffect(() => {
-
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -1582,10 +1838,6 @@ function Subject() {
   const [rawGemini, setRawGemini] = useState('');
 
   const validateInputs = () => {
-    if (!selectedFormType) {
-      setNotification({ open: true, message: 'Please select a Form Type first.', severity: 'warning' });
-      return false;
-    }
     if (!selectedFile) {
       setNotification({ open: true, message: 'Please select a file first.', severity: 'warning' });
       return false;
@@ -1600,7 +1852,6 @@ function Subject() {
   const startExtractionProcess = () => {
     setLoading(true);
     setExtractionAttempted(true);
-    // setIsHtmlReviewLoading(true); // Start HTML review loading along with main extraction
     setExtractionProgress(0);
     setTimer(0);
     timerRef.current = setInterval(() => {
@@ -1617,7 +1868,7 @@ function Subject() {
     for (let i = 0; i < retries; i++) {
       try {
         const formData = new FormData();
-        formData.append('file', selectedFile); // Ensure the actual file object is sent
+        formData.append('file', selectedFile);
         formData.append('form_type', formType);
         if (category) {
           formData.append('category', category);
@@ -1702,7 +1953,6 @@ function Subject() {
 
     setData(prevData => {
       const updatedData = { ...prevData, ...normalizedFields };
-      // Ensure nested objects are merged, not replaced
       Object.keys(normalizedFields).forEach(key => {
         if (typeof normalizedFields[key] === 'object' && normalizedFields[key] !== null && !Array.isArray(normalizedFields[key])) {
           updatedData[key] = { ...(prevData[key] || {}), ...normalizedFields[key] };
@@ -1716,7 +1966,6 @@ function Subject() {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
 
-    // Only show success notification if the 'From Type' warning isn't already active.
     if (result.fields?.INCOME_APPROACH?.['Estimated Monthly Market Rent $'] && selectedFormType !== '1007') {
       setIsRentFormTypeMismatchDialogOpen(true);
     } else {
@@ -1741,7 +1990,7 @@ function Subject() {
     if (!validateInputs()) return;
 
     if (!category && !selectedFile) {
-      setNotification({ open: true, message: 'Please select a section from the sidebar to extract.', severity: 'info' }); // This logic can be adjusted based on desired behavior for a "full extract" button.
+      setNotification({ open: true, message: 'Please select a section from the sidebar to extract.', severity: 'info' }); 
       return;
     }
 
@@ -1763,7 +2012,6 @@ function Subject() {
         if (p.status === 'fulfilled') {
           processExtractionResult(p.value.result, startTime, p.value.category);
           if (p.value.category === 'CONTRACT') {
-            // setContractExtracted(true);
           }
         } else {
           setNotification({ open: true, message: p.reason.message || `An unknown error occurred during extraction.`, severity: 'error' });
@@ -1782,10 +2030,6 @@ function Subject() {
 
   const extractInitialSections = async () => {
     if (!selectedFile || !selectedFormType) return;
-    if (!selectedFile || !selectedFormType) {
-
-      return;
-    }
 
     const initialCategories = ['SUBJECT'];
     setLoading(true);
@@ -1793,7 +2037,6 @@ function Subject() {
     setTimer(0);
     timerRef.current = setInterval(() => setTimer(prev => prev + 1), 1000);
 
-    // Process requests sequentially instead of in parallel to avoid overloading the server.
     for (const category of initialCategories) {
       try {
         const formData = new FormData();
@@ -1860,29 +2103,25 @@ function Subject() {
     }
   };
 
-  // Helper function for API calls with retry logic
   const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-    const timeout = 60000; // 60 seconds timeout
+    const timeout = 60000; 
     for (let i = 0; i < retries; i++) {
       try {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
         const res = await fetch(url, { ...options, signal: controller.signal });
-        // If response is not a 5xx error, return it
         clearTimeout(id);
         if (res.status < 500) {
           return res;
         }
-        // If it is a 5xx error, log and prepare to retry
+        
         console.warn(`Attempt ${i + 1}: Server error ${res.status}. Retrying in ${delay / 1000}s...`);
       } catch (error) {
-        // Network or other fetch errors
         console.warn(`Attempt ${i + 1}: Network error. Retrying in ${delay / 1000}s...`, error);
       }
-      // Wait for the delay before the next attempt
       if (i < retries - 1) {
         await new Promise(resolve => setTimeout(resolve));
-        delay *= 2; // Exponential backoff
+        delay *= 2; 
       }
     }
     throw new Error(`Failed to fetch from ${url} after ${retries} attempts.`);
@@ -1894,32 +2133,9 @@ function Subject() {
       return;
     }
 
-    if (stateReqResponse && !forceReload) {
-      setModalContent({
-        title: 'State Requirement Check',
-        Component: StateRequirementCheck,
-        props: { loading: false, response: stateReqResponse, error: stateReqError }
-      });
-      setIsCheckModalOpen(true);
-      return;
-    }
-
     setStateReqLoading(true);
     setStateReqError('');
     setStateReqResponse(null);
-    setFhaLoading(true);
-    setFhaError('');
-    setFhaResponse(null);
-
-    setADULoading(true);
-    setADUError('');
-    setADUResponse(null);
-    setModalContent({
-      title: 'State Requirement Check',
-      Component: StateRequirementCheck,
-      props: { loading: true }
-    });
-    setIsCheckModalOpen(true);
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -1930,8 +2146,7 @@ function Subject() {
       const res = await fetchWithRetry('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
-
-      }, 3, 1000); // 3 retries, starting with a 1-second delay
+      }, 3, 1000);
 
       const result = await res.json();
       if (!res.ok) {
@@ -1939,19 +2154,9 @@ function Subject() {
       }
       const responseData = result.fields || result;
       setStateReqResponse(responseData);
-      setModalContent({
-        title: 'State Requirement Check',
-        Component: StateRequirementCheck,
-        props: { loading: false, response: responseData, error: '' }
-      });
     } catch (e) {
       const errorMsg = e.message || 'An unexpected error occurred.';
       setStateReqError(errorMsg);
-      setModalContent({
-        title: 'State Requirement Check',
-        Component: StateRequirementCheck,
-        props: { loading: false, response: null, error: errorMsg }
-      });
     } finally {
       setStateReqLoading(false);
       if (timerRef.current) clearInterval(timerRef.current);
@@ -1964,7 +2169,6 @@ function Subject() {
       setUnpaidOkError('Please select a PDF file first.');
       return;
     }
-
     if (unpaidOkResponse && !forceReload) {
       setModalContent({
         title: 'Unpaid OK Lender Check',
@@ -1990,7 +2194,6 @@ function Subject() {
     formData.append('file', selectedFile);
     formData.append('form_type', selectedFormType);
     formData.append('comment', UNPAID_OK_PROMPT);
-
     try {
       const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
         method: 'POST',
@@ -2029,26 +2232,9 @@ function Subject() {
       return;
     }
 
-    if (clientReqResponse && !forceReload) {
-      setModalContent({
-        title: 'Client Requirement Check',
-        Component: ClientRequirementCheck,
-        props: { loading: false, response: clientReqResponse, error: clientReqError }
-      });
-      setIsCheckModalOpen(true);
-      return;
-    }
-
     setClientReqLoading(true);
     setClientReqError('');
     setClientReqResponse(null);
-
-    setModalContent({
-      title: 'Client Requirement Check',
-      Component: ClientRequirementCheck,
-      props: { loading: true }
-    });
-    setIsCheckModalOpen(true);
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -2067,19 +2253,9 @@ function Subject() {
       }
       const responseData = result.fields || result;
       setClientReqResponse(responseData);
-      setModalContent({
-        title: 'Client Requirement Check',
-        Component: ClientRequirementCheck,
-        props: { loading: false, response: responseData, error: '' }
-      });
     } catch (e) {
       const errorMsg = e.message || 'An unexpected error occurred.';
       setClientReqError(errorMsg);
-      setModalContent({
-        title: 'Client Requirement Check',
-        Component: ClientRequirementCheck,
-        props: { loading: false, response: null, error: errorMsg }
-      });
     } finally {
       setClientReqLoading(false);
       if (timerRef.current) clearInterval(timerRef.current);
@@ -2221,26 +2397,9 @@ function Subject() {
       return;
     }
 
-    if (escalationResponse && !forceReload) {
-      setModalContent({
-        title: 'Escalation Check',
-        Component: EscalationCheck,
-        props: { loading: false, response: escalationResponse, error: escalationError }
-      });
-      setIsCheckModalOpen(true);
-      return;
-    }
-
     setEscalationLoading(true);
     setEscalationError('');
     setEscalationResponse(null);
-
-    setModalContent({
-      title: 'Escalation Check',
-      Component: EscalationCheck,
-      props: { loading: true }
-    });
-    setIsCheckModalOpen(true);
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -2259,38 +2418,21 @@ function Subject() {
       }
       const responseData = result.fields || result;
       setEscalationResponse(responseData);
-      setModalContent({
-        title: 'Escalation Check',
-        Component: EscalationCheck,
-        props: { loading: false, response: responseData, error: '' }
-      });
     } catch (e) {
       const errorMsg = e.message || 'An unexpected error occurred.';
       setEscalationError(errorMsg);
-      setModalContent({
-        title: 'Escalation Check',
-        Component: EscalationCheck,
-        props: { loading: false, response: null, error: errorMsg }
-      });
     } finally {
       setEscalationLoading(false);
     }
   };
 
   const handleSectionClick = (section) => {
-    if (section.id === 'state-requirement-check') {
-      if (validateInputs()) {
-        handleStateRequirementCheck();
-      }
-      return;
-    }
     setActiveSection(section.id);
     const element = document.getElementById(section.id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     if (!section.category) {
-      // If the section doesn't have a specific category to extract, just scroll.
       return;
     }
 
@@ -2323,12 +2465,10 @@ function Subject() {
     return () => observer.disconnect();
   }, [data, sections]);
   useEffect(() => {
-    // Remove previous highlight
     document.querySelectorAll('.section-active').forEach(el => {
       el.classList.remove('section-active');
     });
 
-    // Add highlight to the new active section
     if (activeSection) {
       const element = document.getElementById(activeSection);
       if (element) {
@@ -2356,10 +2496,8 @@ function Subject() {
 
   useEffect(() => {
     const handleBeforeUnload = (event) => {
-      // Show confirmation message if there is data or a file selected
       if (Object.keys(data).length > 0 || selectedFile) {
         event.preventDefault();
-        // Required for Chrome
         event.returnValue = '';
       }
     };
@@ -2390,12 +2528,10 @@ function Subject() {
           const pageCount = doc.internal.getNumberOfPages();
           for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
-
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text('Appraisal Report Summary', margin, 10);
             doc.text(new Date().toLocaleDateString(), pageWidth - margin, 10, { align: 'right' });
-
             doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
           }
         };
@@ -2404,7 +2540,6 @@ function Subject() {
         doc.setFont(undefined, 'bold');
         doc.text('Review Details', margin, yPos);
         yPos += 8;
-
         doc.setFontSize(10);
         doc.setFont(undefined, 'normal');
         const totalTime = `${Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:${Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:${(fileUploadTimer % 60).toString().padStart(2, '0')}`;
@@ -2429,8 +2564,6 @@ function Subject() {
             doc.addPage();
             yPos = margin;
           }
-
-
           doc.setFontSize(14);
           doc.setFont(undefined, 'bold');
           doc.setTextColor(40);
@@ -2485,8 +2618,6 @@ function Subject() {
         sectionDefinitions.forEach(section => {
           addSection(section.title, section.fields, section.data, section.usePre)
         });
-
-
 
         if (yPos > pageHeight - 60) { doc.addPage(); yPos = margin; }
         doc.setFontSize(14);
@@ -2544,7 +2675,6 @@ function Subject() {
       setNotification({ open: true, message: 'No data to save.', severity: 'warning' });
       return;
     }
-
     setLoading(true);
     setNotification({ open: true, message: 'Saving data to database...', severity: 'info' });
 
@@ -2554,7 +2684,7 @@ function Subject() {
       const cleanedData = JSON.parse(JSON.stringify(data));
 
       const sectionsToCheck = [
-        'Subject', 'SUBJECT', 'CONTRACT', 'NEIGHBORHOOD', 'SITE', 'IMPROVEMENTS',
+        'Subject', 'CONTRACT', 'NEIGHBORHOOD', 'SITE', 'IMPROVEMENTS',
         'SALES_TRANSFER', 'PRIOR_SALE_HISTORY', 'RECONCILIATION',
         'COST_APPROACH', 'INCOME_APPROACH', 'PUD_INFO', 'MARKET_CONDITIONS',
         'CONDO_FORECLOSURE', 'CERTIFICATION', 'INFO_OF_SALES',
@@ -2574,20 +2704,37 @@ function Subject() {
         }
       });
 
-      const dataToSave = {
-        fileName: selectedFile?.name || 'N/A',
-        username: username,
-        totalTimeTaken: totalTime,
-        ...cleanedData,
+      const validationErrors = getValidationErrors();
+      const validationSuccesses = getValidationSuccesses();
+      const consistencyErrors = getDataConsistencyErrors(data);
+
+      const validationLog = {
         promptAnalysis: promptAnalysisResponse,
-        save_option: 'update'
+        stateRequirementCheck: stateReqResponse,
+        clientRequirementCheck: clientReqResponse,
+        escalationCheck: escalationResponse,
+        fhaCheck: fhaResponse,
+        aduCheck: ADUResponse,
+        validationErrors,
+        validationSuccesses,
+        consistencyErrors
+      };
+
+      const dataToSave = {
+        file_name: selectedFile?.name || 'N/A',
+        user_name: username,
+        validation_log: validationLog,
+        report_data: {
+          totalTimeTaken: totalTime,
+          ...cleanedData,
+          save_option: 'update'
+        }
       };
       const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        // body: JSON.stringify(data),
         body: JSON.stringify(dataToSave),
       });
 
@@ -2605,7 +2752,7 @@ function Subject() {
     }
   };
 
-  const getVisibleSections = () => {
+  const visibleSectionsList = useMemo(() => {
     const baseSections = sections.map(s => s.id);
     let visibleSectionIds = [];
 
@@ -2620,7 +2767,7 @@ function Subject() {
         visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'rent-schedule-section', 'improvements-section', 'site-section', 'rent-schedule-reconciliation-section', 'pud-info-section'].includes(id));
         break;
       case '1007':
-        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'project-site-section', 'prior-sale-history-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section', 'pud-info-section', 'market-conditions-section'].includes(id));
+        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'project-site-section', 'prior-sale-history-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
         break;
       default:
 
@@ -2629,7 +2776,26 @@ function Subject() {
     }
 
     return sections.filter(section => visibleSectionIds.includes(section.id));
+  }, [selectedFormType, sections]);
+
+  const handleSidebarEnter = () => {
+    if (sidebarLeaveTimerRef.current) {
+      clearTimeout(sidebarLeaveTimerRef.current);
+      sidebarLeaveTimerRef.current = null;
+    }
+    if (!isSidebarLocked) {
+      setIsSidebarOpen(true);
+    }
   };
+
+  const handleSidebarLeave = () => {
+    if (!isSidebarLocked) {
+      sidebarLeaveTimerRef.current = setTimeout(() => {
+        setIsSidebarOpen(false);
+      }, 300);
+    }
+  };
+
   const renderForm = () => {
     const revisionHandlers = {
       // SUBJECT SECTION
@@ -2800,13 +2966,11 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
-
       // =========================
       // SALES GRID
       // =========================
       onSalesGridRevisionButtonClick: () => setSalesGridRevisionLangDialogOpen(true),
       onOneWithAccessoryUnitRevisionButtonClick: () => setOneWithAccessoryUnitRevisionLangDialogOpen(true),
-
 
       // =========================
       // RECONCILIATION / COST APPROACH / CERTIFICATION
@@ -2814,7 +2978,6 @@ function Subject() {
       onReconciliationRevisionButtonClick: () => setReconciliationRevisionLangDialogOpen(true),
       onCostApproachRevisionButtonClick: () => setCostApproachRevisionLangDialogOpen(true),
       onCertificationRevisionButtonClick: () => setCertificationRevisionLangDialogOpen(true),
-
 
       // =========================
       // PROPERTY RIGHTS / BORROWER / MISC
@@ -3049,7 +3212,6 @@ function Subject() {
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
 
-
       ONNeighborhoodDescriptionrevisionButtonClick: () => {
         const revisionText = `Please revise the 'Neighborhood Description' "${data["Neighborhood Description"] || '...'}" field in the section.`;
         navigator.clipboard.writeText(revisionText);
@@ -3068,7 +3230,6 @@ function Subject() {
         setNotification({ open: true, message: "Commercial revision text copied!", severity: "success" });
         setNotes(prev => `${prev}\n- ${revisionText}`);
       },
-
 
       ONOneUnitrevisionButtonClick: () => {
         const revisionText = `Please revise the 'One Unit' "${data["One Unit"] || '...'}" field in the section.`;
@@ -3795,6 +3956,29 @@ function Subject() {
       revisionHandlers,
     };
 
+    // const dialogSetters = {
+    //   setPropertyAddressRevisionLangDialogOpen,
+    //   setContractPriceRevisionLangDialogOpen,
+    //   setFinancialAssistanceRevisionLangDialogOpen,
+    //   setDateOfContractRevisionLangDialogOpen,
+    //   setNeighborhoodBoundariesRevisionLangDialogOpen,
+    //   setOtherLandUseRevisionLangDialogOpen,
+    //   setZoningComplianceRevisionLangDialogOpen,
+    //   setAreaRevisionLangDialogOpen,
+    //   setImprovementsRevisionLangDialogOpen,
+    //   setSalesGridRevisionLangDialogOpen,
+    //   setReconciliationRevisionLangDialogOpen,
+    //   setCostApproachRevisionLangDialogOpen,
+    //   setCertificationRevisionLangDialogOpen,
+    //   setOneWithAccessoryUnitRevisionLangDialogOpen,
+    //   setLenderClientAddressRevisionLangDialogOpen,
+    //   setLenderClientRevisionLangDialogOpen,
+    //   setHoaRevisionLangDialogOpen,
+    //   set1007RevisionLangDialogOpen,
+    //   setAddendumRevisionLangDialogOpen,
+    // };
+    // const revisionHandlers = createRevisionHandlers(data, setNotification, setNotes, dialogSetters);
+
     let formComponent;
     switch (selectedFormType) {
       case '1004':
@@ -3824,26 +4008,20 @@ function Subject() {
     );
   };
 
-  const activeTheme = themeMode === 'light' ? lightTheme : darkTheme;
-
   return (
-    <ThemeProvider theme={activeTheme}>
+    <>
       <CssBaseline />
       <TooltipStyles />
 
 
       <div className="page-container">
         <Sidebar
-          sections={getVisibleSections()}
+          sections={visibleSectionsList}
           isOpen={isSidebarOpen || isSidebarLocked}
           isLocked={isSidebarLocked}
           onLockToggle={() => { setIsSidebarLocked(!isSidebarLocked); setIsEditable(!isEditable); }}
-          onMouseEnter={() => {
-            if (!isSidebarLocked) setIsSidebarOpen(true);
-          }}
-          onMouseLeave={() => {
-            if (!isSidebarLocked) setIsSidebarOpen(false);
-          }}
+          onMouseEnter={handleSidebarEnter}
+          onMouseLeave={handleSidebarLeave}
           onSectionClick={handleSectionClick}
           onThemeToggle={handleThemeChange}
           currentTheme={themeMode}
@@ -3855,438 +4033,583 @@ function Subject() {
           loading={loading}
         />
         <div className={`main-content container-fluid ${isSidebarOpen || isSidebarLocked ? 'sidebar-open' : ''}`}>
+          {selectedFormType !== '1004D' && (
+            <>
           <Box
             className="header-container"
+            elevation={0}
             sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 2,
-              my: 2,
-            }}
-          >
-            <Box
-              component="img"
-              src={process.env.PUBLIC_URL + '/logo.png'}
-              alt="logo"
-              sx={{ height: { xs: 80, md: 100 }, width: 'auto' }}
-            />
-            <Typography variant="h3" component="h1" className="app-title" sx={{ fontFamily: 'BBH Sans Hegarty', fontWeight: 'bold', fontSize: { xs: '2rem', md: '3rem' } }}>
-              FULL FILE REVIEW
-            </Typography>
+              gap: { xs: 2, md: 3 },
+              my: 3,
+              py: 2,
+              px: 4,
+              borderRadius: 3,
+              background: `linear-gradient(135deg, ${activeTheme.palette.background.paper} 0%, ${activeTheme.palette.action.hover} 100%)`,
+              border: '1px solid',
+              borderColor: 'divider',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
+            }}>
+            <PremiumLogo size={70} fullScreen={false} />
+            <Box>
+              <Typography
+                variant="h3"
+                component="h1"
+                className="app-title"
+                sx={{
+                  fontFamily: 'BBH Sans Hegarty, sans-serif',
+                  fontWeight: 800,
+                  fontSize: { xs: '1.6rem', md: '2.4rem' },
+                  background: `linear-gradient(45deg, ${activeTheme.palette.primary.main}, ${activeTheme.palette.secondary?.main || activeTheme.palette.primary.dark})`,
+                  backgroundClip: 'text',
+                  textFillColor: 'transparent',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: -0.5
+                }}
+              >
+                FULL FILE REVIEW
+              </Typography>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  color: 'text.secondary',
+                  letterSpacing: 3,
+                  fontSize: { xs: '0.6rem', md: '0.75rem' },
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  textAlign: 'right',
+                  opacity: 0.8
+                }}
+              >
+                Intelligent Analysis
+              </Typography>
+            </Box>
           </Box>
-
           <Paper
-            elevation={2}
+            elevation={0}
             sx={{
-              p: 2,
-              top: 0,
-              zIndex: 1100,
-              height: "fit-content",
-              backgroundColor: activeTheme.palette.background.paper,
+              p: 1.5,
+              // mb: 1,
+              borderRadius: 3,
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider'
             }}
           >
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              sx={{ display: "flex", flexWrap: "wrap" }}
-            >
-              {/* Select File */}
-              <Grid item>
-                <Tooltip title="Click to upload the main PDF report">
-                  <Button variant="outlined" onClick={() => fileInputRef.current.click()}>
-                    Select PDF File
-                    <input
-                      type="file"
-                      hidden
-                      accept=".pdf,application/pdf"
-                      ref={fileInputRef}
-                      onChange={onFileChange}
-                    />
-                  </Button>
-                </Tooltip>
-
-              </Grid>
-
-              {/* Optional HTML File */}
-              <Grid item>
-                <Tooltip title="Click to upload an optional HTML file for comparison">
-                  <Button variant="outlined" onClick={() => htmlFileInputRef.current.click()}>
-                    Upload HTML
-                    <input
-                      type="file"
-                      hidden
-                      accept=".html,text/html"
-                      ref={htmlFileInputRef}
-                      onChange={onHtmlFileChange}
-                    />
-                  </Button>
-                </Tooltip>
-
-
-
-
-              </Grid>
-
-              {/* Optional Contract Copy */}
-              <Grid item>
-                <Tooltip title="Click to upload an optional contract copy for comparison">
-                  <Button variant="outlined" onClick={() => contractFileInputRef.current.click()}>
-                    Contract Copy
-                    <input
-                      type="file"
-                      hidden
-                      accept=".pdf,application/pdf,.doc,.docx"
-                      ref={contractFileInputRef}
-                      onChange={onContractFileChange}
-                    />
-                  </Button>
-                </Tooltip>
-                {contractFile && (
-                  <Button
-                    variant="contained"
-                    onClick={() => setIsContractCompareOpen(true)}
-                    sx={{ ml: 1 }}
+            <Grid item xs={12} md={8}>
+              <Stack spacing={2}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={700}
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
                   >
-                    Review Contract
-                  </Button>
-                )}
-
-
-              </Grid>
-
-              <Grid item>
-                <Tooltip title="Click to upload an optional engagement letter for comparison">
-                  <Button variant="outlined" onClick={() => engagementLetterFileInputRef.current.click()}>
-                    Engagement Letter
-                    <input
-                      type="file"
-                      hidden
-                      accept=".pdf,application/pdf,.doc,.docx"
-                      ref={engagementLetterFileInputRef}
-                      onChange={onEngagementLetterFileChange}
-                    />
-                  </Button>
-                </Tooltip>
-              </Grid>
-
-              {/* Form Type Dropdown */}
-              <Grid item sx={{ minWidth: 200 }}>
-                <Autocomplete
-                  id="form-type-autocomplete"
-                  options={formTypes}
-                  value={selectedFormType}
-                  onChange={(event, newValue) => {
-                    if (newValue) setSelectedFormType(newValue);
-                  }}
-                  disableClearable
-                  size="small"
-                  fullWidth
-                  renderInput={(params) => <TextField {...params} label="Form Type" />}
-                />
-              </Grid>
-
-              <Grid item>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={handleGeneratePdf}
-                  disabled={Object.keys(data).length === 0}
-                >
-                  {isGeneratingPdf ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    "Generate PDF"
+                    <CloudUploadIcon fontSize="small" color="primary" />
+                    Upload Documents
+                  </Typography>
+                  {(selectedFile || htmlFile || contractFile || engagementLetterFile) && (
+                    <Button size="small" color="error" onClick={() => setIsClearDialogOpen(true)} startIcon={<DeleteForeverIcon />}>
+                      Clear All
+                    </Button>
                   )}
-                </Button>
-              </Grid>
-              {/* Generate Error Log Button */}
-              <Grid item>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  //     onClick={handleGenerateErrorLog}
-                  //     disabled={Object.keys(data).length === 0}
-                  //   >
-                  //     Generate Error Log
-                  //   </Button>
-                  // </Grid>
-                  // <Grid item>
-                  //   <Button
-                  //     variant="outlined"
-                  //     color="warning"
-                  onClick={handleGenerateValidationLog}
-                  disabled={Object.keys(data).length === 0}
+                </Stack>
+
+                {/* Responsive Upload Grid */}
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 1.5,
+                    gridTemplateColumns: {
+                      xs: 'repeat(3, 1fr)',  // mobile
+                      sm: 'repeat(6, 1fr)'   // tablet & desktop
+                    }
+                  }}
                 >
-                  Generate Validation Log
-                </Button>
-              </Grid>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleSaveToDB}
-                  disabled={Object.keys(data).length === 0 || loading}
-                >
-                  Save to DB
-                </Button>
+                  {[
+                    {
+                      label: 'PDF',
+                      icon: <PictureAsPdfIcon fontSize="medium" />,
+                      file: selectedFile,
+                      onClick: () => fileInputRef.current.click(),
+                      inputRef: fileInputRef,
+                      accept: '.pdf',
+                      onChange: onFileChange
+                    },
+                    {
+                      label: 'HTML',
+                      icon: <DescriptionIcon fontSize="medium" />,
+                      file: htmlFile,
+                      onClick: () => htmlFileInputRef.current.click(),
+                      inputRef: htmlFileInputRef,
+                      accept: '.html',
+                      onChange: onHtmlFileChange
+                    },
+                    {
+                      label: 'Contract',
+                      icon: <AssignmentIcon fontSize="medium" />,
+                      file: contractFile,
+                      onClick: () => contractFileInputRef.current.click(),
+                      inputRef: contractFileInputRef,
+                      accept: '.pdf,.doc,.docx',
+                      onChange: onContractFileChange
+                    },
+                    {
+                      label: 'Letter',
+                      icon: <AssignmentIcon fontSize="medium" />,
+                      file: engagementLetterFile,
+                      onClick: () => engagementLetterFileInputRef.current.click(),
+                      inputRef: engagementLetterFileInputRef,
+                      accept: '.pdf,.doc,.docx',
+                      onChange: onEngagementLetterFileChange
+                    }
+                  ].map((item, index) => (
+                    <Paper
+                      key={index}
+                      variant="outlined"
+                      onClick={item.onClick}
+                      sx={{
+                        p: 1.25,
+                        height: { xs: 40, sm: 60 },
+                        cursor: 'pointer',
+                        borderRadius: 2,
+                        textAlign: 'center',
+                        borderStyle: item.file ? 'solid' : 'dashed',
+                        borderColor: item.file ? 'success.main' : 'divider',
+                        bgcolor: item.file ? 'success.lighter' : 'background.default',
+                        transition: 'all .2s',
+                        '&:hover': { boxShadow: 2 }
+                      }}
+                    >
+                      <Stack
+                        spacing={0.5}
+                        alignItems="center"
+                        justifyContent="center"
+                        height="100%"
+                      >
+
+
+                        {/* Label hidden on mobile */}
+                        <Typography
+                          fontSize={12}
+                          fontWeight={600}
+                          gap={1}
+                          display={{ xs: 'none', sm: 'block' }}
+                        >{item.icon}
+                          {item.label}
+                        </Typography>
+
+                        {item.file && (
+                          <Typography fontSize={10} color="success.main">
+                            ✓
+                          </Typography>
+                        )}
+                      </Stack>
+
+                      <input type="file" hidden ref={item.inputRef} accept={item.accept} onChange={item.onChange} />
+                    </Paper>
+                  ))}
+                </Box>
+
+                {/* FORM TYPE (already responsive) */}
+                <Autocomplete
+                  size="small"
+                  options={formTypes}
+                  marginBottom={20}
+                  value={selectedFormType}
+                  onChange={(e, v) => v && setSelectedFormType(v)}
+                  disableClearable
+                  renderInput={(params) => (
+                    <TextField {...params} label="Form Type" />
+                  )}
+                />
+              </Stack>
+
+              {/* RIGHT: ACTIONS */}
+              <Grid
+                item
+                xs={12}
+                md={4}
+                sx={{
+                  pl: { md: 3 },
+                  borderLeft: { md: '1px solid' },
+                  borderColor: 'divider',
+                  position: { xs: 'sticky', md: 'static' },
+                  bottom: { xs: 0, md: 'auto' },
+                  bgcolor: { xs: 'background.paper', md: 'transparent' },
+                  zIndex: 10,
+                  py: { xs: 1, md: 0 }
+                }}
+              >
+                <Stack spacing={1.5} width="100%">
+                  {/* Title hidden on mobile */}
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={700}
+                    display={{ xs: 'none', md: 'flex' }}
+                    alignItems="center"
+                    gap={1}
+                    mt={10}
+                  >
+                    <AssessmentIcon fontSize="small" color="primary" />
+                    Actions
+                  </Typography>
+
+                  {/* Responsive Action Buttons */}
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gap: 1,
+                      gridTemplateColumns: {
+                        xs: 'repeat(4, 1fr)',   // mobile: icon-only bar
+                        sm: 'repeat(4, 1fr)',   // tablet: one line
+                        md: 'repeat(4, 1fr)'    // desktop: one line
+                      }
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={handleGeneratePdf}
+                      disabled={!Object.keys(data).length}
+                      startIcon={
+                        isGeneratingPdf
+                          ? <CircularProgress size={14} color="inherit" />
+                          : <PictureAsPdfIcon fontSize="small" />
+                      }
+                    >
+                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                        {isGeneratingPdf ? 'Generating' : 'PDF'}
+                      </Box>
+                    </Button>
+
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="info"
+                      onClick={handleExportJSON}
+                      disabled={!Object.keys(data).length}
+                      startIcon={<FileDownloadIcon fontSize="small" />}
+                    >
+                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                        JSON
+                      </Box>
+                    </Button>
+
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="warning"
+                      onClick={handleGenerateValidationLog}
+                      disabled={!Object.keys(data).length}
+                      startIcon={<AssessmentIcon fontSize="small" />}
+                    >
+                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                        Log
+                      </Box>
+                    </Button>
+
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      onClick={handleSaveToDB}
+                      disabled={!Object.keys(data).length || loading}
+                      startIcon={<SaveIcon fontSize="small" />}
+                    >
+                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                        Save
+                      </Box>
+                    </Button>
+                  </Box>
+                </Stack>
               </Grid>
             </Grid>
           </Paper>
-
-          <Paper elevation={2} sx={{ p: 5, position: 'sticky', top: 0, zIndex: 1100, height: 'fit-content', backgroundColor: activeTheme.palette.background.paper }}>
-            {selectedFile &&
-              (
-                <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
-
-                  {/* FILE NAME */}
-                  <Typography variant="body2" noWrap>
-                    Selected File: <strong>{selectedFile.name}</strong>
+          <Paper elevation={3} sx={{ p: 2, position: 'sticky', top: 0, zIndex: 1100, mb: 3, borderRadius: 0, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: activeTheme.palette.background.paper, transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+            {selectedFile ? (
+              <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap" justifyContent="space-between">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="subtitle1" noWrap>
+                    File: <strong>{selectedFile.name}</strong>
                   </Typography>
+                  <Tooltip title="Preview">
+                    <IconButton size="small" onClick={() => handlePreviewPdf(selectedFile)}><VisibilityTwoToneIcon className="animated-eye" color="primary" /></IconButton>
+                  </Tooltip>
+                </Box>
 
-                  {/* LOADING AREA */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                   {loading && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <CircularProgress size={24} />
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        Elapsed: {Math.floor(timer / 60)}m {timer % 60}s
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={20} />
+                      <Typography variant="body2">
+                        {Math.floor(timer / 60)}m {timer % 60}s
                       </Typography>
                       <LinearProgress
                         variant="determinate"
                         value={extractionProgress}
-                        sx={{ width: '100px' }}
+                        sx={{ width: '80px' }}
                       />
                     </Box>
                   )}
 
-                  {/* TOTAL TIME TIMER */}
-                  <Tooltip title={isTimerRunning
-                    // ? "Click to pause timer" : "Click to start timer"
-                  }>
+                  <Tooltip sx={{ ml: 8, m: 'auto' }} title={isTimerRunning ? "Timer Running" : "Timer Paused"}>
                     <Typography
                       variant="body2"
-                      sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer' }}
-                      onClick={handleTimerToggle}
-                    >
-                      Total Time: {Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:
+                      sx={{ fontWeight: 'bold', cursor: 'pointer', marginRight: 40, color: isTimerRunning ? 'text.primary' : 'text.secondary' }}
+                      onClick={handleTimerToggle}>
+                      Total: {Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:
                       {Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:
                       {(fileUploadTimer % 60).toString().padStart(2, '0')}
                     </Typography>
                   </Tooltip>
 
-                  {/* LAST EXTRACTION */}
                   {!loading && lastExtractionTime && (
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      Last extraction: {lastExtractionTime >= 60 ? `${Math.floor(lastExtractionTime / 60)}m ` : ''}
+                    <Typography variant="body2" color="success.main"
+                      sx={{ marginRight: 40 }}>
+                      Last: {lastExtractionTime >= 60 ? `${Math.floor(lastExtractionTime / 60)}m ` : ''}
                       {`${(lastExtractionTime % 60).toFixed(1)}s`}
                     </Typography>
                   )}
+                </Box>
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="text.secondary" align="center">No file selected</Typography>
+            )}
 
+            {(htmlFile || contractFile || engagementLetterFile) && (
+              <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
+                  {htmlFile && (
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Typography variant="caption" sx={{ fontWeight: 'bold' }}>HTML:</Typography>
+                      <Typography variant="caption">{htmlFile.name}</Typography>
+                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsComparisonDialogOpen(true)} disabled={isHtmlReviewLoading || loading}>
+                        {isHtmlReviewLoading ? (
+                          <>
+                            <CircularProgress size={14} sx={{ mr: 0.5 }} />
+                            {Math.floor(htmlExtractionTimer / 60)}m {htmlExtractionTimer % 60}s
+                          </>
+                        ) : <GetAppIcon fontSize="small" />}
+                      </Button>
+                    </Stack>
+                  )}
+                  {contractFile && (
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Contract:</Typography>
+                      <Typography variant="caption">{contractFile.name}</Typography>
+                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsContractCompareOpen(true)}><GetAppIcon fontSize="small" /></Button>
+                      <IconButton size="small" onClick={() => handlePreviewPdf(contractFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
+                    </Stack>
+                  )}
+                  {engagementLetterFile && (
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Engagement:</Typography>
+                      <Typography variant="caption">{engagementLetterFile.name}</Typography>
+                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsEngagementLetterDialogOpen(true)}><GetAppIcon fontSize="small" /></Button>
+                      <IconButton size="small" onClick={() => handlePreviewPdf(engagementLetterFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
+                    </Stack>
+                  )}
                 </Stack>
-              )
-            }
-            {htmlFile && (
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="caption">HTML File: {htmlFile.name}</Typography>
-                <Button size="small" variant="text" onClick={() => setIsComparisonDialogOpen(true)} disabled={isHtmlReviewLoading || loading}>
-                  {isHtmlReviewLoading ? (
-                    <>
-                      <CircularProgress size={16} sx={{ mr: 1 }} />
-                      <Typography variant="caption" sx={{ mr: 1 }}>{Math.floor(htmlExtractionTimer / 60)}m {htmlExtractionTimer % 60}s</Typography>
-                    </>
-                  ) : loading && isHtmlReviewLoading ? (
-                    <CircularProgress size={16} sx={{ mr: 1 }} />
-                  ) : null}
-                  HTML Review
-                </Button>
-              </Stack>
+              </Box>
             )}
-            {contractFile && (
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="caption">Contract Copy: {contractFile.name}</Typography>
-                <Button size="small" variant="text" onClick={() => setIsContractCompareOpen(true)}>Contract Review</Button>
-              </Stack>
-            )}
-
-            {engagementLetterFile && (
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="caption">Engagement Letter: {engagementLetterFile.name}</Typography>
-                {engagementLetterFile && (
-                  <Button
-                    variant="text"
-                    onClick={() => setIsEngagementLetterDialogOpen(true)}
-                    sx={{ ml: 1 }}
+          </Paper>
+          <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: activeTheme.palette.background.paper, borderRadius: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: (!isValidationSectionMinimized && selectedFile) ? 2 : 0,
+                pb: (!isValidationSectionMinimized && selectedFile) ? 1 : 0,
+                borderBottom: (!isValidationSectionMinimized && selectedFile) ? '1px solid' : 'none',
+                borderColor: 'divider',
+                cursor: 'pointer'
+              }}
+              onClick={() => setIsValidationSectionMinimized(!isValidationSectionMinimized)}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <FactCheckIcon color="primary" sx={{ mr: 1 }} />
+                <Typography variant="h6" fontWeight="bold" color="text.primary">
+                  Validation Checks
+                </Typography>
+              </Box>
+              <IconButton size="small">
+                {isValidationSectionMinimized ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+              </IconButton>
+            </Box>
+            {!isValidationSectionMinimized && selectedFile && (
+              <Stack spacing={2}>
+                {data['From Type'] && (
+                  <Alert
+                    severity="warning"
+                    icon={<WarningIcon fontSize="inherit" />}
+                    sx={{ alignItems: 'center', '& .MuiAlert-message': { width: '100%' } }}
                   >
-                    Engagement Letter Review
-                  </Button>
+                    <Stack direction="row" alignItems="center" spacing={2} width="100%">
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        Form Type Mismatch:
+                      </Typography>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <EditableField
+                          fieldPath={['From Type']}
+                          value={data['From Type']}
+                          onDataChange={handleDataChange}
+                          editingField={editingField}
+                          setEditingField={setEditingField}
+                          isEditable={isEditable}
+                          allData={data}
+                        />
+                      </Box>
+                    </Stack>
+                  </Alert>
                 )}
 
-
-              </Stack>)}
-
-          </Paper>
-
-          <Paper elevation={2} sx={{ p: 5, top: 0, zIndex: 1100, height: 'fit-content', backgroundColor: activeTheme.palette.background.paper }} >
-
-            <Grid item xs={12} md={8}>
-              {selectedFile && (
-                <Stack spacing={1}>
-                  {data['From Type'] && (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        mt: 0.5,
-                        width: '100%',
-                        p: 1,
-                        borderRadius: 1,
-                        backgroundColor: 'warning.light',
-                        border: '1px solid',
-                        borderColor: 'warning.main',
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'warning.dark' }}>
-                        Please select the correct form type:
-                      </Typography>
-
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 'bold' }}
-                      >
-                        Form Type:
-                      </Typography>
-
-                      <EditableField
-                        fieldPath={['From Type']}
-                        value={data['From Type']}
-                        onDataChange={handleDataChange}
-                        editingField={editingField}
-                        setEditingField={setEditingField}
-                        isEditable={isEditable}
-                        allData={data}
-                      />
-                      <WarningIcon color="warning" sx={{ marginLeft: '-20px' }} />
-                    </Box>
-
+                <Grid container spacing={2}>
+                  {data['FHA Case No.'] && (
+                    <Grid item xs={12} sm={6} md={4}>
+                      <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
+                        <Box sx={{ overflow: 'hidden' }}>
+                          <Typography variant="caption" color="secondary.main" fontWeight="bold" display="block" noWrap>FHA Case #</Typography>
+                          <EditableField fieldPath={['FHA Case No.']} value={data['FHA Case No.'] || ''} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                        </Box>
+                        <Tooltip title="Check FHA Requirements">
+                          <IconButton onClick={handleFhaCheck} size="small" color="info">
+                            <Info fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Paper>
+                    </Grid>
                   )}
-                  <Paper variant="outlined" sx={{ p: 1.5, mt: 1, bgcolor: 'background.default' }}>
-                    <Stack spacing={1}>
-                      {data['FHA Case No.'] && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
-                            FHA Case #: {data['FHA Case No.']}
-                          </Typography>
-                          <Tooltip title="Check FHA Requirements">
-                            <IconButton onClick={handleFhaCheck} size="small" sx={{ ml: 0.5 }}>
-                              <Info fontSize="small" color="info" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      )}
-                      {data['ADU File Check'] && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
-                            ADU File Check: {data['ADU File Check']}
-                          </Typography>
-                          <Tooltip title="Check 'ADU  Requirements">
-                            <IconButton onClick={handleADUCheck} size="small" sx={{ ml: 0.5 }}>
-                              <Info fontSize="small" color="info" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      )}
-                      {data['ANSI'] && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold', mr: 1, flexShrink: 0 }}>
-                            ANSI:
-                          </Typography>
-                          <EditableField fieldPath={['ANSI']} value={data['ANSI']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                        </Box>
-                      )}
-                      {data['Exposure comment'] && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', mr: 1 }}>
-                            Exposure Comment:
-                          </Typography>
-                          <EditableField fieldPath={['Exposure comment']} value={data['Exposure comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                        </Box>
-                      )}
-                      {data['Prior service comment'] && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', mr: 1 }}>
-                            Prior Service Comment:
-                          </Typography>
-                          <EditableField fieldPath={['Prior service comment']} value={data['Prior service comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                        </Box>
-                      )}
-                      {isUnpaidOkLender && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                            Unpaid OK can proceed with review
-                          </Typography>
-                        </Box>
-                      )}
 
-                    </Stack>
-                  </Paper>
+                  {data['ADU File Check'] && (
+                    <Grid item xs={12} sm={6} md={4}>
+                      <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
+                        <Box sx={{ overflow: 'hidden' }}>
+                          <Typography variant="caption" color="secondary.main" fontWeight="bold" display="block" noWrap>ADU File Check</Typography>
+                          <EditableField fieldPath={['ADU File Check']} value={data['ADU File Check']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                        </Box>
+                        <Tooltip title="Check ADU Requirements">
+                          <IconButton onClick={handleADUCheck} size="small" color="info">
+                            <Info fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Paper>
+                    </Grid>
+                  )}
 
-                </Stack>
+                  {data['ANSI'] && (
+                    <Grid item xs={12} sm={6} md={4}>
+                      <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>ANSI</Typography>
+                        <EditableField fieldPath={['ANSI']} value={data['ANSI']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {data['Exposure comment'] && (
+                    <Grid item xs={12} sm={6} md={6}>
+                      <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>Exposure Comment</Typography>
+                        <EditableField fieldPath={['Exposure comment']} value={data['Exposure comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {data['Prior service comment'] && (
+                    <Grid item xs={12} sm={6} md={6}>
+                      <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>Prior Service Comment</Typography>
+                        <EditableField fieldPath={['Prior service comment']} value={data['Prior service comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                      </Paper>
+                    </Grid>
+                  )}
+                </Grid>
+
+                {isUnpaidOkLender && (
+                  <Alert severity="success" variant="standard" sx={{ fontWeight: 'bold' }}>
+                    Unpaid OK can proceed with review
+                  </Alert>
+                )}
+                {!isUnpaidOkLender && (
+                  <Alert severity="warning" variant="standard" sx={{ fontWeight: 'bold' }}>
+                    Unpaid OK cannot proceed with review, please check with lender
+                  </Alert>
+                )}
+
+                {(!data['FHA Case No.'] || !data['ANSI'] || !data['Exposure comment'] || !data['Prior service comment'] || !isUnpaidOkLender) && (
+                  <Alert severity="error" variant="filled" icon={<ErrorOutlineIcon fontSize="inherit" />} sx={{ fontWeight: 'bold' }}>
+                    Plz check the report
+                  </Alert>
+                )}
+              </Stack>
+            )}
+          </Paper>
+          {htmlFile && (
+            <Paper
+              elevation={3}
+              sx={{
+                p: 2,
+                mb: 3,
+                borderRadius: 2,
+                backgroundColor: activeTheme.palette.background.paper,
+                border: '1px solid',
+                borderColor: 'divider',
+                overflow: 'hidden'
+              }}
+              id="html-data-section"
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, pb: 1, borderBottom: '1px solid', borderColor: 'divider', cursor: 'pointer' }} onClick={() => setIsHtmlDataMinimized(!isHtmlDataMinimized)}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <DescriptionIcon color="primary" sx={{ mr: 1 }} />
+                  <Typography variant="h6" fontWeight="bold" color="text.primary">
+                    HTML Data Analysis
+                  </Typography>
+                </Box>
+                <IconButton size="small" onClick={() => setIsHtmlDataMinimized(!isHtmlDataMinimized)}>
+                  {isHtmlDataMinimized ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+                </IconButton>
+              </Box>
+
+              {!isHtmlDataMinimized && (
+                <Box>
+                  {comparisonData?.comparison_results ? (
+                    <Box>
+                      <Alert severity="info" sx={{ mb: 2 }} icon={<CompareArrowsIcon fontSize="inherit" />}>
+                        Comparison Results
+                      </Alert>
+                      <ComparisonResultTable result={comparisonData.comparison_results} />
+                    </Box>
+                  ) : (
+                    <Box>
+                      {Object.keys(comparisonData).length > 0 && (
+                        <GridInfoCard
+                          id="html-data-info"
+                          title="Extracted HTML Data"
+                          fields={Object.keys(comparisonData)}
+                          data={comparisonData}
+                          cardClass="bg-primary text-white"
+                          onDataChange={(field, value) => handleComparisonDataChange(field[0], value)}
+                          editingField={editingField}
+                          setEditingField={setEditingField}
+                          isEditable={true}
+                          allData={data}
+                          manualValidations={manualValidations}
+                          handleManualValidation={handleManualValidation}
+                        />
+                      )}
+                    </Box>
+                  )}
+                </Box>
               )}
-            </Grid>
-          </Paper>
-          <Paper
-            elevation={2}
-            sx={{
-              margin: "0 auto",
-              padding: "2px",
-              fontSize: "0.85rem",
-            }}
-          >
-            {htmlFile && comparisonData?.comparison_results && (
-              <div
-                id="html-data-section"
-                className="card shadow"
-                style={{ fontSize: "0.85rem" }}
-              >
-                <div className="card-header bg-secondary text-white py-1">
-                  <strong style={{ fontSize: "0.9rem" }}>Comparison Result</strong>
-                </div>
-
-                <div className="card-body p-2">
-                  <ComparisonResultTable
-                    result={comparisonData.comparison_results || []}
-                  />
-                </div>
-              </div>
-            )}
-
-            {htmlFile && !comparisonData?.comparison_results && (
-              <div
-                id="html-data-section"
-                className="card shadow mb-3"
-                style={{ fontSize: "0.85rem" }}
-              >
-                <GridInfoCard
-                  id="html-data-section"
-                  title="HTML Data"
-                  fields={Object.keys(comparisonData)}
-                  data={comparisonData}
-                  cardClass="bg-secondary"
-                  onDataChange={(field, value) =>
-                    handleComparisonDataChange(field[0], value)
-                  }
-                  editingField={editingField}
-                  setEditingField={setEditingField}
-                  isEditable={true}
-                  allData={data}
-                  manualValidations={manualValidations}
-                  handleManualValidation={handleManualValidation}
-                />
-              </div>
-            )}
-          </Paper>
+            </Paper>
+          )}
+            </>
+          )}
 
 
           <ComparisonDialog
@@ -4334,6 +4657,35 @@ function Subject() {
 
           {renderForm()}
 
+          {selectedFormType !== '1004D' && (
+            <>
+          <div id="state-requirement-check" className="mb-4">
+            <StateRequirementCheck
+              onPromptSubmit={handleStateRequirementCheck}
+              loading={stateReqLoading}
+              response={stateReqResponse}
+              error={stateReqError}
+            />
+          </div>
+
+          <div id="client-requirement-check" className="mb-4">
+            <ClientRequirementCheck
+              onPromptSubmit={handleClientRequirementCheck}
+              loading={clientReqLoading}
+              response={clientReqResponse}
+              error={clientReqError}
+            />
+          </div>
+
+          <div id="escalation-check" className="mb-4">
+            <EscalationCheck
+              onPromptSubmit={handleEscalationCheck}
+              loading={escalationLoading}
+              response={escalationResponse}
+              error={escalationError}
+            />
+          </div>
+
           <PromptAnalysis
             onPromptSubmit={handlePromptAnalysis}
             loading={promptAnalysisLoading}
@@ -4353,7 +4705,10 @@ function Subject() {
               </pre>
             </div>
           )}
+            </>
+          )}
 
+          <Footer />
 
         </div>
         {modalContent && (
@@ -4378,30 +4733,17 @@ function Subject() {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setIsCheckModalOpen(false)}>Close</Button>
-              {modalContent.title === 'State Requirement Check' && (
-                <Button onClick={() => handleStateRequirementCheck(true)} variant="contained" disabled={stateReqLoading}>
-                  {stateReqLoading ? <CircularProgress size={24} /> : 'Reload'}
-                </Button>
-              )}
-              {modalContent.title === 'Client Requirement Check' && (
-                <Button onClick={() => handleClientRequirementCheck(true)} variant="contained" disabled={clientReqLoading}>
-                  {clientReqLoading ? <CircularProgress size={24} /> : 'Reload'}
-                </Button>
-              )}
-              {modalContent.title === 'Escalation Check' && (
-                <Button onClick={() => handleEscalationCheck(true)} variant="contained" disabled={escalationLoading}>
-                  {escalationLoading ? <CircularProgress size={24} /> : 'Reload'}
-                </Button>
-              )}
             </DialogActions>
           </Dialog>
         )}
       </div>
-      {showScrollTop && (
-        <Fab color="primary" size="small" onClick={scrollTop} sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1200 }}>
-          <KeyboardArrowUpIcon />
-        </Fab>
-      )}
+      {
+        showScrollTop && (
+          <Fab color="primary" size="small" onClick={scrollTop} sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1200 }}>
+            <KeyboardArrowUpIcon />
+          </Fab>
+        )
+      }
       <NotepadDialog
         open={isNotepadOpen}
         onClose={() => setIsNotepadOpen(false)}
@@ -4443,7 +4785,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4488,8 +4829,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4504,8 +4843,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
-
         }}
       />
       <RevisionLanguageDialog
@@ -4520,7 +4857,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4535,7 +4871,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4550,7 +4885,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4565,7 +4899,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
           setAddendumRevisionLangDialogOpen(false);
         }}
       />
@@ -4581,7 +4914,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4596,7 +4928,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4615,7 +4946,6 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
         }}
       />
       <RevisionLanguageDialog
@@ -4824,7 +5154,63 @@ function Subject() {
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
         }}
       />
-    </ThemeProvider >
+      {pdfPreviewOpen && (
+        <Paper
+          elevation={10}
+          sx={{
+            position: 'fixed',
+            left: pdfPosition.x,
+            top: pdfPosition.y,
+            width: isPdfMinimized ? 300 : 600,
+            height: isPdfMinimized ? 48 : 800,
+            zIndex: 1300,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            resize: isPdfMinimized ? 'none' : 'both',
+          }}
+        >
+          <Box
+            onMouseDown={handleMouseDown}
+            sx={{
+              p: 1,
+              bgcolor: 'primary.main',
+              color: 'primary.contrastText',
+              cursor: 'move',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              userSelect: 'none'
+            }}
+          >
+            <Typography variant="subtitle2" noWrap sx={{ maxWidth: '200px' }}>PDF Preview</Typography>
+            <Box>
+              <IconButton size="small" onClick={() => setIsPdfMinimized(!isPdfMinimized)} sx={{ color: 'inherit' }}>
+                {isPdfMinimized ? <KeyboardArrowUpIcon /> : <RemoveIcon />}
+              </IconButton>
+              <IconButton size="small" onClick={() => { setPdfPreviewOpen(false); URL.revokeObjectURL(pdfPreviewUrl); }} sx={{ color: 'inherit' }}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Box>
+          {!isPdfMinimized && (
+            <Box sx={{ flexGrow: 1, bgcolor: 'grey.100', overflow: 'hidden' }}>
+              <iframe src={pdfPreviewUrl} width="100%" height="100%" style={{ border: 'none' }} title="PDF Preview" />
+            </Box>
+          )}
+        </Paper>
+      )}
+      <Dialog open={isClearDialogOpen} onClose={() => setIsClearDialogOpen(false)}>
+        <DialogTitle>Clear All Data?</DialogTitle>
+        <DialogContent>
+          <Typography>This will remove all uploaded files and extracted data. This action cannot be undone.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsClearDialogOpen(false)}>Cancel</Button>
+          <Button onClick={confirmClearFiles} color="error" variant="contained" autoFocus>Clear All</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
 export default Subject;

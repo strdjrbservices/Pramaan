@@ -12,6 +12,7 @@ import {
   TableHead,
   TableRow,
   Stack,
+  Tooltip,
 } from '@mui/material';
 
 export const ESCALATION_CHECK_PROMPT = `
@@ -87,16 +88,32 @@ const EscalationCheck = ({ onPromptSubmit, loading, response, error }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {details.length > 0 ? (
-                  details.map((item, index) => (
-                    <TableRow
-                      key={index}
-                      sx={{
-                        backgroundColor: item.status === 'Needs Escalation' ? 'error.light' : 'inherit',
-                      }}
-                    >
+              {details.length > 0 ? (details.map((item, index) => {
+                const isInvalid = item.status === 'Needs Escalation';
+                const statusStyle = isInvalid
+                  ? { backgroundColor: '#ff0000', color: '#ffffff', padding: '4px 8px', borderRadius: '4px', display: 'inline-block', cursor: 'pointer' }
+                  : { backgroundColor: '#91ff00ff', color: '#000000', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' };
+
+                let tooltipContent = '';
+                if (isInvalid) {
+                  if (typeof item.value_or_comment === 'object' && item.value_or_comment !== null) {
+                    tooltipContent = item.value_or_comment.value || JSON.stringify(item.value_or_comment);
+                  } else {
+                    tooltipContent = item.value_or_comment;
+                  }
+                }
+                return (
+                  <TableRow key={index}>
                       <TableCell>{item.requirement}</TableCell>
-                      <TableCell>{item.status}</TableCell>
+                    <TableCell>
+                      {isInvalid ? (
+                        <Tooltip title={tooltipContent} arrow>
+                          <span style={statusStyle}>{item.status}</span>
+                        </Tooltip>
+                      ) : (
+                        <span style={statusStyle}>{item.status}</span>
+                      )}
+                    </TableCell>
                       <TableCell>
                         {typeof item.value_or_comment === 'object' && item.value_or_comment !== null ? (
                           <>
@@ -114,8 +131,8 @@ const EscalationCheck = ({ onPromptSubmit, loading, response, error }) => {
                         )}
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
+                )
+              })) : (
                   <TableRow><TableCell colSpan={4} align="center">No escalation items found.</TableCell></TableRow>
                 )}
               </TableBody>

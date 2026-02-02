@@ -7,6 +7,7 @@ import {
     CheckCircleOutline as CheckCircleOutlineIcon, ErrorOutline as ErrorOutlineIcon
 } from '@mui/icons-material';
 import { EditableField } from './FormComponents';
+import { checkCondoCoopProjectsTableFields } from './form1073Validation';
 
 export const ComparableAddressConsistency = ({ data, comparableSales, extractionAttempted, onDataChange, editingField, setEditingField, isEditable, allData }) => {
     return (
@@ -221,7 +222,7 @@ export const CondoCoopProjectsTable = ({ id, title, data, onDataChange, editingF
                                         const isMissing = extractionAttempted && !value;
                                         return (
                                             <TableCell key={tf} align="center" style={isMissing ? { border: '2px solid red' } : {}}>
-                                                <EditableField fieldPath={['CONDO_COOP_PROJECTS', fieldName]} value={value} onDataChange={onDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} isMissing={isMissing} allData={allData} />
+                                                <EditableField fieldPath={['CONDO_COOP_PROJECTS', fieldName]} value={value} onDataChange={onDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} isMissing={isMissing} allData={allData} customValidation={checkCondoCoopProjectsTableFields} />
                                             </TableCell>
                                         );
                                     })}
