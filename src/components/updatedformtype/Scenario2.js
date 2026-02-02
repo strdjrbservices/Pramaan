@@ -22,8 +22,8 @@ import { GlobalStyles } from '@mui/system';
 import { lightTheme, darkTheme } from '../../theme';
 import Sidebar from '../Subject/Sidebar';
 import PremiumLogo from '../Subject/logo';
-import { GridInfoCard } from '../Subject/FormComponents';
-import { SalesComparisonSection } from '../Subject/tables';
+// import { GridInfoCard } from '../Subject/FormComponents';
+// import { SalesComparisonSection } from '../Subject/tables';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -132,7 +132,7 @@ const Scenario2 = () => {
   const [editingField, setEditingField] = useState(null);
   const [loadingSection, setLoadingSection] = useState(null);
   const [extractionTime, setExtractionTime] = useState(null);
-  const [fullExtractionTime, setFullExtractionTime] = useState(null);
+  // const [fullExtractionTime, setFullExtractionTime] = useState(null);
   const [fileSessionTimer, setFileSessionTimer] = useState(0);
   const fileSessionTimerRef = useRef(null);
   const [activeSection, setActiveSection] = useState('value-condition');
@@ -143,14 +143,14 @@ const Scenario2 = () => {
   const [showRawData, setShowRawData] = useState(false);
 
   const [selectedFormType, setSelectedFormType] = useState({ label: 'Scenario 2', id: 'Scenario2' });
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  // const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
-  const [htmlExtractionTimer, setHtmlExtractionTimer] = useState(0);
-  const [isHtmlReviewLoading, setIsHtmlReviewLoading] = useState(false);
+  // const [htmlExtractionTimer, setHtmlExtractionTimer] = useState(0);
+  // const [isHtmlReviewLoading, setIsHtmlReviewLoading] = useState(false);
   
-  const [isComparisonDialogOpen, setIsComparisonDialogOpen] = useState(false);
-  const [isContractCompareOpen, setIsContractCompareOpen] = useState(false);
-  const [isEngagementLetterDialogOpen, setIsEngagementLetterDialogOpen] = useState(false);
+  // const [isComparisonDialogOpen, setIsComparisonDialogOpen] = useState(false);
+  // const [isContractCompareOpen, setIsContractCompareOpen] = useState(false);
+  // const [isEngagementLetterDialogOpen, setIsEngagementLetterDialogOpen] = useState(false);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
   const [isPdfMinimized, setIsPdfMinimized] = useState(false);
