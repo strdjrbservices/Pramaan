@@ -77,7 +77,7 @@ const ContactUs = () => {
     if (validate()) {
       setLoading(true);
       try {
-        const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/contact/', {
+        const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/contact/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

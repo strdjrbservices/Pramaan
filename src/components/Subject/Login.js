@@ -41,7 +41,7 @@ const Login = ({ onLogin }) => {
 
     try {
       const response = await fetch(
-        'https://strdjrbservices1.pythonanywhere.com/api/token/',
+        'https://praman-strdjrbservices.pythonanywhere.com/api/token/',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

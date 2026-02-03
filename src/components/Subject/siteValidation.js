@@ -136,34 +136,51 @@ export const checkArea = (field, text) => {
     }
     return { isMatch: true };
 };
-
 export const checkYesNoWithComment = (field, text, data, fieldConfig) => {
-    if (field !== fieldConfig.name) return null;
+  if (field !== fieldConfig.name) return null;
 
-    const value = String(text || '').trim().toLowerCase();
-//   // Special handling for the adverse site conditions field
-//     if (field === "Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe") {
-//         if (value.includes('yes')) {
-//             return { isMatch: true };
-//         } else {
-//             return { isError: true, message: `The response for '${field}' must include 'Yes' if adverse conditions are present.` };
-//         }
-//     }
-    if (!value) {
-        return { isError: true, message: `'${field}' should not be blank.` };
-    }
+  const value = String(text || '').trim().toLowerCase();
 
-    if (value.startsWith(fieldConfig.unwantedValue)) {
-        const supplementalAddendum = String(data['SUPPLEMENTAL ADDENDUM'] || '').trim();
-        if (!supplementalAddendum) {
-            return { isError: true, message: `Comments are required in 'Supplemental Addendum' when '${field}' is '${fieldConfig.unwantedValue}'.` };
-        }
-    } else if (value !== fieldConfig.wantedValue) {
-        return { isError: true, message: `'${field}' should be '${fieldConfig.wantedValue}' or '${fieldConfig.unwantedValue}'.` };
+  if (!value) {
+    return {
+      isError: true,
+      message: `'${field}' should not be blank.`,
+    };
+  }
+
+  const wanted = fieldConfig.wantedValue.toLowerCase();     // allowed without comment
+  const unwanted = fieldConfig.unwantedValue.toLowerCase(); // requires comment
+
+  const isWanted = value === wanted || value.startsWith(`${wanted} `);
+  const isUnwanted = value.startsWith(unwanted);
+
+  // ✅ Wanted value → valid (no description needed)
+  if (isWanted) {
+    return { isMatch: true };
+  }
+
+  // ❌ Unwanted value → must have description
+  if (isUnwanted) {
+    const description = value.replace(unwanted, '').trim();
+
+    if (!description) {
+      return {
+        isError: true,
+        message: `'${field}' requires a description when answered '${unwanted}'.`,
+      };
     }
 
     return { isMatch: true };
+  }
+
+  // ❌ Invalid input
+  return {
+    isError: true,
+    message: `'${field}' should be '${wanted}' or '${unwanted}' with description.`,
+  };
 };
+
+
 
 export const checkUtilities = (field, text, data) => {
     const utilityFields = ["Electricity", "Gas", "Water", "Sanitary Sewer", "Street", "Alley"];

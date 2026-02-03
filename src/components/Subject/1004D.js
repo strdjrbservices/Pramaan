@@ -157,7 +157,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
             formData.append('old_pdf_file', oldPdfFile);
             formData.append('new_pdf_file', newPdfFile);
             formData.append('revision_request', promptText);
-            endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/compare-pdfs/';
+            endpoint = 'https://praman-strdjrbservices.pythonanywhere.com/api/compare-pdfs/';
         } else { // html-vs-pdf
             if (!htmlFile || !newPdfFile) {
                 setError('Please provide both the HTML and New PDF files.');
@@ -167,7 +167,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
             formData.append('html_file', htmlFile);
             formData.append('pdf_file', newPdfFile);
             formData.append('comment', promptText);
-            endpoint = 'https://strdjrbservices1.pythonanywhere.com/api/htmlpdf/';
+            endpoint = 'https://praman-strdjrbservices.pythonanywhere.com/api/htmlpdf/';
         }
 
         try {
@@ -216,7 +216,7 @@ For each item, provide a JSON object in a 'details' array. Each object must have
                 }
             };
 
-            const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
+            const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/save-report/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -78,6 +78,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     'Shape': [checkSiteSectionBlank],
     'View': [checkSiteSectionBlank],
     'Area': [checkArea],
+    
     'Are the utilities and off-site improvements typical for the market area? If No, describe': [(field, text, data) => checkYesNoWithComment(field, text, data, { name: 'Are the utilities and off-site improvements typical for the market area? If No, describe', wantedValue: 'yes', unwantedValue: 'no' })],
     'Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe': [(field, text, data) => checkYesNoWithComment(field, text, data, { name: 'Are there any adverse site conditions or external factors (easements, encroachments, environmental conditions, land uses, etc.)? If Yes, describe', wantedValue: 'no', unwantedValue: 'yes' })],
     "Electricity": [checkUtilities], "Gas": [checkUtilities], "Water": [checkUtilities], "Sanitary Sewer": [checkUtilities], "Street": [checkUtilities], "Alley": [checkUtilities],

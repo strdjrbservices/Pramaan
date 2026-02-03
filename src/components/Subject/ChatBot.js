@@ -37,7 +37,7 @@ const ChatBot = ({ open, onClose, file, formType }) => {
             formData.append('comment', userMessage.text);
 
             try {
-                const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+                const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
                     method: 'POST',
                     body: formData,
                 });

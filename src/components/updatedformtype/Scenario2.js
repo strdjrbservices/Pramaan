@@ -311,7 +311,7 @@ const Scenario2 = () => {
     }
 
     try {
-      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -497,7 +497,7 @@ const Scenario2 = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/save-report/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

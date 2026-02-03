@@ -1,4 +1,3 @@
-// c:\all in one\onlinedjrb\src\components\Subject\Footer.js
 import React from 'react';
 import { Box, Typography, Link, Stack } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';

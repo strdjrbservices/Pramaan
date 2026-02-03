@@ -125,7 +125,7 @@ const HomePage = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/get-reports/');
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/get-reports/');
       if (response.ok) {
         const data = await response.json();
         setReports(Array.isArray(data) ? data : []);

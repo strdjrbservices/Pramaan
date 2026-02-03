@@ -15,11 +15,19 @@ import {
   Alert,
   Chip,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Tooltip,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
 import PremiumLogo from './logo';
 
 const History = () => {
@@ -28,6 +36,9 @@ const History = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState(null);
   const [filters, setFilters] = useState({
     file_name: '',
     user_name: localStorage.getItem('username') || '',
@@ -37,27 +48,60 @@ const History = () => {
   });
 
   useEffect(() => {
+    setIsAdmin(localStorage.getItem('username') === 'admin');
     fetchReports();
   }, []);
 
   const fetchReports = async () => {
     try {
-      // Fetching from the backend API
-      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/get-reports/');
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/get-reports/');
       
       if (!response.ok) {
-        // Fallback error if endpoint is not yet implemented or fails
         throw new Error(`Failed to fetch reports (Status: ${response.status})`);
       }
       
       const data = await response.json();
-      // Ensure we are working with an array
+      // Assuming each report object from the API has a unique 'id'
       setReports(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching history:", err);
       setError('Could not load review history. Please ensure the backend supports this feature.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (report) => {
+    setReportToDelete(report);
+    setOpenDeleteConfirm(true);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setOpenDeleteConfirm(false);
+    setReportToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!reportToDelete) return;
+
+    try {
+      // This assumes your API has an endpoint like /api/delete-report/<id>/
+      // and that the report object has a unique 'id' property.
+      const response = await fetch(`https://praman-strdjrbservices.pythonanywhere.com/api/delete-report/${reportToDelete.id}/`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete report');
+      }
+
+      setReports(prevReports => prevReports.filter(report => report.id !== reportToDelete.id));
+      setError('');
+    } catch (err) {
+      console.error("Error deleting report:", err);
+      setError('Could not delete the report. Please try again.');
+    } finally {
+      handleCloseDeleteConfirm();
     }
   };
 
@@ -186,6 +230,7 @@ const History = () => {
                                 <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Date Processed</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Status</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Time Taken</TableCell>
+                                {isAdmin && <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Actions</TableCell>}
                             </TableRow>
                             <TableRow>
                                 <TableCell sx={{ p: 1 }}>
@@ -222,16 +267,31 @@ const History = () => {
                                 <TableCell sx={{ p: 1 }}>
                                     <TextField size="small" variant="standard" placeholder="Filter Time" fullWidth onChange={(e) => handleFilterChange('totalTimeTaken', e.target.value)} />
                                 </TableCell>
+                                {isAdmin && <TableCell sx={{ p: 1 }} />}
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {filteredReports.length === 0 && (
-                                <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3 }}>No matching records found</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={isAdmin ? 6 : 5} align="center" sx={{ py: 3 }}>No matching records found</TableCell></TableRow>
                             )}
-                            {filteredReports.map((report, index) => (
-                                <TableRow key={index} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                            {filteredReports.map((report) => (
+                                <TableRow key={report.id /* Assuming unique id from API */} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
-                                        {report.file_name || 'Unknown File'}
+                                        <Box
+                                            onClick={() => {
+                                                if (report.report_data) {
+                                                    navigate('/extractor', {
+                                                        state: {
+                                                            reportData: report.report_data,
+                                                            fileName: report.file_name
+                                                        }
+                                                    });
+                                                }
+                                            }}
+                                            sx={{ cursor: report.report_data ? 'pointer' : 'default', color: report.report_data ? 'primary.main' : 'inherit', '&:hover': { textDecoration: report.report_data ? 'underline' : 'none' } }}
+                                        >
+                                            {report.file_name || 'Unknown File'}
+                                        </Box>
                                     </TableCell>
                                     <TableCell>{report.user_name || 'Unknown'}</TableCell>
                                     <TableCell>
@@ -246,6 +306,15 @@ const History = () => {
                                         />
                                     </TableCell>
                                     <TableCell>{report.report_data?.totalTimeTaken || 'N/A'}</TableCell>
+                                    {isAdmin && (
+                                        <TableCell>
+                                            <Tooltip title="Delete Report">
+                                                <IconButton onClick={() => handleDeleteClick(report)} color="error" size="small">
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -254,6 +323,23 @@ const History = () => {
             )}
         </Paper>
       </Container>
+      <Dialog
+        open={openDeleteConfirm}
+        onClose={handleCloseDeleteConfirm}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the report for "{reportToDelete?.file_name}"? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteConfirm}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

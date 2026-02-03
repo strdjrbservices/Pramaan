@@ -95,6 +95,7 @@ import PremiumLogo from './logo';
 import { SUBJECT_REVISION_PROMPTS, CONTRACT_REVISION_PROMPTS, NEIGHBORHOOD_REVISION_PROMPTS, SITE_REVISION_PROMPTS, IMPROVEMENTS_REVISION_PROMPTS, SALES_GRID_REVISION_PROMPTS, RECONCILIATION_REVISION_PROMPTS, COST_APPROACH_REVISION_PROMPTS, CERTIFICATION_REVISION_PROMPTS, ADDENDUM_GENERAL_REVISION_PROMPTS, FORM_1007_REVISION_PROMPTS } from './revisionPrompts';
 import { useThemeContext } from '../../context/ThemeContext';
 import Footer from './Footer';
+import { useLocation } from 'react-router-dom';
 
 const TooltipStyles = () => (
   <GlobalStyles styles={{
@@ -141,7 +142,7 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
     if (htmlFile) formData.append('html_file', htmlFile);
 
     try {
-      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/compare/', { method: 'POST', body: formData });
+      const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/compare/', { method: 'POST', body: formData });
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(errorText || 'PDF-HTML comparison failed.');
@@ -167,6 +168,7 @@ const ComparisonDialog = ({ open, onClose, data, onDataChange, pdfFile, htmlFile
 function Subject() {
   const { themeMode, toggleTheme: handleThemeChange } = useThemeContext();
   const activeTheme = useTheme();
+  const location = useLocation();
   const [data, setData] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -278,6 +280,20 @@ function Subject() {
   const [pdfPosition, setPdfPosition] = useState({ x: 50, y: 50 });
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (location.state && location.state.reportData) {
+      const { reportData, fileName } = location.state;
+      setData(reportData);
+      if (fileName) {
+        setSelectedFile({ name: fileName });
+      }
+      if (reportData['From Type']) {
+        setSelectedFormType(reportData['From Type']);
+      }
+      setNotification({ open: true, message: 'Report data loaded from history.', severity: 'success' });
+    }
+  }, [location.state]);
 
   const handleMouseDown = (e) => {
     isDraggingRef.current = true;
@@ -594,7 +610,7 @@ function Subject() {
       }
     });
 
-  
+
     comparableRents.forEach(rentName => {
       if (allData[rentName]) {
         Object.keys(allData[rentName]).forEach(fieldKey => {
@@ -659,7 +675,7 @@ function Subject() {
 
           if (result && result.isError) {
             hasError = true;
-            break; 
+            break;
           }
         } catch (e) {
           hasError = true;
@@ -1024,7 +1040,7 @@ function Subject() {
     formData.append('contract_copy_file', contractFile);
 
     try {
-      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/compare-contract/', {
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/compare-contract/', {
         method: 'POST',
         body: formData,
       });
@@ -1059,7 +1075,7 @@ function Subject() {
     formData.append('engagement_letter_file', engagementLetterFile);
 
     try {
-      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/compare-engagement-letter/', {
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/compare-engagement-letter/', {
         method: 'POST',
         body: formData,
       });
@@ -1652,7 +1668,7 @@ function Subject() {
     { label: "Sale Price/GLA", valueKey: "Sale Price/Gross Liv. Area" },
     { label: "Data Source(s)", valueKey: "Data Source(s)" },
     { label: "Verification Source(s)", valueKey: "Verification Source(s)" },
-    { label: "Sale or Financing Concessions", valueKey: "Sale or Financing Concessions", adjustmentKey: "Sale or Financing Concessions Adjustment" },
+    { label: "Sales or Financing Concessions", valueKey: "Sales or Financing Concessions", adjustmentKey: "Sales or Financing Concessions Adjustment" },
     { label: "Date of Sale/Time", valueKey: "Date of Sale/Time", adjustmentKey: "Date of Sale/Time Adjustment" },
     { label: "Location", valueKey: "Location", adjustmentKey: "Location Adjustment" },
     { label: "Leasehold/Fee Simple", valueKey: "Leasehold/Fee Simple", adjustmentKey: "Leasehold/Fee Simple Adjustment" },
@@ -1722,27 +1738,27 @@ function Subject() {
   ];
 
   const comparableRents = [
-    "COMPARABLE No. 1",
-    "COMPARABLE No. 2",
-    "COMPARABLE No. 3",
-    "COMPARABLE No. 4",
-    "COMPARABLE No. 5",
-    "COMPARABLE No. 6",
-    "COMPARABLE No. 7",
-    "COMPARABLE No. 8",
-    "COMPARABLE No. 9",
+    "COMPARABLE RENT #1",
+    "COMPARABLE RENT #2",
+    "COMPARABLE RENT #3",
+    "COMPARABLE RENT #4",
+    "COMPARABLE RENT #5",
+    "COMPARABLE RENT #6",
+    "COMPARABLE RENT #7",
+    "COMPARABLE RENT #8",
+    "COMPARABLE RENT #9",
   ];
 
   const ComparableRentAdjustments = [
-    "COMPARABLE RENTAL NO. 1",
-    "COMPARABLE RENTAL NO. 2",
-    "COMPARABLE RENTAL NO. 3",
-    "COMPARABLE RENTAL NO. 4",
-    "COMPARABLE RENTAL NO. 5",
-    "COMPARABLE RENTAL NO. 6",
-    "COMPARABLE RENTAL NO. 7",
-    "COMPARABLE RENTAL NO. 8",
-    "COMPARABLE RENTAL NO. 9",
+    "COMPARABLE RENT # 1",
+    "COMPARABLE RENT # 2",
+    "COMPARABLE RENT # 3",
+    "COMPARABLE RENT # 4",
+    "COMPARABLE RENT # 5",
+    "COMPARABLE RENT # 6",
+    "COMPARABLE RENT # 7",
+    "COMPARABLE RENT # 8",
+    "COMPARABLE RENT # 9",
   ]
 
   const handleExportJSON = () => {
@@ -1822,7 +1838,7 @@ function Subject() {
       });
       setFileUploadTimer(0);
       setIsTimerRunning(true);
-      extractInitialSections(); 
+      extractInitialSections();
 
     }
   };
@@ -1878,7 +1894,7 @@ function Subject() {
           setExtractionProgress(prev => (prev < 40 ? prev + 5 : prev));
         }, 500);
 
-        const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+        const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
           method: 'POST', body: formData
         });
 
@@ -1990,7 +2006,7 @@ function Subject() {
     if (!validateInputs()) return;
 
     if (!category && !selectedFile) {
-      setNotification({ open: true, message: 'Please select a section from the sidebar to extract.', severity: 'info' }); 
+      setNotification({ open: true, message: 'Please select a section from the sidebar to extract.', severity: 'info' });
       return;
     }
 
@@ -2044,7 +2060,7 @@ function Subject() {
         formData.append('form_type', selectedFormType);
         formData.append('category', category);
 
-        const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', { method: 'POST', body: formData });
+        const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', { method: 'POST', body: formData });
 
         if (!res.ok) {
           throw new Error(`Failed to extract ${category}`);
@@ -2083,7 +2099,7 @@ function Subject() {
     formData.append('comment', prompt);
 
     try {
-      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2104,7 +2120,7 @@ function Subject() {
   };
 
   const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-    const timeout = 60000; 
+    const timeout = 60000;
     for (let i = 0; i < retries; i++) {
       try {
         const controller = new AbortController();
@@ -2114,14 +2130,14 @@ function Subject() {
         if (res.status < 500) {
           return res;
         }
-        
+
         console.warn(`Attempt ${i + 1}: Server error ${res.status}. Retrying in ${delay / 1000}s...`);
       } catch (error) {
         console.warn(`Attempt ${i + 1}: Network error. Retrying in ${delay / 1000}s...`, error);
       }
       if (i < retries - 1) {
         await new Promise(resolve => setTimeout(resolve));
-        delay *= 2; 
+        delay *= 2;
       }
     }
     throw new Error(`Failed to fetch from ${url} after ${retries} attempts.`);
@@ -2143,7 +2159,7 @@ function Subject() {
     formData.append('comment', STATE_REQUIREMENTS_PROMPT);
 
     try {
-      const res = await fetchWithRetry('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const res = await fetchWithRetry('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       }, 3, 1000);
@@ -2195,7 +2211,7 @@ function Subject() {
     formData.append('form_type', selectedFormType);
     formData.append('comment', UNPAID_OK_PROMPT);
     try {
-      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2242,7 +2258,7 @@ function Subject() {
     formData.append('comment', CLIENT_REQUIREMENT_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2297,7 +2313,7 @@ function Subject() {
     formData.append('comment', FHA_REQUIREMENTS_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2361,7 +2377,7 @@ function Subject() {
     formData.append('comment', ADU_REQUIREMENTS_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2407,7 +2423,7 @@ function Subject() {
     formData.append('comment', ESCALATION_CHECK_PROMPT);
 
     try {
-      const res = await fetch('https://strdjrbservices1.pythonanywhere.com/api/extract/', {
+      const res = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
         method: 'POST',
         body: formData,
       });
@@ -2730,7 +2746,7 @@ function Subject() {
           save_option: 'update'
         }
       };
-      const response = await fetch('https://strdjrbservices1.pythonanywhere.com/api/save-report/', {
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/save-report/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -4035,579 +4051,579 @@ function Subject() {
         <div className={`main-content container-fluid ${isSidebarOpen || isSidebarLocked ? 'sidebar-open' : ''}`}>
           {selectedFormType !== '1004D' && (
             <>
-          <Box
-            className="header-container"
-            elevation={0}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: { xs: 2, md: 3 },
-              my: 3,
-              py: 2,
-              px: 4,
-              borderRadius: 3,
-              background: `linear-gradient(135deg, ${activeTheme.palette.background.paper} 0%, ${activeTheme.palette.action.hover} 100%)`,
-              border: '1px solid',
-              borderColor: 'divider',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
-            }}>
-            <PremiumLogo size={70} fullScreen={false} />
-            <Box>
-              <Typography
-                variant="h3"
-                component="h1"
-                className="app-title"
+              <Box
+                className="header-container"
+                elevation={0}
                 sx={{
-                  fontFamily: 'BBH Sans Hegarty, sans-serif',
-                  fontWeight: 800,
-                  fontSize: { xs: '1.6rem', md: '2.4rem' },
-                  background: `linear-gradient(45deg, ${activeTheme.palette.primary.main}, ${activeTheme.palette.secondary?.main || activeTheme.palette.primary.dark})`,
-                  backgroundClip: 'text',
-                  textFillColor: 'transparent',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: -0.5
-                }}
-              >
-                FULL FILE REVIEW
-              </Typography>
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  color: 'text.secondary',
-                  letterSpacing: 3,
-                  fontSize: { xs: '0.6rem', md: '0.75rem' },
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  textAlign: 'right',
-                  opacity: 0.8
-                }}
-              >
-                Intelligent Analysis
-              </Typography>
-            </Box>
-          </Box>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 1.5,
-              // mb: 1,
-              borderRadius: 3,
-              bgcolor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            <Grid item xs={12} md={8}>
-              <Stack spacing={2}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={700}
-                    display="flex"
-                    alignItems="center"
-                    gap={1}
-                  >
-                    <CloudUploadIcon fontSize="small" color="primary" />
-                    Upload Documents
-                  </Typography>
-                  {(selectedFile || htmlFile || contractFile || engagementLetterFile) && (
-                    <Button size="small" color="error" onClick={() => setIsClearDialogOpen(true)} startIcon={<DeleteForeverIcon />}>
-                      Clear All
-                    </Button>
-                  )}
-                </Stack>
-
-                {/* Responsive Upload Grid */}
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gap: 1.5,
-                    gridTemplateColumns: {
-                      xs: 'repeat(3, 1fr)',  // mobile
-                      sm: 'repeat(6, 1fr)'   // tablet & desktop
-                    }
-                  }}
-                >
-                  {[
-                    {
-                      label: 'PDF',
-                      icon: <PictureAsPdfIcon fontSize="medium" />,
-                      file: selectedFile,
-                      onClick: () => fileInputRef.current.click(),
-                      inputRef: fileInputRef,
-                      accept: '.pdf',
-                      onChange: onFileChange
-                    },
-                    {
-                      label: 'HTML',
-                      icon: <DescriptionIcon fontSize="medium" />,
-                      file: htmlFile,
-                      onClick: () => htmlFileInputRef.current.click(),
-                      inputRef: htmlFileInputRef,
-                      accept: '.html',
-                      onChange: onHtmlFileChange
-                    },
-                    {
-                      label: 'Contract',
-                      icon: <AssignmentIcon fontSize="medium" />,
-                      file: contractFile,
-                      onClick: () => contractFileInputRef.current.click(),
-                      inputRef: contractFileInputRef,
-                      accept: '.pdf,.doc,.docx',
-                      onChange: onContractFileChange
-                    },
-                    {
-                      label: 'Letter',
-                      icon: <AssignmentIcon fontSize="medium" />,
-                      file: engagementLetterFile,
-                      onClick: () => engagementLetterFileInputRef.current.click(),
-                      inputRef: engagementLetterFileInputRef,
-                      accept: '.pdf,.doc,.docx',
-                      onChange: onEngagementLetterFileChange
-                    }
-                  ].map((item, index) => (
-                    <Paper
-                      key={index}
-                      variant="outlined"
-                      onClick={item.onClick}
-                      sx={{
-                        p: 1.25,
-                        height: { xs: 40, sm: 60 },
-                        cursor: 'pointer',
-                        borderRadius: 2,
-                        textAlign: 'center',
-                        borderStyle: item.file ? 'solid' : 'dashed',
-                        borderColor: item.file ? 'success.main' : 'divider',
-                        bgcolor: item.file ? 'success.lighter' : 'background.default',
-                        transition: 'all .2s',
-                        '&:hover': { boxShadow: 2 }
-                      }}
-                    >
-                      <Stack
-                        spacing={0.5}
-                        alignItems="center"
-                        justifyContent="center"
-                        height="100%"
-                      >
-
-
-                        {/* Label hidden on mobile */}
-                        <Typography
-                          fontSize={12}
-                          fontWeight={600}
-                          gap={1}
-                          display={{ xs: 'none', sm: 'block' }}
-                        >{item.icon}
-                          {item.label}
-                        </Typography>
-
-                        {item.file && (
-                          <Typography fontSize={10} color="success.main">
-                            ✓
-                          </Typography>
-                        )}
-                      </Stack>
-
-                      <input type="file" hidden ref={item.inputRef} accept={item.accept} onChange={item.onChange} />
-                    </Paper>
-                  ))}
-                </Box>
-
-                {/* FORM TYPE (already responsive) */}
-                <Autocomplete
-                  size="small"
-                  options={formTypes}
-                  marginBottom={20}
-                  value={selectedFormType}
-                  onChange={(e, v) => v && setSelectedFormType(v)}
-                  disableClearable
-                  renderInput={(params) => (
-                    <TextField {...params} label="Form Type" />
-                  )}
-                />
-              </Stack>
-
-              {/* RIGHT: ACTIONS */}
-              <Grid
-                item
-                xs={12}
-                md={4}
-                sx={{
-                  pl: { md: 3 },
-                  borderLeft: { md: '1px solid' },
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: { xs: 2, md: 3 },
+                  my: 3,
+                  py: 2,
+                  px: 4,
+                  borderRadius: 3,
+                  background: `linear-gradient(135deg, ${activeTheme.palette.background.paper} 0%, ${activeTheme.palette.action.hover} 100%)`,
+                  border: '1px solid',
                   borderColor: 'divider',
-                  position: { xs: 'sticky', md: 'static' },
-                  bottom: { xs: 0, md: 'auto' },
-                  bgcolor: { xs: 'background.paper', md: 'transparent' },
-                  zIndex: 10,
-                  py: { xs: 1, md: 0 }
-                }}
-              >
-                <Stack spacing={1.5} width="100%">
-                  {/* Title hidden on mobile */}
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
+                }}>
+                <PremiumLogo size={70} fullScreen={false} />
+                <Box>
                   <Typography
-                    variant="subtitle1"
-                    fontWeight={700}
-                    display={{ xs: 'none', md: 'flex' }}
-                    alignItems="center"
-                    gap={1}
-                    mt={10}
-                  >
-                    <AssessmentIcon fontSize="small" color="primary" />
-                    Actions
-                  </Typography>
-
-                  {/* Responsive Action Buttons */}
-                  <Box
+                    variant="h3"
+                    component="h1"
+                    className="app-title"
                     sx={{
-                      display: 'grid',
-                      gap: 1,
-                      gridTemplateColumns: {
-                        xs: 'repeat(4, 1fr)',   // mobile: icon-only bar
-                        sm: 'repeat(4, 1fr)',   // tablet: one line
-                        md: 'repeat(4, 1fr)'    // desktop: one line
-                      }
+                      fontFamily: 'BBH Sans Hegarty, sans-serif',
+                      fontWeight: 800,
+                      fontSize: { xs: '1.6rem', md: '2.4rem' },
+                      background: `linear-gradient(45deg, ${activeTheme.palette.primary.main}, ${activeTheme.palette.secondary?.main || activeTheme.palette.primary.dark})`,
+                      backgroundClip: 'text',
+                      textFillColor: 'transparent',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      mb: -0.5
                     }}
                   >
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={handleGeneratePdf}
-                      disabled={!Object.keys(data).length}
-                      startIcon={
-                        isGeneratingPdf
-                          ? <CircularProgress size={14} color="inherit" />
-                          : <PictureAsPdfIcon fontSize="small" />
-                      }
-                    >
-                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                        {isGeneratingPdf ? 'Generating' : 'PDF'}
-                      </Box>
-                    </Button>
-
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="info"
-                      onClick={handleExportJSON}
-                      disabled={!Object.keys(data).length}
-                      startIcon={<FileDownloadIcon fontSize="small" />}
-                    >
-                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                        JSON
-                      </Box>
-                    </Button>
-
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="warning"
-                      onClick={handleGenerateValidationLog}
-                      disabled={!Object.keys(data).length}
-                      startIcon={<AssessmentIcon fontSize="small" />}
-                    >
-                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                        Log
-                      </Box>
-                    </Button>
-
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="success"
-                      onClick={handleSaveToDB}
-                      disabled={!Object.keys(data).length || loading}
-                      startIcon={<SaveIcon fontSize="small" />}
-                    >
-                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                        Save
-                      </Box>
-                    </Button>
-                  </Box>
-                </Stack>
-              </Grid>
-            </Grid>
-          </Paper>
-          <Paper elevation={3} sx={{ p: 2, position: 'sticky', top: 0, zIndex: 1100, mb: 3, borderRadius: 0, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: activeTheme.palette.background.paper, transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-            {selectedFile ? (
-              <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap" justifyContent="space-between">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="subtitle1" noWrap>
-                    File: <strong>{selectedFile.name}</strong>
+                    FULL FILE REVIEW
                   </Typography>
-                  <Tooltip title="Preview">
-                    <IconButton size="small" onClick={() => handlePreviewPdf(selectedFile)}><VisibilityTwoToneIcon className="animated-eye" color="primary" /></IconButton>
-                  </Tooltip>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                  {loading && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={20} />
-                      <Typography variant="body2">
-                        {Math.floor(timer / 60)}m {timer % 60}s
-                      </Typography>
-                      <LinearProgress
-                        variant="determinate"
-                        value={extractionProgress}
-                        sx={{ width: '80px' }}
-                      />
-                    </Box>
-                  )}
-
-                  <Tooltip sx={{ ml: 8, m: 'auto' }} title={isTimerRunning ? "Timer Running" : "Timer Paused"}>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 'bold', cursor: 'pointer', marginRight: 40, color: isTimerRunning ? 'text.primary' : 'text.secondary' }}
-                      onClick={handleTimerToggle}>
-                      Total: {Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:
-                      {Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:
-                      {(fileUploadTimer % 60).toString().padStart(2, '0')}
-                    </Typography>
-                  </Tooltip>
-
-                  {!loading && lastExtractionTime && (
-                    <Typography variant="body2" color="success.main"
-                      sx={{ marginRight: 40 }}>
-                      Last: {lastExtractionTime >= 60 ? `${Math.floor(lastExtractionTime / 60)}m ` : ''}
-                      {`${(lastExtractionTime % 60).toFixed(1)}s`}
-                    </Typography>
-                  )}
-                </Box>
-              </Stack>
-            ) : (
-              <Typography variant="body2" color="text.secondary" align="center">No file selected</Typography>
-            )}
-
-            {(htmlFile || contractFile || engagementLetterFile) && (
-              <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-                <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
-                  {htmlFile && (
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography variant="caption" sx={{ fontWeight: 'bold' }}>HTML:</Typography>
-                      <Typography variant="caption">{htmlFile.name}</Typography>
-                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsComparisonDialogOpen(true)} disabled={isHtmlReviewLoading || loading}>
-                        {isHtmlReviewLoading ? (
-                          <>
-                            <CircularProgress size={14} sx={{ mr: 0.5 }} />
-                            {Math.floor(htmlExtractionTimer / 60)}m {htmlExtractionTimer % 60}s
-                          </>
-                        ) : <GetAppIcon fontSize="small" />}
-                      </Button>
-                    </Stack>
-                  )}
-                  {contractFile && (
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Contract:</Typography>
-                      <Typography variant="caption">{contractFile.name}</Typography>
-                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsContractCompareOpen(true)}><GetAppIcon fontSize="small" /></Button>
-                      <IconButton size="small" onClick={() => handlePreviewPdf(contractFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
-                    </Stack>
-                  )}
-                  {engagementLetterFile && (
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Engagement:</Typography>
-                      <Typography variant="caption">{engagementLetterFile.name}</Typography>
-                      <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsEngagementLetterDialogOpen(true)}><GetAppIcon fontSize="small" /></Button>
-                      <IconButton size="small" onClick={() => handlePreviewPdf(engagementLetterFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
-                    </Stack>
-                  )}
-                </Stack>
-              </Box>
-            )}
-          </Paper>
-          <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: activeTheme.palette.background.paper, borderRadius: 2 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: (!isValidationSectionMinimized && selectedFile) ? 2 : 0,
-                pb: (!isValidationSectionMinimized && selectedFile) ? 1 : 0,
-                borderBottom: (!isValidationSectionMinimized && selectedFile) ? '1px solid' : 'none',
-                borderColor: 'divider',
-                cursor: 'pointer'
-              }}
-              onClick={() => setIsValidationSectionMinimized(!isValidationSectionMinimized)}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <FactCheckIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6" fontWeight="bold" color="text.primary">
-                  Validation Checks
-                </Typography>
-              </Box>
-              <IconButton size="small">
-                {isValidationSectionMinimized ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
-              </IconButton>
-            </Box>
-            {!isValidationSectionMinimized && selectedFile && (
-              <Stack spacing={2}>
-                {data['From Type'] && (
-                  <Alert
-                    severity="warning"
-                    icon={<WarningIcon fontSize="inherit" />}
-                    sx={{ alignItems: 'center', '& .MuiAlert-message': { width: '100%' } }}
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      color: 'text.secondary',
+                      letterSpacing: 3,
+                      fontSize: { xs: '0.6rem', md: '0.75rem' },
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      textAlign: 'right',
+                      opacity: 0.8
+                    }}
                   >
-                    <Stack direction="row" alignItems="center" spacing={2} width="100%">
-                      <Typography variant="body2" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-                        Form Type Mismatch:
-                      </Typography>
-                      <Box sx={{ flexGrow: 1 }}>
-                        <EditableField
-                          fieldPath={['From Type']}
-                          value={data['From Type']}
-                          onDataChange={handleDataChange}
-                          editingField={editingField}
-                          setEditingField={setEditingField}
-                          isEditable={isEditable}
-                          allData={data}
-                        />
-                      </Box>
-                    </Stack>
-                  </Alert>
-                )}
-
-                <Grid container spacing={2}>
-                  {data['FHA Case No.'] && (
-                    <Grid item xs={12} sm={6} md={4}>
-                      <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
-                        <Box sx={{ overflow: 'hidden' }}>
-                          <Typography variant="caption" color="secondary.main" fontWeight="bold" display="block" noWrap>FHA Case #</Typography>
-                          <EditableField fieldPath={['FHA Case No.']} value={data['FHA Case No.'] || ''} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                        </Box>
-                        <Tooltip title="Check FHA Requirements">
-                          <IconButton onClick={handleFhaCheck} size="small" color="info">
-                            <Info fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Paper>
-                    </Grid>
-                  )}
-
-                  {data['ADU File Check'] && (
-                    <Grid item xs={12} sm={6} md={4}>
-                      <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
-                        <Box sx={{ overflow: 'hidden' }}>
-                          <Typography variant="caption" color="secondary.main" fontWeight="bold" display="block" noWrap>ADU File Check</Typography>
-                          <EditableField fieldPath={['ADU File Check']} value={data['ADU File Check']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                        </Box>
-                        <Tooltip title="Check ADU Requirements">
-                          <IconButton onClick={handleADUCheck} size="small" color="info">
-                            <Info fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Paper>
-                    </Grid>
-                  )}
-
-                  {data['ANSI'] && (
-                    <Grid item xs={12} sm={6} md={4}>
-                      <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>ANSI</Typography>
-                        <EditableField fieldPath={['ANSI']} value={data['ANSI']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                      </Paper>
-                    </Grid>
-                  )}
-
-                  {data['Exposure comment'] && (
-                    <Grid item xs={12} sm={6} md={6}>
-                      <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>Exposure Comment</Typography>
-                        <EditableField fieldPath={['Exposure comment']} value={data['Exposure comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                      </Paper>
-                    </Grid>
-                  )}
-
-                  {data['Prior service comment'] && (
-                    <Grid item xs={12} sm={6} md={6}>
-                      <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>Prior Service Comment</Typography>
-                        <EditableField fieldPath={['Prior service comment']} value={data['Prior service comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
-                      </Paper>
-                    </Grid>
-                  )}
-                </Grid>
-
-                {isUnpaidOkLender && (
-                  <Alert severity="success" variant="standard" sx={{ fontWeight: 'bold' }}>
-                    Unpaid OK can proceed with review
-                  </Alert>
-                )}
-                {!isUnpaidOkLender && (
-                  <Alert severity="warning" variant="standard" sx={{ fontWeight: 'bold' }}>
-                    Unpaid OK cannot proceed with review, please check with lender
-                  </Alert>
-                )}
-
-                {(!data['FHA Case No.'] || !data['ANSI'] || !data['Exposure comment'] || !data['Prior service comment'] || !isUnpaidOkLender) && (
-                  <Alert severity="error" variant="filled" icon={<ErrorOutlineIcon fontSize="inherit" />} sx={{ fontWeight: 'bold' }}>
-                    Plz check the report
-                  </Alert>
-                )}
-              </Stack>
-            )}
-          </Paper>
-          {htmlFile && (
-            <Paper
-              elevation={3}
-              sx={{
-                p: 2,
-                mb: 3,
-                borderRadius: 2,
-                backgroundColor: activeTheme.palette.background.paper,
-                border: '1px solid',
-                borderColor: 'divider',
-                overflow: 'hidden'
-              }}
-              id="html-data-section"
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, pb: 1, borderBottom: '1px solid', borderColor: 'divider', cursor: 'pointer' }} onClick={() => setIsHtmlDataMinimized(!isHtmlDataMinimized)}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <DescriptionIcon color="primary" sx={{ mr: 1 }} />
-                  <Typography variant="h6" fontWeight="bold" color="text.primary">
-                    HTML Data Analysis
+                    Intelligent Analysis
                   </Typography>
                 </Box>
-                <IconButton size="small" onClick={() => setIsHtmlDataMinimized(!isHtmlDataMinimized)}>
-                  {isHtmlDataMinimized ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
-                </IconButton>
               </Box>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 1.5,
+                  // mb: 1,
+                  borderRadius: 3,
+                  bgcolor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
+                <Grid item xs={12} md={8}>
+                  <Stack spacing={2}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                      >
+                        <CloudUploadIcon fontSize="small" color="primary" />
+                        Upload Documents
+                      </Typography>
+                      {(selectedFile || htmlFile || contractFile || engagementLetterFile) && (
+                        <Button size="small" color="error" onClick={() => setIsClearDialogOpen(true)} startIcon={<DeleteForeverIcon />}>
+                          Clear All
+                        </Button>
+                      )}
+                    </Stack>
 
-              {!isHtmlDataMinimized && (
-                <Box>
-                  {comparisonData?.comparison_results ? (
-                    <Box>
-                      <Alert severity="info" sx={{ mb: 2 }} icon={<CompareArrowsIcon fontSize="inherit" />}>
-                        Comparison Results
-                      </Alert>
-                      <ComparisonResultTable result={comparisonData.comparison_results} />
+                    {/* Responsive Upload Grid */}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gap: 1.5,
+                        gridTemplateColumns: {
+                          xs: 'repeat(3, 1fr)',  // mobile
+                          sm: 'repeat(6, 1fr)'   // tablet & desktop
+                        }
+                      }}
+                    >
+                      {[
+                        {
+                          label: 'PDF',
+                          icon: <PictureAsPdfIcon fontSize="medium" />,
+                          file: selectedFile,
+                          onClick: () => fileInputRef.current.click(),
+                          inputRef: fileInputRef,
+                          accept: '.pdf',
+                          onChange: onFileChange
+                        },
+                        {
+                          label: 'HTML',
+                          icon: <DescriptionIcon fontSize="medium" />,
+                          file: htmlFile,
+                          onClick: () => htmlFileInputRef.current.click(),
+                          inputRef: htmlFileInputRef,
+                          accept: '.html',
+                          onChange: onHtmlFileChange
+                        },
+                        {
+                          label: 'Contract',
+                          icon: <AssignmentIcon fontSize="medium" />,
+                          file: contractFile,
+                          onClick: () => contractFileInputRef.current.click(),
+                          inputRef: contractFileInputRef,
+                          accept: '.pdf,.doc,.docx',
+                          onChange: onContractFileChange
+                        },
+                        {
+                          label: 'Letter',
+                          icon: <AssignmentIcon fontSize="medium" />,
+                          file: engagementLetterFile,
+                          onClick: () => engagementLetterFileInputRef.current.click(),
+                          inputRef: engagementLetterFileInputRef,
+                          accept: '.pdf,.doc,.docx',
+                          onChange: onEngagementLetterFileChange
+                        }
+                      ].map((item, index) => (
+                        <Paper
+                          key={index}
+                          variant="outlined"
+                          onClick={item.onClick}
+                          sx={{
+                            p: 1.25,
+                            height: { xs: 40, sm: 60 },
+                            cursor: 'pointer',
+                            borderRadius: 2,
+                            textAlign: 'center',
+                            borderStyle: item.file ? 'solid' : 'dashed',
+                            borderColor: item.file ? 'success.main' : 'divider',
+                            bgcolor: item.file ? 'success.lighter' : 'background.default',
+                            transition: 'all .2s',
+                            '&:hover': { boxShadow: 2 }
+                          }}
+                        >
+                          <Stack
+                            spacing={0.5}
+                            alignItems="center"
+                            justifyContent="center"
+                            height="100%"
+                          >
+
+
+                            {/* Label hidden on mobile */}
+                            <Typography
+                              fontSize={12}
+                              fontWeight={600}
+                              gap={1}
+                              display={{ xs: 'none', sm: 'block' }}
+                            >{item.icon}
+                              {item.label}
+                            </Typography>
+
+                            {item.file && (
+                              <Typography fontSize={10} color="success.main">
+                                ✓
+                              </Typography>
+                            )}
+                          </Stack>
+
+                          <input type="file" hidden ref={item.inputRef} accept={item.accept} onChange={item.onChange} />
+                        </Paper>
+                      ))}
                     </Box>
-                  ) : (
+
+                    {/* FORM TYPE (already responsive) */}
+                    <Autocomplete
+                      size="small"
+                      options={formTypes}
+                      marginBottom={20}
+                      value={selectedFormType}
+                      onChange={(e, v) => v && setSelectedFormType(v)}
+                      disableClearable
+                      renderInput={(params) => (
+                        <TextField {...params} label="Form Type" />
+                      )}
+                    />
+                  </Stack>
+
+                  {/* RIGHT: ACTIONS */}
+                  <Grid
+                    item
+                    xs={12}
+                    md={4}
+                    sx={{
+                      pl: { md: 3 },
+                      borderLeft: { md: '1px solid' },
+                      borderColor: 'divider',
+                      position: { xs: 'sticky', md: 'static' },
+                      bottom: { xs: 0, md: 'auto' },
+                      bgcolor: { xs: 'background.paper', md: 'transparent' },
+                      zIndex: 10,
+                      py: { xs: 1, md: 0 }
+                    }}
+                  >
+                    <Stack spacing={1.5} width="100%">
+                      {/* Title hidden on mobile */}
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        display={{ xs: 'none', md: 'flex' }}
+                        alignItems="center"
+                        gap={1}
+                        mt={10}
+                      >
+                        <AssessmentIcon fontSize="small" color="primary" />
+                        Actions
+                      </Typography>
+
+                      {/* Responsive Action Buttons */}
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gap: 1,
+                          gridTemplateColumns: {
+                            xs: 'repeat(4, 1fr)',   // mobile: icon-only bar
+                            sm: 'repeat(4, 1fr)',   // tablet: one line
+                            md: 'repeat(4, 1fr)'    // desktop: one line
+                          }
+                        }}
+                      >
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={handleGeneratePdf}
+                          disabled={!Object.keys(data).length}
+                          startIcon={
+                            isGeneratingPdf
+                              ? <CircularProgress size={14} color="inherit" />
+                              : <PictureAsPdfIcon fontSize="small" />
+                          }
+                        >
+                          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                            {isGeneratingPdf ? 'Generating' : 'PDF'}
+                          </Box>
+                        </Button>
+
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="info"
+                          onClick={handleExportJSON}
+                          disabled={!Object.keys(data).length}
+                          startIcon={<FileDownloadIcon fontSize="small" />}
+                        >
+                          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                            JSON
+                          </Box>
+                        </Button>
+
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="warning"
+                          onClick={handleGenerateValidationLog}
+                          disabled={!Object.keys(data).length}
+                          startIcon={<AssessmentIcon fontSize="small" />}
+                        >
+                          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                            Log
+                          </Box>
+                        </Button>
+
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          onClick={handleSaveToDB}
+                          disabled={!Object.keys(data).length || loading}
+                          startIcon={<SaveIcon fontSize="small" />}
+                        >
+                          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                            Save
+                          </Box>
+                        </Button>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                </Grid>
+              </Paper>
+              <Paper elevation={3} sx={{ p: 2, position: 'sticky', top: 0, zIndex: 1100, mb: 3, borderRadius: 0, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, backgroundColor: activeTheme.palette.background.paper, transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                {selectedFile ? (
+                  <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap" justifyContent="space-between">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Typography variant="subtitle1" noWrap>
+                        File: <strong>{selectedFile.name}</strong>
+                      </Typography>
+                      <Tooltip title="Preview">
+                        <IconButton size="small" onClick={() => handlePreviewPdf(selectedFile)}><VisibilityTwoToneIcon className="animated-eye" color="primary" /></IconButton>
+                      </Tooltip>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      {loading && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CircularProgress size={20} />
+                          <Typography variant="body2">
+                            {Math.floor(timer / 60)}m {timer % 60}s
+                          </Typography>
+                          <LinearProgress
+                            variant="determinate"
+                            value={extractionProgress}
+                            sx={{ width: '80px' }}
+                          />
+                        </Box>
+                      )}
+
+                      <Tooltip sx={{ ml: 8, m: 'auto' }} title={isTimerRunning ? "Timer Running" : "Timer Paused"}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 'bold', cursor: 'pointer', marginRight: 40, color: isTimerRunning ? 'text.primary' : 'text.secondary' }}
+                          onClick={handleTimerToggle}>
+                          Total: {Math.floor(fileUploadTimer / 3600).toString().padStart(2, '0')}:
+                          {Math.floor((fileUploadTimer % 3600) / 60).toString().padStart(2, '0')}:
+                          {(fileUploadTimer % 60).toString().padStart(2, '0')}
+                        </Typography>
+                      </Tooltip>
+
+                      {!loading && lastExtractionTime && (
+                        <Typography variant="body2" color="success.main"
+                          sx={{ marginRight: 40 }}>
+                          Last: {lastExtractionTime >= 60 ? `${Math.floor(lastExtractionTime / 60)}m ` : ''}
+                          {`${(lastExtractionTime % 60).toFixed(1)}s`}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary" align="center">No file selected</Typography>
+                )}
+
+                {(htmlFile || contractFile || engagementLetterFile) && (
+                  <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                    <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
+                      {htmlFile && (
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="caption" sx={{ fontWeight: 'bold' }}>HTML:</Typography>
+                          <Typography variant="caption">{htmlFile.name}</Typography>
+                          <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsComparisonDialogOpen(true)} disabled={isHtmlReviewLoading || loading}>
+                            {isHtmlReviewLoading ? (
+                              <>
+                                <CircularProgress size={14} sx={{ mr: 0.5 }} />
+                                {Math.floor(htmlExtractionTimer / 60)}m {htmlExtractionTimer % 60}s
+                              </>
+                            ) : <GetAppIcon fontSize="small" />}
+                          </Button>
+                        </Stack>
+                      )}
+                      {contractFile && (
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Contract:</Typography>
+                          <Typography variant="caption">{contractFile.name}</Typography>
+                          <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsContractCompareOpen(true)}><GetAppIcon fontSize="small" /></Button>
+                          <IconButton size="small" onClick={() => handlePreviewPdf(contractFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
+                        </Stack>
+                      )}
+                      {engagementLetterFile && (
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Engagement:</Typography>
+                          <Typography variant="caption">{engagementLetterFile.name}</Typography>
+                          <Button size="small" variant="outlined" sx={{ py: 0, minWidth: 0 }} onClick={() => setIsEngagementLetterDialogOpen(true)}><GetAppIcon fontSize="small" /></Button>
+                          <IconButton size="small" onClick={() => handlePreviewPdf(engagementLetterFile)} sx={{ p: 0.5 }}><VisibilityTwoToneIcon fontSize="small" color="primary" /></IconButton>
+                        </Stack>
+                      )}
+                    </Stack>
+                  </Box>
+                )}
+              </Paper>
+              <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: activeTheme.palette.background.paper, borderRadius: 2 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: (!isValidationSectionMinimized && selectedFile) ? 2 : 0,
+                    pb: (!isValidationSectionMinimized && selectedFile) ? 1 : 0,
+                    borderBottom: (!isValidationSectionMinimized && selectedFile) ? '1px solid' : 'none',
+                    borderColor: 'divider',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setIsValidationSectionMinimized(!isValidationSectionMinimized)}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <FactCheckIcon color="primary" sx={{ mr: 1 }} />
+                    <Typography variant="h6" fontWeight="bold" color="text.primary">
+                      Validation Checks
+                    </Typography>
+                  </Box>
+                  <IconButton size="small">
+                    {isValidationSectionMinimized ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+                  </IconButton>
+                </Box>
+                {!isValidationSectionMinimized && selectedFile && (
+                  <Stack spacing={2}>
+                    {data['From Type'] && (
+                      <Alert
+                        severity="warning"
+                        icon={<WarningIcon fontSize="inherit" />}
+                        sx={{ alignItems: 'center', '& .MuiAlert-message': { width: '100%' } }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={2} width="100%">
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                            Form Type Mismatch:
+                          </Typography>
+                          <Box sx={{ flexGrow: 1 }}>
+                            <EditableField
+                              fieldPath={['From Type']}
+                              value={data['From Type']}
+                              onDataChange={handleDataChange}
+                              editingField={editingField}
+                              setEditingField={setEditingField}
+                              isEditable={isEditable}
+                              allData={data}
+                            />
+                          </Box>
+                        </Stack>
+                      </Alert>
+                    )}
+
+                    <Grid container spacing={2}>
+                      {data['FHA Case No.'] && (
+                        <Grid item xs={12} sm={6} md={4}>
+                          <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
+                            <Box sx={{ overflow: 'hidden' }}>
+                              <Typography variant="caption" color="secondary.main" fontWeight="bold" display="block" noWrap>FHA Case #</Typography>
+                              <EditableField fieldPath={['FHA Case No.']} value={data['FHA Case No.'] || ''} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                            </Box>
+                            <Tooltip title="Check FHA Requirements">
+                              <IconButton onClick={handleFhaCheck} size="small" color="info">
+                                <Info fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Paper>
+                        </Grid>
+                      )}
+
+                      {data['ADU File Check'] && (
+                        <Grid item xs={12} sm={6} md={4}>
+                          <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
+                            <Box sx={{ overflow: 'hidden' }}>
+                              <Typography variant="caption" color="secondary.main" fontWeight="bold" display="block" noWrap>ADU File Check</Typography>
+                              <EditableField fieldPath={['ADU File Check']} value={data['ADU File Check']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                            </Box>
+                            <Tooltip title="Check ADU Requirements">
+                              <IconButton onClick={handleADUCheck} size="small" color="info">
+                                <Info fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Paper>
+                        </Grid>
+                      )}
+
+                      {data['ANSI'] && (
+                        <Grid item xs={12} sm={6} md={4}>
+                          <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>ANSI</Typography>
+                            <EditableField fieldPath={['ANSI']} value={data['ANSI']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                          </Paper>
+                        </Grid>
+                      )}
+
+                      {data['Exposure comment'] && (
+                        <Grid item xs={12} sm={6} md={6}>
+                          <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>Exposure Comment</Typography>
+                            <EditableField fieldPath={['Exposure comment']} value={data['Exposure comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                          </Paper>
+                        </Grid>
+                      )}
+
+                      {data['Prior service comment'] && (
+                        <Grid item xs={12} sm={6} md={6}>
+                          <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" noWrap>Prior Service Comment</Typography>
+                            <EditableField fieldPath={['Prior service comment']} value={data['Prior service comment']} onDataChange={handleDataChange} editingField={editingField} setEditingField={setEditingField} isEditable={isEditable} allData={data} />
+                          </Paper>
+                        </Grid>
+                      )}
+                    </Grid>
+
+                    {isUnpaidOkLender && (
+                      <Alert severity="success" variant="standard" sx={{ fontWeight: 'bold' }}>
+                        Unpaid OK can proceed with review
+                      </Alert>
+                    )}
+                    {!isUnpaidOkLender && (
+                      <Alert severity="warning" variant="standard" sx={{ fontWeight: 'bold' }}>
+                        Unpaid OK cannot proceed with review, please check with lender
+                      </Alert>
+                    )}
+
+                    {(!data['FHA Case No.'] || !data['ANSI'] || !data['Exposure comment'] || !data['Prior service comment'] || !isUnpaidOkLender) && (
+                      <Alert severity="error" variant="filled" icon={<ErrorOutlineIcon fontSize="inherit" />} sx={{ fontWeight: 'bold' }}>
+                        Plz check the report
+                      </Alert>
+                    )}
+                  </Stack>
+                )}
+              </Paper>
+              {htmlFile && (
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 2,
+                    backgroundColor: activeTheme.palette.background.paper,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    overflow: 'hidden'
+                  }}
+                  id="html-data-section"
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, pb: 1, borderBottom: '1px solid', borderColor: 'divider', cursor: 'pointer' }} onClick={() => setIsHtmlDataMinimized(!isHtmlDataMinimized)}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <DescriptionIcon color="primary" sx={{ mr: 1 }} />
+                      <Typography variant="h6" fontWeight="bold" color="text.primary">
+                        HTML Data Analysis
+                      </Typography>
+                    </Box>
+                    <IconButton size="small" onClick={() => setIsHtmlDataMinimized(!isHtmlDataMinimized)}>
+                      {isHtmlDataMinimized ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+                    </IconButton>
+                  </Box>
+
+                  {!isHtmlDataMinimized && (
                     <Box>
-                      {Object.keys(comparisonData).length > 0 && (
-                        <GridInfoCard
-                          id="html-data-info"
-                          title="Extracted HTML Data"
-                          fields={Object.keys(comparisonData)}
-                          data={comparisonData}
-                          cardClass="bg-primary text-white"
-                          onDataChange={(field, value) => handleComparisonDataChange(field[0], value)}
-                          editingField={editingField}
-                          setEditingField={setEditingField}
-                          isEditable={true}
-                          allData={data}
-                          manualValidations={manualValidations}
-                          handleManualValidation={handleManualValidation}
-                        />
+                      {comparisonData?.comparison_results ? (
+                        <Box>
+                          <Alert severity="info" sx={{ mb: 2 }} icon={<CompareArrowsIcon fontSize="inherit" />}>
+                            Comparison Results
+                          </Alert>
+                          <ComparisonResultTable result={comparisonData.comparison_results} />
+                        </Box>
+                      ) : (
+                        <Box>
+                          {Object.keys(comparisonData).length > 0 && (
+                            <GridInfoCard
+                              id="html-data-info"
+                              title="Extracted HTML Data"
+                              fields={Object.keys(comparisonData)}
+                              data={comparisonData}
+                              cardClass="bg-primary text-white"
+                              onDataChange={(field, value) => handleComparisonDataChange(field[0], value)}
+                              editingField={editingField}
+                              setEditingField={setEditingField}
+                              isEditable={true}
+                              allData={data}
+                              manualValidations={manualValidations}
+                              handleManualValidation={handleManualValidation}
+                            />
+                          )}
+                        </Box>
                       )}
                     </Box>
                   )}
-                </Box>
+                </Paper>
               )}
-            </Paper>
-          )}
             </>
           )}
 
@@ -4659,52 +4675,52 @@ function Subject() {
 
           {selectedFormType !== '1004D' && (
             <>
-          <div id="state-requirement-check" className="mb-4">
-            <StateRequirementCheck
-              onPromptSubmit={handleStateRequirementCheck}
-              loading={stateReqLoading}
-              response={stateReqResponse}
-              error={stateReqError}
-            />
-          </div>
+              <div id="state-requirement-check" className="mb-4">
+                <StateRequirementCheck
+                  onPromptSubmit={handleStateRequirementCheck}
+                  loading={stateReqLoading}
+                  response={stateReqResponse}
+                  error={stateReqError}
+                />
+              </div>
 
-          <div id="client-requirement-check" className="mb-4">
-            <ClientRequirementCheck
-              onPromptSubmit={handleClientRequirementCheck}
-              loading={clientReqLoading}
-              response={clientReqResponse}
-              error={clientReqError}
-            />
-          </div>
+              <div id="client-requirement-check" className="mb-4">
+                <ClientRequirementCheck
+                  onPromptSubmit={handleClientRequirementCheck}
+                  loading={clientReqLoading}
+                  response={clientReqResponse}
+                  error={clientReqError}
+                />
+              </div>
 
-          <div id="escalation-check" className="mb-4">
-            <EscalationCheck
-              onPromptSubmit={handleEscalationCheck}
-              loading={escalationLoading}
-              response={escalationResponse}
-              error={escalationError}
-            />
-          </div>
+              <div id="escalation-check" className="mb-4">
+                <EscalationCheck
+                  onPromptSubmit={handleEscalationCheck}
+                  loading={escalationLoading}
+                  response={escalationResponse}
+                  error={escalationError}
+                />
+              </div>
 
-          <PromptAnalysis
-            onPromptSubmit={handlePromptAnalysis}
-            loading={promptAnalysisLoading}
-            response={promptAnalysisResponse}
-            error={promptAnalysisError}
-            submittedPrompt={submittedPrompt}
-            onAddendumRevisionButtonClick={() => setAddendumRevisionLangDialogOpen(true)}
-          />
+              <PromptAnalysis
+                onPromptSubmit={handlePromptAnalysis}
+                loading={promptAnalysisLoading}
+                response={promptAnalysisResponse}
+                error={promptAnalysisError}
+                submittedPrompt={submittedPrompt}
+                onAddendumRevisionButtonClick={() => setAddendumRevisionLangDialogOpen(true)}
+              />
 
-          {(rawGemini || Object.keys(data).length > 0) && (
-            <div id="raw-output" className="mt-4">
-              <h5>Raw Gemini Output (Debug):</h5>
-              <pre style={{ background: '#f8f9fa', padding: '1em', borderRadius: '6px', maxHeight: '300px', overflow: 'auto' }}>
-                {rawGemini}
-                {/* {'\n'}
+              {(rawGemini || Object.keys(data).length > 0) && (
+                <div id="raw-output" className="mt-4">
+                  <h5>Raw Gemini Output (Debug):</h5>
+                  <pre style={{ background: '#f8f9fa', padding: '1em', borderRadius: '6px', maxHeight: '300px', overflow: 'auto' }}>
+                    {rawGemini}
+                    {/* {'\n'}
                 {JSON.stringify(data, null, 2)} */}
-              </pre>
-            </div>
-          )}
+                  </pre>
+                </div>
+              )}
             </>
           )}
 
