@@ -82,13 +82,13 @@ const ContactUs = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ ...formData, sendCopy: true }),
         });
 
         if (response.ok) {
           setSnackbar({
             open: true,
-            message: 'Message sent successfully!',
+            message: 'Thank you for contacting us! A confirmation email has been sent.',
             severity: 'success'
           });
           setFormData({ name: '', email: '', subject: '', message: '', sendCopy: false });
@@ -96,7 +96,7 @@ const ContactUs = () => {
           throw new Error('Failed to send message');
         }
       } catch (error) {
-        setSnackbar({ open: true, message: 'Failed to send message. Please try again.', severity: 'error' });
+        setSnackbar({ open: true, message: 'Failed to send the message. Please try again later.', severity: 'error' });
       } finally {
         setLoading(false);
       }

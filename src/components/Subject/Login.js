@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useThemeContext } from '../../context/ThemeContext';
 import {
   Paper,
   Box,
@@ -16,6 +17,12 @@ import {
   InputAdornment,
   IconButton,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
 } from '@mui/material';
 
 import {
@@ -23,16 +30,32 @@ import {
   Visibility,
   VisibilityOff,
   PersonOutline,
+  LightMode,
+  NightlightRound,
 } from '@mui/icons-material';
 
 const Login = ({ onLogin }) => {
+  const { themeMode, toggleTheme } = useThemeContext();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState(null);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedUsername = localStorage.getItem('rememberedUsername');
+    if (savedUsername) {
+      setUsername(savedUsername);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -53,6 +76,13 @@ const Login = ({ onLogin }) => {
         const data = await response.json();
         localStorage.setItem('authToken', data.access);
         localStorage.setItem('username', username);
+
+        if (rememberMe) {
+          localStorage.setItem('rememberedUsername', username);
+        } else {
+          localStorage.removeItem('rememberedUsername');
+        }
+
         onLogin();
         navigate('/');
       } else {
@@ -63,6 +93,39 @@ const Login = ({ onLogin }) => {
       setError('Login failed. Please check your connection.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPasswordOpen = (e) => {
+    e.preventDefault();
+    setForgotPasswordOpen(true);
+  };
+
+  const handleForgotPasswordClose = () => {
+    setForgotPasswordOpen(false);
+    setResetEmail('');
+    setResetMessage(null);
+  };
+
+  const handleResetSubmit = async () => {
+    if (!resetEmail) {
+      setResetMessage({ type: 'error', text: 'Please enter your email address.' });
+      return;
+    }
+    setResetLoading(true);
+    setResetMessage(null);
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setResetMessage({
+        type: 'success',
+        text: 'A temporary password has been sent to your email address.',
+      });
+    } catch (error) {
+      setResetMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -84,6 +147,17 @@ const Login = ({ onLogin }) => {
         },
       }}
     >
+      <IconButton
+        onClick={toggleTheme}
+        sx={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          color: 'white',
+        }}
+      >
+        {themeMode === 'dark' ? <LightMode /> : <NightlightRound />}
+      </IconButton>
       <Paper
         elevation={0}
         sx={{
@@ -91,11 +165,8 @@ const Login = ({ onLogin }) => {
           maxWidth: 420,
           p: 4,
           borderRadius: 4,
-          background:
-            'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.65))',
-          backdropFilter: 'blur(20px)',
-          boxShadow:
-            '0 30px 60px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.4)',
+          bgcolor: 'background.paper',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.25)',
         }}
       >
         <Box textAlign="center">
@@ -123,7 +194,6 @@ const Login = ({ onLogin }) => {
 
         <Box component="form" onSubmit={handleLogin}>
           <Stack spacing={2}>
-            {error && <Alert severity="error">{error}</Alert>}
 
             <TextField
               label="Username"
@@ -181,17 +251,16 @@ const Login = ({ onLogin }) => {
             <Grid container alignItems="center" justifyContent="space-between">
               <Grid item>
                 <FormControlLabel
-                  control={<Checkbox />}
+                  control={<Checkbox checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />}
                   label="Remember me"
                 />
               </Grid>
               <Grid item>
-                <MuiLink href="#" underline="hover">
+                <MuiLink href="#" underline="hover" onClick={handleForgotPasswordOpen}>
                   Forgot password?
                 </MuiLink>
               </Grid>
             </Grid>
-
             <Button
               type="submit"
               fullWidth
@@ -230,6 +299,43 @@ const Login = ({ onLogin }) => {
           </Stack>
         </Box>
       </Paper>
+
+      <Dialog open={forgotPasswordOpen} onClose={handleForgotPasswordClose}>
+        <DialogTitle>Reset Password</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            To reset your password, please enter your email address here. We will send a temporary password to your email.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="Email Address"
+            type="email"
+            fullWidth
+            variant="standard"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+          />
+          {resetMessage && (
+            <Alert severity={resetMessage.type} sx={{ mt: 2 }}>
+              {resetMessage.text}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleForgotPasswordClose}>Cancel</Button>
+          <Button onClick={handleResetSubmit} disabled={resetLoading}>
+            {resetLoading ? <CircularProgress size={24} /> : 'Send Temp Password'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }} variant="filled">
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

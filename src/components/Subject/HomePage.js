@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useThemeContext } from '../../context/ThemeContext';
 import {
   Box,
   Typography,
   Grid,
   Paper,
   CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  IconButton,
+  useTheme,
 } from '@mui/material';
 
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -16,6 +22,8 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import HistoryIcon from '@mui/icons-material/History';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import NightlightRoundIcon from '@mui/icons-material/NightlightRound';
 import PremiumLogo from './logo';
 import {
   BarChart,
@@ -42,6 +50,7 @@ import {
 
 const AnimatedCard = ({ to, title, desc, icon, color, newTab }) => {
   const location = useLocation();
+  const theme = useTheme();
   const isActive = location.pathname === to;
 
   return (
@@ -61,10 +70,10 @@ const AnimatedCard = ({ to, title, desc, icon, color, newTab }) => {
           p: 3,
           height: '100%',
           borderRadius: 3,
-          backgroundColor: '#ffffff',
+          backgroundColor: 'background.paper',
           border: isActive
             ? `2px solid ${color}`
-            : '1px solid rgba(0,0,0,0.08)',
+            : `1px solid ${theme.palette.divider}`,
           transition: 'all 0.3s ease',
           display: 'flex',
           flexDirection: 'column',
@@ -114,9 +123,11 @@ const AnimatedCard = ({ to, title, desc, icon, color, newTab }) => {
 /* ---------- PAGE ---------- */
 
 const HomePage = () => {
+  const { themeMode, toggleTheme } = useThemeContext();
   const [username, setUsername] = useState('');
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('7days');
 
   useEffect(() => {
     setUsername(localStorage.getItem('username') || '');
@@ -137,17 +148,55 @@ const HomePage = () => {
     }
   };
 
-  const getWeeklyData = () => {
-    const last7Days = [...Array(7)].map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      return d.toISOString().split('T')[0];
-    });
-
-    return last7Days.map(date => {
-      const count = reports.filter(r => r.created_at && r.created_at.startsWith(date)).length;
-      return { date, count };
-    });
+  const getChartData = () => {
+    if (timeRange === '7days') {
+      const last7Days = [...Array(7)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return d.toISOString().split('T')[0];
+      });
+      return last7Days.map(date => {
+        const count = reports.filter(r => r.created_at && r.created_at.startsWith(date)).length;
+        return {
+          date,
+          count,
+          label: new Date(date).toLocaleDateString(undefined, { weekday: 'short' })
+        };
+      });
+    } else if (timeRange === 'month') {
+      const last30Days = [...Array(30)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (29 - i));
+        return d.toISOString().split('T')[0];
+      });
+      return last30Days.map(date => {
+        const count = reports.filter(r => r.created_at && r.created_at.startsWith(date)).length;
+        return {
+          date,
+          count,
+          label: new Date(date).getDate().toString()
+        };
+      });
+    } else if (timeRange === 'year') {
+      const last12Months = [...Array(12)].map((_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (11 - i));
+        return {
+          year: d.getFullYear(),
+          month: d.getMonth(),
+          label: d.toLocaleString('default', { month: 'short' })
+        };
+      });
+      return last12Months.map(({ year, month, label }) => {
+        const count = reports.filter(r => {
+          if (!r.created_at) return false;
+          const d = new Date(r.created_at);
+          return d.getFullYear() === year && d.getMonth() === month;
+        }).length;
+        return { date: `${year}-${month + 1}`, count, label };
+      });
+    }
+    return [];
   };
 
   const getAverageTime = () => {
@@ -164,30 +213,52 @@ const HomePage = () => {
     return Math.round(times.reduce((a, b) => a + b, 0) / times.length);
   };
 
-  const weeklyData = getWeeklyData();
+  const chartData = getChartData();
   const avgTime = getAverageTime();
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1b1f3b, #2b2f55)',
+        background: themeMode === 'dark'
+          ? 'linear-gradient(135deg, #1b1f3b, #2b2f55, #1b1f3b)'
+          : 'linear-gradient(135deg, #f5f7fa, #c3cfe2, #f5f7fa)',
+        backgroundSize: '400% 400%',
+        animation: 'gradient 15s ease infinite',
+        '@keyframes gradient': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
         display: 'flex',
         justifyContent: 'center',
-
         alignItems: 'center',
         p: 2,
+        color: 'text.primary',
       }}
     >
       <Box
         sx={{
           width: '100%',
           maxWidth: 1000,
-          backgroundColor: '#f5f6f8',
+          backgroundColor: 'background.paper',
           borderRadius: 4,
           p: { xs: 3, md: 5 },
+          position: 'relative',
+          color: 'text.primary',
         }}
       >
+        <IconButton
+          onClick={toggleTheme}
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: 'text.secondary',
+          }}
+        >
+          {themeMode === 'dark' ? <LightModeIcon /> : <NightlightRoundIcon />}
+        </IconButton>
         {/* HEADER */}
         <Box display="flex" alignItems="center" justifyContent="center" mb={5} gap={3}>
           <PremiumLogo size={100} fullScreen={false} />
@@ -227,12 +298,26 @@ const HomePage = () => {
               {/* Reviews This Week */}
               <Grid item xs={12} md={8}>
                 <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.08)', height: 320, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="subtitle2" fontWeight={700} >Reviews Completed (Last 7 Days)</Typography>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                    <Typography variant="subtitle2" fontWeight={700}>Reviews Completed</Typography>
+                    <FormControl size="small" variant="standard">
+                      <Select
+                        value={timeRange}
+                        onChange={(e) => setTimeRange(e.target.value)}
+                        disableUnderline
+                        sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}
+                      >
+                        <MenuItem value="7days">Last 7 Days</MenuItem>
+                        <MenuItem value="month">Last 30 Days</MenuItem>
+                        <MenuItem value="year">Last Year</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
                   <Box sx={{ flexGrow: 1, minHeight: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={weeklyData} margin={{ top: 5, right: 15, left: -20, bottom: 15 }}>
+                      <BarChart data={chartData} margin={{ top: 5, right: 15, left: -20, bottom: 15 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, { weekday: 'short' })} />
+                        <XAxis dataKey="label" tick={{ fontSize: 12 }} interval={timeRange === 'month' ? 'preserveStartEnd' : 0} />
                         <YAxis allowDecimals={false} />
                         <RechartsTooltip />
                         <Bar dataKey="count" fill="#1976d2" radius={[4, 4, 0, 0]} name="Reviews" />

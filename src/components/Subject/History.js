@@ -13,7 +13,6 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Chip,
   TextField,
   InputAdornment,
   Tooltip,
@@ -22,7 +21,10 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Select,
+  MenuItem,
+  Chip
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -48,7 +50,7 @@ const History = () => {
   });
 
   useEffect(() => {
-    setIsAdmin(localStorage.getItem('username') === 'admin');
+    setIsAdmin(localStorage.getItem('username') === 'Abhi');
     fetchReports();
   }, []);
 
@@ -103,6 +105,33 @@ const History = () => {
     } finally {
       handleCloseDeleteConfirm();
     }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    setReports(prevReports => prevReports.map(report => 
+      report.id === id ? { ...report, status: newStatus } : report
+    ));
+
+    try {
+      await fetch(`https://praman-strdjrbservices.pythonanywhere.com/api/update-report-status/${id}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const statusLower = (status || '').toLowerCase();
+    if (statusLower === 'completed') return 'success';
+    if (statusLower === 'pending') return 'warning';
+    if (statusLower === 'in progress') return 'info';
+    if (statusLower === 'failed') return 'error';
+    return 'default';
   };
 
   const handleFilterChange = (field, value) => {
@@ -223,7 +252,7 @@ const History = () => {
             ) : (
                 <TableContainer>
                     <Table sx={{ minWidth: 650 }}>
-                        <TableHead sx={{ bgcolor: 'grey.50' }}>
+                        <TableHead sx={{ bgcolor: 'grey.200' }}>
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 'bold', py: 2 }}>File Name</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', py: 2 }}>User</TableCell>
@@ -298,12 +327,31 @@ const History = () => {
                                         {report.created_at ? new Date(report.created_at).toLocaleString() : 'N/A'}
                                     </TableCell>
                                     <TableCell>
-                                        <Chip 
-                                            label={report.status || 'Completed'} 
-                                            color="success" 
-                                            size="small" 
-                                            variant="outlined"
-                                        />
+                                        <Select
+                                            value={report.status || 'Completed'}
+                                            onChange={(e) => handleStatusChange(report.id, e.target.value)}
+                                            variant="standard"
+                                            disableUnderline
+                                            size="small"
+                                            sx={{ 
+                                                fontSize: '0.875rem',
+                                                minWidth: 120,
+                                                '& .MuiSelect-select': { padding: 0 }
+                                            }}
+                                            renderValue={(selected) => (
+                                                <Chip 
+                                                    label={selected} 
+                                                    color={getStatusColor(selected)} 
+                                                    size="small" 
+                                                    sx={{ fontWeight: 600, width: '100%', cursor: 'pointer' }}
+                                                />
+                                            )}
+                                        >
+                                            <MenuItem value="Completed">Completed</MenuItem>
+                                            <MenuItem value="Pending">Pending</MenuItem>
+                                            <MenuItem value="In Progress">In Progress</MenuItem>
+                                            <MenuItem value="Failed">Failed</MenuItem>
+                                        </Select>
                                     </TableCell>
                                     <TableCell>{report.report_data?.totalTimeTaken || 'N/A'}</TableCell>
                                     {isAdmin && (

@@ -61,6 +61,7 @@ import { getComparisonStyle, playSound } from './utils.js';
 
 import Form1004 from './1004';
 import Form1007 from './1007';
+import Form1004And1007 from './1004And1007';
 import Form1073 from './1073';
 import Form1025 from './1025';
 import Form1004D from './1004D';
@@ -1629,7 +1630,7 @@ function Subject() {
     },
     'GLA': { 'Improvements': 'GLA Improvements Count', 'Grid': 'GLA Sales Comparison Approach Count', 'Photo': 'GLA Photo Count', 'Floorplan': 'GLA Floorplan Count' }
   };
-  const formTypes = ['1004', '1004C', '1004D', '1025', '1073', '2090', '203k-FHA', '2055', '1075', '2095', '1007', '216', '1025 + 1007', '1073 + 1007'];
+  const formTypes = ['1004', '1004C', '1004D', '1025', '1073', '2090', '203k-FHA', '2055', '1075', '2095', '1007', '216', '1025 + 1007', '1073 + 1007', '1004 + 1007'];
 
   const sections = useMemo(() => [
     { id: 'subject-info', title: 'Subject', category: 'SUBJECT', icon: <HomeIcon /> },
@@ -1937,8 +1938,11 @@ function Subject() {
       let finalFormType = '';
 
       if (rawExtractedType.includes('1004') && rawExtractedType.includes('1007')) {
+        finalFormType = '1004 + 1007';
+      } else if (rawExtractedType.includes('1004') && rawExtractedType.includes('1007')) {
         finalFormType = '1007';
-      } else if (rawExtractedType.includes('1025') && rawExtractedType.includes('1007')) {
+      }
+      else if (rawExtractedType.includes('1025') && rawExtractedType.includes('1007')) {
         finalFormType = '1025 + 1007';
       } else if (rawExtractedType.includes('1073') && rawExtractedType.includes('1007')) {
         finalFormType = '1073 + 1007';
@@ -1982,7 +1986,7 @@ function Subject() {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
 
-    if (result.fields?.INCOME_APPROACH?.['Estimated Monthly Market Rent $'] && selectedFormType !== '1007') {
+    if (result.fields?.INCOME_APPROACH?.['Estimated Monthly Market Rent $'] && selectedFormType !== '1004 + 1007') {
       setIsRentFormTypeMismatchDialogOpen(true);
     } else {
       const sectionName = category ? `${category.replace(/_/g, ' ').toLowerCase()} section` : 'extraction';
@@ -2000,6 +2004,24 @@ function Subject() {
     setLastExtractionTime(totalSeconds.toFixed(1));
     setExtractionProgress(100);
   };
+
+  // if (result.fields?.INCOME_APPROACH?.['Estimated Monthly Market Rent $'] && selectedFormType !== '1007') {
+  //   setIsRentFormTypeMismatchDialogOpen(true);
+  // } else {
+  //   const sectionName = category ? `${category.replace(/_/g, ' ').toLowerCase()} section` : 'extraction';
+  //   let durationMessage = '';
+  //   if (minutes > 0) {
+  //     durationMessage += `${minutes}m `;
+  //   }
+  //   durationMessage += `${seconds}s`;
+  //   setNotification({
+  //     open: true,
+  //     message: <>Extraction of <strong style={{ color: '#000000' }}>{sectionName}</strong> completed in {durationMessage}.</>,
+  //     severity: 'success'
+  //   });
+  // }
+  // setLastExtractionTime(totalSeconds.toFixed(1));
+  // setExtractionProgress(100);
 
   const handleExtract = async (category, sectionId) => {
     setNotification({ open: false, message: '', severity: 'info' });
@@ -2783,6 +2805,9 @@ function Subject() {
         visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'rent-schedule-section', 'improvements-section', 'site-section', 'rent-schedule-reconciliation-section', 'pud-info-section'].includes(id));
         break;
       case '1007':
+        visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'project-site-section', 'prior-sale-history-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
+        break;
+      case '1004 + 1007':
         visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'project-site-section', 'prior-sale-history-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
         break;
       default:
@@ -4005,6 +4030,9 @@ function Subject() {
         break;
       case '1007':
         formComponent = <Form1007 {...props} allData={data} />;
+        break;
+      case '1004 + 1007':
+        formComponent = <Form1004And1007 {...props} allData={data} />;
         break;
       case '1025':
         formComponent = <Form1025 {...props} allData={data} />;
