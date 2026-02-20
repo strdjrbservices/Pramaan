@@ -19,6 +19,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Container,
+  Tooltip,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -49,7 +50,46 @@ const playSound = (soundType) => {
   }
 };
 
-// Local EditableField component for the Compare page to avoid dependency on complex validation logic.
+const HighlightKeywords = ({ text, keywordGroups, comment }) => {
+  if (!text || !keywordGroups || keywordGroups.length === 0) {
+    return text;
+  }
+
+  const allKeywords = keywordGroups.flatMap(group => group.keywords);
+  if (allKeywords.length === 0) {
+    return text;
+  }
+
+  const escapedKeywords = allKeywords.map(kw => kw.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&'));
+  const regex = new RegExp(`(${escapedKeywords.join('|')})`, 'gi');
+  const parts = String(text).split(regex);
+
+  return (
+    <span>
+      {parts.map((part, i) => {
+        const matchedGroup = keywordGroups.find(group =>
+          group.keywords.some(keyword => part.toLowerCase() === keyword.toLowerCase())
+        );
+        if (matchedGroup) {
+          const styledPart = <span style={matchedGroup.style}>{part}</span>;
+          const isErrorGroup = matchedGroup.style.backgroundColor === '#ff0000';
+          let tooltipText = matchedGroup.Tooltip;
+
+          if (isErrorGroup && comment) {
+            tooltipText = comment;
+          }
+
+          if (tooltipText) {
+            return <Tooltip key={i} title={tooltipText}>{styledPart}</Tooltip>;
+          }
+          return <span key={i} style={matchedGroup.style}>{part}</span>;
+        }
+        return part;
+      })}
+    </span>
+  );
+};
+
 const SimpleEditableField = ({ fieldPath, value, onDataChange, editingField, setEditingField, isEditable }) => {
   const isEditing = isEditable && editingField && JSON.stringify(editingField) === JSON.stringify(fieldPath);
 
@@ -82,12 +122,10 @@ const SimpleEditableField = ({ fieldPath, value, onDataChange, editingField, set
   );
 };
 
-// Helper function to normalize currency values for accurate comparison
 const normalizeCurrencyValue = (value) => {
   if (typeof value !== 'string' || value === 'Not Found') {
-    return NaN; // Return NaN for non-strings or 'Not Found' to indicate it's not a comparable number
+    return NaN;
   }
-  // Remove currency symbols, commas, and any non-numeric characters except for the decimal point and a leading minus sign
   const cleanedValue = value.replace(/[^0-9.-]/g, '');
   return parseFloat(cleanedValue);
 };
@@ -128,17 +166,27 @@ const Compare = () => {
   const [timer, setTimer] = useState(0);
   const timerRef = useRef(null);
 
+  const keywordGroups = [
+    {
+      keywords: ["Corrected", "Fulfilled", "pass", "correct"],
+      style: { backgroundColor: '#91ff00ff', color: '#000000', padding: '1px 3px', borderRadius: '3px' },
+      Tooltip: 'This item has been successfully validated.'
+    },
+    {
+      keywords: ["not Corrected", "not Fulfilled", "Fail", "incorrect", "mismatch", "mismatched"],
+      style: { backgroundColor: '#ff0000', color: '#ffffff', padding: '1px 3px', borderRadius: '3px' },
+      Tooltip: 'This item has an issue or could not be validated.'
+    }
+  ];
+
 
   useEffect(() => {
-    // This effect should update comparisonData whenever the response for pdf-html mode changes.
     if (comparisonMode === 'pdf-html' && response && response.comparison_results) {
       setComparisonData(response.comparison_results);
     } else {
       setComparisonData([]);
     }
-  }, [response, comparisonMode]); // Keeping comparisonMode ensures data is cleared on mode switch.
-
-  // Logic from ResponsePage for extracting revision text from HTML
+  }, [response, comparisonMode]);
   useEffect(() => {
     if (comparisonMode !== 'revision' || !htmlFile) {
       setRevisionText('');
@@ -183,7 +231,6 @@ const Compare = () => {
     }
   }, [response]);
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -218,8 +265,6 @@ const Compare = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // This function is now primarily triggered by handleModeChange.
-    // We can call it with the current comparisonMode.
     await startComparison(comparisonMode);
   };
 
@@ -227,11 +272,11 @@ const Compare = () => {
     setLoading(true);
     setError('');
     setResponse(null);
-    setTimer(0); // Reset timer
-    if (timerRef.current) { // Clear any existing timer
+    setTimer(0);
+    if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    timerRef.current = setInterval(() => { // Start new timer
+    timerRef.current = setInterval(() => {
       setTimer(prev => prev + 1);
     }, 1000);
 
@@ -245,7 +290,7 @@ const Compare = () => {
         return;
       }
       formData.append('file', newPdfFile);
-      formData.append('form_type', '1004'); // Or make this selectable
+      formData.append('form_type', '1004');
       formData.append('revision_request', revisionText);
       endpoint = 'https://praman-strdjrbservices.pythonanywhere.com/api/extract/';
     } else if (mode === 'checklist') {
@@ -284,17 +329,14 @@ const Compare = () => {
         body: formData,
       });
 
-      // Defensive parsing: get text first, then parse.
       const rawText = await res.text();
 
       if (!res.ok) {
-        // Try to parse error from text, fallback to status.
         let errorDetail = `HTTP error! status: ${res.status}`;
         try {
           const errorJson = JSON.parse(rawText);
           errorDetail = errorJson.detail || errorDetail;
         } catch (parseError) {
-          // If parsing fails, the raw text might be the error message
           errorDetail = rawText || errorDetail;
         }
         throw new Error(errorDetail);
@@ -314,8 +356,6 @@ const Compare = () => {
       }
 
     } catch (e) {
-      // If the error is a generic network error, show a generic message.
-      // Otherwise, show the specific error message from the backend.
       const errorMessage = e.message.includes('Failed to fetch') ? 'Could not connect to the server. Please ensure it is running.' : e.message;
       setError(errorMessage);
       console.error('Comparison failed:', e);
@@ -334,27 +374,22 @@ const Compare = () => {
       setOldPdfPageCount(null);
       setNewPdfPageCount(null);
       setRevisionText('');
-      // Directly start the comparison process.
       startComparison(newMode);
     }
   };
 
-  // Renders response for PDF-to-PDF comparison
   const renderPdfToPdfResponse = (data) => {
     if (!data) return null;
 
     const comparisonSummary = data?.comparison_summary || [];
     const summaryText = data?.summary || '';
 
-    // Helper function to safely extract the market value
     const oldMarketValueRaw = data.old_market_value || 'Not Found';
     const newMarketValueRaw = data.new_market_value || 'Not Found';
 
-    // Normalize values for comparison
     const normalizedOldMarketValue = normalizeCurrencyValue(oldMarketValueRaw);
     const normalizedNewMarketValue = normalizeCurrencyValue(newMarketValueRaw);
 
-    // Determine if market values match, considering 'Not Found' as a match if both are 'Not Found'
     const areMarketValuesMatching = (oldMarketValueRaw === 'Not Found' && newMarketValueRaw === 'Not Found') ||
       (!isNaN(normalizedOldMarketValue) && !isNaN(normalizedNewMarketValue) &&
         normalizedOldMarketValue === normalizedNewMarketValue);
@@ -373,7 +408,7 @@ const Compare = () => {
         {summaryText && (
           <Paper elevation={2} sx={{ p: 3, mb: 3, borderLeft: 5, borderColor: 'primary.main', bgcolor: 'action.hover' }}>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
-              {summaryText}
+              <HighlightKeywords text={summaryText} keywordGroups={keywordGroups} />
             </Typography>
           </Paper>
         )}
@@ -415,10 +450,18 @@ const Compare = () => {
             <TableBody>
               {comparisonSummary.map((change, index) => (
                 <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <TableCell component="th" scope="row">{change.field}</TableCell>
-                  <TableCell>{change.original_value}</TableCell>
-                  <TableCell>{change.revised_value}</TableCell>
-                  <TableCell>{change.comment}</TableCell>
+                  <TableCell component="th" scope="row">
+                    <HighlightKeywords text={change.field} keywordGroups={keywordGroups} />
+                  </TableCell>
+                  <TableCell>
+                    <HighlightKeywords text={change.original_value} keywordGroups={keywordGroups} />
+                  </TableCell>
+                  <TableCell>
+                    <HighlightKeywords text={change.revised_value} keywordGroups={keywordGroups} />
+                  </TableCell>
+                  <TableCell>
+                    <HighlightKeywords text={change.comment} keywordGroups={keywordGroups} />
+                  </TableCell>
                   <TableCell align="right">{change.page_no}</TableCell>
                 </TableRow>
               ))}
@@ -429,7 +472,6 @@ const Compare = () => {
     );
   };
 
-  // Renders response for Revision Verification
   const renderRevisionResponse = (data) => {
     if (!data) return null;
 
@@ -453,7 +495,7 @@ const Compare = () => {
               Summary
             </Typography>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
-              {summaryText}
+              <HighlightKeywords text={summaryText} keywordGroups={keywordGroups} />
             </Typography>
           </Paper>
         )}
@@ -469,9 +511,15 @@ const Compare = () => {
             <TableBody>
               {comparisonSummary.map((change, index) => (
                 <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <TableCell component="th" scope="row">{change.status}</TableCell>
-                  <TableCell>{change.section}</TableCell>
-                  <TableCell>{change.comment}</TableCell>
+                  <TableCell component="th" scope="row">
+                    <HighlightKeywords text={change.status} keywordGroups={keywordGroups} comment={change.comment} />
+                  </TableCell>
+                  <TableCell>
+                    <HighlightKeywords text={change.section} keywordGroups={keywordGroups} />
+                  </TableCell>
+                  <TableCell>
+                    <HighlightKeywords text={change.comment} keywordGroups={keywordGroups} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -481,7 +529,6 @@ const Compare = () => {
     );
   };
 
-  // Renders response for Confirmation Checklist
   const renderChecklistResponse = (data) => {
     if (!data || !data.details || data.details.length === 0) return null;
 
@@ -679,14 +726,11 @@ const Compare = () => {
                       </TableHead>
                       <TableBody>
                         {comparisonData.map((item, index) => {
-                          // Ensure we are working with strings, defaulting null/undefined to empty string.
                           const htmlValue = (item.html_value === null || item.html_value === undefined) ? '' : String(item.html_value);
                           const pdfValue = (item.pdf_value === null || item.pdf_value === undefined) ? '' : String(item.pdf_value);
 
-                          // Start with the status from the backend.
                           let isMatch = item.status === 'Match';
 
-                          // Normalize strings for robust comparison.
                           const normalize = (str) => {
                             if (typeof str !== 'string') {
                               return '';
@@ -694,16 +738,12 @@ const Compare = () => {
 
                             let normalizedStr = str.toLowerCase();
 
-                            // 1. Unicode normalization (e.g., to handle accented characters)
-                            // Convert to NFD (Canonical Decomposition) and remove diacritics
                             normalizedStr = normalizedStr.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-                            // 2. Replace common address abbreviations using word boundaries
                             const abbreviations = {
                               'ave': 'avenue', 'st': 'street', 'rd': 'road', 'dr': 'drive',
                               'blvd': 'boulevard', 'ln': 'lane', 'pl': 'place',
                               'cir': 'circle', 'pkwy': 'parkway', 'ter': 'terrace',
-                              // State abbreviations
                               'al': 'alabama', 'ak': 'alaska', 'az': 'arizona', 'ar': 'arkansas', 'ca': 'california',
                               'co': 'colorado', 'ct': 'connecticut', 'de': 'delaware', 'fl': 'florida', 'ga': 'georgia',
                               'hi': 'hawaii', 'id': 'idaho', 'il': 'illinois', 'in': 'indiana', 'ia': 'iowa',
@@ -715,15 +755,12 @@ const Compare = () => {
                               'ri': 'rhodeisland', 'sc': 'southcarolina', 'sd': 'southdakota', 'tn': 'tennessee',
                               'tx': 'texas', 'ut': 'utah', 'vt': 'vermont', 'va': 'virginia', 'wa': 'washington',
                               'wv': 'westvirginia', 'wi': 'wisconsin', 'wy': 'wyoming',
-                              // Other common terms
                               'apt': 'apartment', 'bldg': 'building', 'dept': 'department',
                               'ste': 'suite', 'unit': 'unit'
                             };
-                            // Replace abbreviations using word boundaries to avoid replacing parts of words
                             for (const [abbr, full] of Object.entries(abbreviations)) {
                               normalizedStr = normalizedStr.replace(new RegExp(`\\b${abbr}\\b`, 'g'), full);
                             }
-                            // Remove all spaces and non-alphanumeric characters
                             return normalizedStr.replace(/[\s\W_]/g, '');
                           };
 
@@ -731,14 +768,11 @@ const Compare = () => {
                           const normalizedPdf = normalize(pdfValue);
 
                           if (item.field === 'Property Address') {
-                            // Special check for Property Address: match if the first word/number is the same.
                             const getFirstWord = (str) => (str || '').toLowerCase().replace(/[^\w\s]/g, '').trim().split(/\s+/)[0] || '';
                             const htmlFirstWord = getFirstWord(htmlValue);
                             const pdfFirstWord = getFirstWord(pdfValue);
-                            // Match if both have a first word and they are identical.
                             isMatch = htmlFirstWord && pdfFirstWord && htmlFirstWord === pdfFirstWord;
                           } else {
-                            // For other fields, check for an exact match or if one contains the other.
                             isMatch = normalizedHtml === normalizedPdf || normalizedHtml.includes(normalizedPdf) || normalizedPdf.includes(normalizedHtml);
                           }
 

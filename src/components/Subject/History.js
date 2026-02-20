@@ -149,6 +149,38 @@ const History = () => {
     });
   };
 
+  const handleFileClick = async (report) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`https://praman-strdjrbservices.pythonanywhere.com/api/get-report/${report.id}/`);
+      if (response.ok) {
+        const data = await response.json();
+        navigate('/extractor', {
+          state: {
+            reportData: data.report_data,
+            fileName: data.file_name,
+            pdfFile: data.pdf_file
+          }
+        });
+      } else {
+        throw new Error('Failed to fetch report');
+      }
+    } catch (err) {
+      console.error("Error fetching report details:", err);
+      if (report.report_data) {
+        navigate('/extractor', {
+          state: {
+            reportData: report.report_data,
+            fileName: report.file_name
+          }
+        });
+      } else {
+        setError('Could not load report details.');
+        setLoading(false);
+      }
+    }
+  };
+
   const filteredReports = reports.filter((report) => {
     const fileName = (report.file_name || '').toLowerCase();
     const userName = (report.user_name || '').toLowerCase();
@@ -307,17 +339,8 @@ const History = () => {
                                 <TableRow key={report.id /* Assuming unique id from API */} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
                                         <Box
-                                            onClick={() => {
-                                                if (report.report_data) {
-                                                    navigate('/extractor', {
-                                                        state: {
-                                                            reportData: report.report_data,
-                                                            fileName: report.file_name
-                                                        }
-                                                    });
-                                                }
-                                            }}
-                                            sx={{ cursor: report.report_data ? 'pointer' : 'default', color: report.report_data ? 'primary.main' : 'inherit', '&:hover': { textDecoration: report.report_data ? 'underline' : 'none' } }}
+                                            onClick={() => handleFileClick(report)}
+                                            sx={{ cursor: 'pointer', color: 'primary.main', '&:hover': { textDecoration: 'underline' } }}
                                         >
                                             {report.file_name || 'Unknown File'}
                                         </Box>

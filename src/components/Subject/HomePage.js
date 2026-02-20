@@ -392,7 +392,7 @@ const HomePage = () => {
               desc="Compare original and revised reports side-by-side."
               icon={<CompareArrowsIcon />}
               color="#9c27b0"
-              newTab
+              
             />
           </Grid>
         </Grid>
@@ -410,7 +410,7 @@ const HomePage = () => {
               desc="Run advanced appraisal data queries."
               icon={<SearchIcon />}
               color="#ed6c02"
-              newTab
+              
             />
           </Grid>
 
@@ -421,7 +421,7 @@ const HomePage = () => {
               desc="Process appraisal completion certificates."
               icon={<AssignmentTurnedInIcon />}
               color="#2e7d32"
-              newTab
+              
             />
           </Grid>
 

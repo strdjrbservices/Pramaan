@@ -284,15 +284,33 @@ function Subject() {
 
   useEffect(() => {
     if (location.state && location.state.reportData) {
-      const { reportData, fileName } = location.state;
+      const { reportData, fileName, pdfFile } = location.state;
       setData(reportData);
-      if (fileName) {
-        setSelectedFile({ name: fileName });
+
+      if (pdfFile) {
+        setNotification({ open: true, message: 'Restoring PDF file...', severity: 'info' });
+        fetch(pdfFile)
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], fileName || 'restored.pdf', { type: 'application/pdf' });
+            setSelectedFile(file);
+            setNotification({ open: true, message: 'Report data and PDF loaded from history.', severity: 'success' });
+          })
+          .catch(err => {
+            console.error("Error restoring PDF:", err);
+            setNotification({ open: true, message: 'Report data loaded, but failed to restore PDF file.', severity: 'warning' });
+            if (fileName) setSelectedFile({ name: fileName });
+          });
+      } else {
+        if (fileName) {
+          setSelectedFile({ name: fileName });
+        }
+        setNotification({ open: true, message: 'Report data loaded from history.', severity: 'success' });
       }
+
       if (reportData['From Type']) {
         setSelectedFormType(reportData['From Type']);
       }
-      setNotification({ open: true, message: 'Report data loaded from history.', severity: 'success' });
     }
   }, [location.state]);
 
@@ -2721,25 +2739,62 @@ function Subject() {
 
       const cleanedData = JSON.parse(JSON.stringify(data));
 
-      const sectionsToCheck = [
-        'Subject', 'CONTRACT', 'NEIGHBORHOOD', 'SITE', 'IMPROVEMENTS',
-        'SALES_TRANSFER', 'PRIOR_SALE_HISTORY', 'RECONCILIATION',
-        'COST_APPROACH', 'INCOME_APPROACH', 'PUD_INFO', 'MARKET_CONDITIONS',
-        'CONDO_FORECLOSURE', 'CERTIFICATION', 'INFO_OF_SALES',
-        'PROJECT_SITE', 'PROJECT_INFO', 'PROJECT_ANALYSIS', 'UNIT_DESCRIPTIONS',
-        'SUBJECT_RENT_SCHEDULE', 'RENT_SCHEDULE_GRID', 'RENT_SCHEDULE_RECONCILIATION',
+      // Define the preferred order of sections
+      const sectionOrder = [
+        'Subject',
+        'CONTRACT',
+        'NEIGHBORHOOD',
+        'SITE',
+        'IMPROVEMENTS',
+        'SALES_TRANSFER',
+        'PRIOR_SALE_HISTORY',
+        'RECONCILIATION',
+        'COST_APPROACH',
+        'INCOME_APPROACH',
+        'PUD_INFO',
+        'MARKET_CONDITIONS',
+        'CONDO_FORECLOSURE',
+        'CERTIFICATION',
+        'INFO_OF_SALES',
+        'PROJECT_SITE',
+        'PROJECT_INFO',
+        'PROJECT_ANALYSIS',
+        'UNIT_DESCRIPTIONS',
+        'SUBJECT_RENT_SCHEDULE',
+        'RENT_SCHEDULE_GRID',
+        'RENT_SCHEDULE_RECONCILIATION',
         'COMPARABLE_RENTAL_DATA'
       ];
 
-      sectionsToCheck.forEach(section => {
+      // Remove root-level keys that are already present inside sections
+      sectionOrder.forEach(section => {
         if (cleanedData[section] && typeof cleanedData[section] === 'object') {
           Object.keys(cleanedData[section]).forEach(key => {
-            // Check if the key exists at the root level
             if (cleanedData.hasOwnProperty(key)) {
               delete cleanedData[key];
             }
           });
         }
+      });
+
+      // Construct ordered report data
+      const orderedReportData = {
+        totalTimeTaken: totalTime,
+        save_option: 'update'
+      };
+
+      // Add sections in defined order
+      sectionOrder.forEach(section => {
+        if (cleanedData[section]) {
+          orderedReportData[section] = cleanedData[section];
+          delete cleanedData[section];
+        }
+      });
+
+      // Add any remaining keys (e.g. Comparables, or fields not in sections)
+      // Sort them for consistency
+      Object.keys(cleanedData).sort().forEach(key => {
+        orderedReportData[key] = cleanedData[key];
       });
 
       const validationErrors = getValidationErrors();
@@ -2758,22 +2813,19 @@ function Subject() {
         consistencyErrors
       };
 
-      const dataToSave = {
-        file_name: selectedFile?.name || 'N/A',
-        user_name: username,
-        validation_log: validationLog,
-        report_data: {
-          totalTimeTaken: totalTime,
-          ...cleanedData,
-          save_option: 'update'
-        }
-      };
+      const formData = new FormData();
+      formData.append('file_name', selectedFile?.name || 'N/A');
+      formData.append('user_name', username);
+      formData.append('validation_log', JSON.stringify(validationLog));
+      formData.append('report_data', JSON.stringify(orderedReportData));
+
+      if (selectedFile && selectedFile instanceof File) {
+        formData.append('pdf_file', selectedFile);
+      }
+
       const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/save-report/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSave),
+        body: formData,
       });
 
       if (!response.ok) {
