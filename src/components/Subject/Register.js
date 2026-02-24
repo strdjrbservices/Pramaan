@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useThemeContext } from '../../context/ThemeContext';
 import {
@@ -12,16 +12,10 @@ import {
   Avatar,
   Checkbox,
   FormControlLabel,
-  Grid,
   Link as MuiLink,
   InputAdornment,
   IconButton,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   Snackbar,
 } from '@mui/material';
 
@@ -30,102 +24,65 @@ import {
   Visibility,
   VisibilityOff,
   PersonOutline,
+  EmailOutlined,
   LightMode,
   NightlightRound,
 } from '@mui/icons-material';
 
-const Login = ({ onLogin }) => {
+const Register = () => {
   const { themeMode, toggleTheme } = useThemeContext();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetMessage, setResetMessage] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedUsername = localStorage.getItem('rememberedUsername');
-    if (savedUsername) {
-      setUsername(savedUsername);
-      setRememberMe(true);
-    }
-  }, []);
-
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
+
+    if (!agreeTerms) {
+      setError("You must agree to the terms and conditions");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch(
-        'https://praman-strdjrbservices.pythonanywhere.com/api/token/',
+        'https://praman-strdjrbservices.pythonanywhere.com/api/register/',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({ username, email, password }),
         }
       );
 
       if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('authToken', data.access);
-        localStorage.setItem('username', username);
-
-        if (rememberMe) {
-          localStorage.setItem('rememberedUsername', username);
-        } else {
-          localStorage.removeItem('rememberedUsername');
-        }
-
-        onLogin();
-        navigate('/');
+        setSuccess(true);
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       } else {
         const errorData = await response.json();
-        setError(errorData.detail || 'Invalid username or password');
+        setError(errorData.detail || errorData.message || 'Registration failed');
       }
-    } catch {
-      setError('Login failed. Please check your connection.');
+    } catch (err) {
+      setError('Registration failed. Please check your connection.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleForgotPasswordOpen = (e) => {
-    e.preventDefault();
-    setForgotPasswordOpen(true);
-  };
-
-  const handleForgotPasswordClose = () => {
-    setForgotPasswordOpen(false);
-    setResetEmail('');
-    setResetMessage(null);
-  };
-
-  const handleResetSubmit = async () => {
-    if (!resetEmail) {
-      setResetMessage({ type: 'error', text: 'Please enter your email address.' });
-      return;
-    }
-    setResetLoading(true);
-    setResetMessage(null);
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setResetMessage({
-        type: 'success',
-        text: 'A temporary password has been sent to your email address.',
-      });
-    } catch (error) {
-      setResetMessage({ type: 'error', text: 'An error occurred. Please try again.' });
-    } finally {
-      setResetLoading(false);
     }
   };
 
@@ -185,14 +142,14 @@ const Login = ({ onLogin }) => {
           </Avatar>
 
           <Typography variant="h5" fontWeight={700}>
-            DJRB Review
+            Create Account
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={3}>
-            Sign in to continue
+            Sign up to get started
           </Typography>
         </Box>
 
-        <Box component="form" onSubmit={handleLogin}>
+        <Box component="form" onSubmit={handleRegister}>
           <Stack spacing={2}>
 
             <TextField
@@ -213,7 +170,38 @@ const Login = ({ onLogin }) => {
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 3,
                   marginBottom: 2,
-                   backgroundColor: 'action.hover',
+                  backgroundColor: 'action.hover',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'action.selected',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: 'background.paper',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Email"
+              type="email"
+              fullWidth
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailOutlined />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  marginBottom: 2,
+                  backgroundColor: 'action.hover',
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: 'action.selected',
@@ -253,6 +241,7 @@ const Login = ({ onLogin }) => {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 3,
+                  marginBottom: 2,
                   backgroundColor: 'action.hover',
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
@@ -266,19 +255,46 @@ const Login = ({ onLogin }) => {
               }}
             />
 
-            <Grid container alignItems="center" justifyContent="space-between">
-              <Grid item>
-                <FormControlLabel
-                  control={<Checkbox checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />}
-                  label="Remember me"
-                />
-              </Grid>
-              <Grid item>
-                <MuiLink href="#" underline="hover" onClick={handleForgotPasswordOpen}>
-                  Forgot password?
-                </MuiLink>
-              </Grid>
-            </Grid>
+            <TextField
+              label="Confirm Password"
+              type={showPassword ? 'text' : 'password'}
+              fullWidth
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlined />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  marginBottom: 2,
+                  backgroundColor: 'action.hover',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'action.selected',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: 'background.paper',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  },
+                },
+              }}
+            />
+
+            <FormControlLabel
+              control={<Checkbox checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} color="primary" />}
+              label={
+                <Typography variant="body2" color="text.secondary">
+                  I agree to the <MuiLink component={Link} to="/terms">Terms</MuiLink> & <MuiLink component={Link} to="/privacy">Privacy Policy</MuiLink>
+                </Typography>
+              }
+            />
+
             <Button
               type="submit"
               fullWidth
@@ -305,66 +321,35 @@ const Login = ({ onLogin }) => {
               {loading ? (
                 <CircularProgress size={26} color="#000000" />
               ) : (
-                'Log In'
+                'Register'
               )}
             </Button>
 
             <Box mt={2} textAlign="center">
               <Typography variant="body2" color="text.secondary">
-                Don't have an account?{' '}
-                <MuiLink component={Link} to="/register" underline="hover" fontWeight="bold">
-                  Sign Up
+                Already have an account?{' '}
+                <MuiLink component={Link} to="/login" underline="hover" fontWeight="bold">
+                  Log In
                 </MuiLink>
               </Typography>
-            </Box>
-
-            <Box mt={1} textAlign="center">
-              <MuiLink component={Link} to="/contact" underline="hover" color="text.secondary" variant="body2">
-                Need help? Contact Us
-              </MuiLink>
             </Box>
           </Stack>
         </Box>
       </Paper>
-
-      <Dialog open={forgotPasswordOpen} onClose={handleForgotPasswordClose}>
-        <DialogTitle>Reset Password</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            To reset your password, please enter your email address here. We will send a temporary password to your email.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="name"
-            label="Email Address"
-            type="email"
-            fullWidth
-            variant="standard"
-            value={resetEmail}
-            onChange={(e) => setResetEmail(e.target.value)}
-          />
-          {resetMessage && (
-            <Alert severity={resetMessage.type} sx={{ mt: 2 }}>
-              {resetMessage.text}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleForgotPasswordClose}>Cancel</Button>
-          <Button onClick={handleResetSubmit} disabled={resetLoading}>
-            {resetLoading ? <CircularProgress size={24} /> : 'Send Temp Password'}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }} variant="filled">
           {error}
         </Alert>
       </Snackbar>
+
+      <Snackbar open={success} autoHideDuration={6000} onClose={() => setSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }} variant="filled">
+          Registration successful! Redirecting to login...
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
 
-export default Login;
+export default Register;

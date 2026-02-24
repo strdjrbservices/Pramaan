@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { ThemeContextProvider } from './context/ThemeContext'; 
+import { ThemeContextProvider } from './context/ThemeContext';
 import Subject from './components/Subject/subject';
 import CustomQuery from './components/Subject/CustomQuery';
 import HomePage from './components/Subject/HomePage';
@@ -18,6 +18,7 @@ import PrivacyPolicy from './components/Subject/PrivacyPolicy';
 import ContactUs from './components/Subject/ContactUs';
 import History from './components/Subject/History';
 import FloatingMenu from './components/Subject/FloatingMenu';
+import Register from './components/Subject/Register';
 
 import {
   //Box,
@@ -145,6 +146,7 @@ function App() {
       <ThemeContextProvider>
         {/* ROUTES */}
         <Routes>
+          <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} />}>

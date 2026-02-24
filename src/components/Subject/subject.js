@@ -34,9 +34,7 @@ import {
   Domain as DomainIcon,
   TrendingUp as TrendingUpIcon,
   Business as BusinessIcon,
-  VerifiedUser as VerifiedUserIcon,
   FactCheck as FactCheckIcon,
-  Psychology as PsychologyIcon,
   Code as CodeIcon,
   Apartment as ApartmentIcon,
   FileDownload as FileDownloadIcon,
@@ -1675,8 +1673,6 @@ function Subject() {
     { id: 'pud-info-section', title: 'PUD Information', category: 'PUD_INFO', icon: <DomainIcon /> },
     { id: 'market-conditions-section', title: 'Market Conditions', category: 'MARKET_CONDITIONS', icon: <TrendingUpIcon /> },
     { id: 'condo-coop-section', title: 'Condo/Co-op', category: ['CONDO', 'CONDO_FORECLOSURE'], icon: <BusinessIcon /> },
-    { id: 'appraiser-section', title: 'CERTIFICATION', category: 'CERTIFICATION', icon: <VerifiedUserIcon /> }, // This should be condo coop projects
-    { id: 'prompt-analysis', title: 'Prompt Analysis', category: 'PROMPT_ANALYSIS', icon: <PsychologyIcon /> },
     { id: 'raw-output', title: 'Raw Output', icon: <CodeIcon /> },
   ], []);
 

@@ -39,7 +39,7 @@ const Sidebar = ({ sections, isOpen, isLocked, onLockToggle, onMouseEnter, onMou
             {sections.map((section) => (
                 <ListItem key={section.id} disablePadding>
                     <Tooltip title={!isOpen ? section.title : ""} placement="right" arrow>
-                        <ListItemButton component="a" href={`#${section.id}`} className={`sidebar-link ${activeSection === section.id ? 'active' : ''}`} onClick={() => onSectionClick(section)} disabled={loading}>
+                        <ListItemButton component="a" href={`#${section.id}`} className={`sidebar-link ${activeSection === section.id ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); onSectionClick(section); }} disabled={loading}>
                             {section.icon && (
                                 <ListItemIcon>
                                     {section.icon}
