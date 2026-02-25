@@ -1668,7 +1668,7 @@ function Subject() {
     { id: 'subject-rent-schedule', title: 'SUBJECT RENT SCHEDULE', category: 'SUBJECT_RENT_SCHEDULE', icon: <RequestQuoteIcon /> },
     { id: 'rent-schedule-section', title: 'Comparable Rent Schedule', category: 'RENT_SCHEDULE_GRID', icon: <TableChartIcon /> },
     { id: 'rent-schedule-reconciliation-section', title: 'Rent Schedule Reconciliation', category: 'RENT_SCHEDULE_RECONCILIATION', icon: <MergeTypeIcon /> },
-    { id: 'reconciliation-section', title: 'Reconciliation', category: 'RECONCILIATION', icon: <BalanceIcon /> },
+    { id: 'reconciliation-section', title: '1004 Reconciliation', category: 'RECONCILIATION', icon: <BalanceIcon /> },
     { id: 'cost-approach-section', title: 'Cost Approach', category: 'COST_APPROACH', icon: <CalculateIcon /> },
     { id: 'income-approach-section', title: 'Income Approach', category: 'INCOME_APPROACH', icon: <AttachMoneyIcon /> },
     { id: 'pud-info-section', title: 'PUD Information', category: 'PUD_INFO', icon: <DomainIcon /> },
