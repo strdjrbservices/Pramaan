@@ -20,13 +20,7 @@ import History from './components/Subject/History';
 import FloatingMenu from './components/Subject/FloatingMenu';
 import Register from './components/Subject/Register';
 
-import {
-  //Box,
-  //Button,
-  IconButton,
-  // Avatar,
-  // Typography,
-} from '@mui/material';
+import {IconButton} from '@mui/material';
 
 import MenuIcon from '@mui/icons-material/Menu';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -50,40 +44,7 @@ function App() {
     localStorage.setItem('isAuthenticated', String(isAuthenticated));
   }, [isAuthenticated]);
 
-  // useEffect(() => {
-  //   if (!isAuthenticated) return;
 
-  //   let idleTimer;
-
-  //   const resetTimer = () => {
-  //     clearTimeout(idleTimer);
-  //     if (location.pathname !== '/logo') {
-  //       idleTimer = setTimeout(() => {
-  //         localStorage.setItem('lastPath', location.pathname);
-  //         navigate('/logo');
-  //       }, 1 * 30 * 1000);
-  //     }
-  //   };
-
-  //   const handleActivity = () => {
-  //     if (location.pathname === '/logo') {
-  //       const lastPath = localStorage.getItem('lastPath') || '/';
-  //       navigate(lastPath);
-  //     } else {
-  //       resetTimer();
-  //     }
-  //   };
-
-  //   window.addEventListener('mousemove', handleActivity);
-  //   window.addEventListener('keydown', handleActivity);
-  //   resetTimer();
-
-  //   return () => {
-  //     clearTimeout(idleTimer);
-  //     window.removeEventListener('mousemove', handleActivity);
-  //     window.removeEventListener('keydown', handleActivity);
-  //   };
-  // }, [isAuthenticated, location.pathname, navigate]);
 
   const handleLogout = () => {
     setMenuOpen(false);
@@ -106,7 +67,6 @@ function App() {
 
   return (
     <>
-      {/* MENU BUTTON */}
       {!hideHeader && (
         <IconButton
           ref={menuButtonRef}
@@ -131,7 +91,6 @@ function App() {
         </IconButton>
       )}
 
-      {/* FLOATING MENU */}
       {!hideHeader && (
         <FloatingMenu
           menuOpen={menuOpen}
@@ -144,7 +103,6 @@ function App() {
         />
       )}
       <ThemeContextProvider>
-        {/* ROUTES */}
         <Routes>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />

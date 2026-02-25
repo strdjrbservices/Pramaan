@@ -213,7 +213,7 @@ const Login = ({ onLogin }) => {
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 3,
                   marginBottom: 2,
-                   backgroundColor: 'action.hover',
+                  backgroundColor: 'action.hover',
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: 'action.selected',

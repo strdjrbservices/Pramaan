@@ -40,6 +40,7 @@ import {
   FileDownload as FileDownloadIcon,
   DeleteForever as DeleteForeverIcon
 } from '@mui/icons-material';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import VisibilityTwoToneIcon from '@mui/icons-material/VisibilityTwoTone';
 import { Button, Stack, IconButton, Tooltip, Paper, Box, Typography, LinearProgress, Alert, Snackbar, Fade, CircularProgress, useTheme, CssBaseline, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Fab, Autocomplete, TextField } from '@mui/material';
 import jsPDF from 'jspdf';
@@ -1673,6 +1674,7 @@ function Subject() {
     { id: 'pud-info-section', title: 'PUD Information', category: 'PUD_INFO', icon: <DomainIcon /> },
     { id: 'market-conditions-section', title: 'Market Conditions', category: 'MARKET_CONDITIONS', icon: <TrendingUpIcon /> },
     { id: 'condo-coop-section', title: 'Condo/Co-op', category: ['CONDO', 'CONDO_FORECLOSURE'], icon: <BusinessIcon /> },
+    { id: 'appraiser-section', title: 'Certification', category: 'CERTIFICATION', icon: <VerifiedUserIcon /> },
     { id: 'raw-output', title: 'Raw Output', icon: <CodeIcon /> },
   ], []);
 

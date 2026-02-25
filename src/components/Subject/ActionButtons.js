@@ -1,5 +1,4 @@
 import React from 'react';
-// import { Button, Stack } from '@mui/material';
 import { Stack } from '@mui/material';
 
 const ActionButtons = ({
@@ -11,15 +10,6 @@ const ActionButtons = ({
     escalationLoading,
 }) => (
     <Stack direction="row">
-        {/* <Button variant="contained" onClick={handleStateRequirementCheck} disabled={stateReqLoading} className="blink-me">
-            State Req Check
-        </Button>
-        <Button variant="contained" onClick={handleClientRequirementCheck} disabled={clientReqLoading} className="blink-me">
-            Client Req Check
-        </Button>
-        <Button variant="contained" onClick={handleEscalationCheck} disabled={escalationLoading} color="error">
-            Escalation Check
-        </Button> */}
     </Stack>
 );
 

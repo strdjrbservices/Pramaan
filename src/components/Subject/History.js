@@ -41,6 +41,7 @@ const History = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [reportToDelete, setReportToDelete] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
   const [filters, setFilters] = useState({
     file_name: '',
     user_name: localStorage.getItem('username') || '',
@@ -55,23 +56,41 @@ const History = () => {
   }, []);
 
   const fetchReports = async () => {
+    const token = localStorage.getItem('authToken');
+
+    if (!token) {
+      setError('Please log in to view history.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/get-reports/');
-      
+      const response = await fetch('https://praman-strdjrbservices.pythonanywhere.com/api/get-reports/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+
+      if (response.status === 401) {
+        localStorage.removeItem('authToken');
+        throw new Error('Session expired. Please log in again.');
+      }
+
       if (!response.ok) {
         throw new Error(`Failed to fetch reports (Status: ${response.status})`);
       }
-      
+
       const data = await response.json();
-      // Assuming each report object from the API has a unique 'id'
       setReports(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching history:", err);
-      setError('Could not load review history. Please ensure the backend supports this feature.');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleDeleteClick = (report) => {
     setReportToDelete(report);
@@ -87,10 +106,12 @@ const History = () => {
     if (!reportToDelete) return;
 
     try {
-      // This assumes your API has an endpoint like /api/delete-report/<id>/
-      // and that the report object has a unique 'id' property.
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`https://praman-strdjrbservices.pythonanywhere.com/api/delete-report/${reportToDelete.id}/`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -108,15 +129,17 @@ const History = () => {
   };
 
   const handleStatusChange = async (id, newStatus) => {
-    setReports(prevReports => prevReports.map(report => 
+    setReports(prevReports => prevReports.map(report =>
       report.id === id ? { ...report, status: newStatus } : report
     ));
 
     try {
+      const token = localStorage.getItem('authToken');
       await fetch(`https://praman-strdjrbservices.pythonanywhere.com/api/update-report-status/${id}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -150,9 +173,14 @@ const History = () => {
   };
 
   const handleFileClick = async (report) => {
-    setLoading(true);
+    setProcessingId(report.id);
     try {
-      const response = await fetch(`https://praman-strdjrbservices.pythonanywhere.com/api/get-report/${report.id}/`);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://praman-strdjrbservices.pythonanywhere.com/api/get-report/${report.id}/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         navigate('/extractor', {
@@ -176,7 +204,7 @@ const History = () => {
         });
       } else {
         setError('Could not load report details.');
-        setLoading(false);
+        setProcessingId(null);
       }
     }
   };
@@ -218,21 +246,21 @@ const History = () => {
         </Button>
 
         <Box display="flex" alignItems="center" gap={2} mb={5} justifyContent='center' >
-            <PremiumLogo size={60} fullScreen={false} />
-            <Box>
-                <Typography variant="h4" fontWeight={800} sx={{
-                    background: 'linear-gradient(45deg, #1976d2, #9c27b0)',
-                    backgroundClip: 'text',
-                    textFillColor: 'transparent',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                }}>
-                    Review History
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary">
-                    Archive of past appraisal reviews
-                </Typography>
-            </Box>
+          <PremiumLogo size={60} fullScreen={false} />
+          <Box>
+            <Typography variant="h4" fontWeight={800} sx={{
+              background: 'linear-gradient(45deg, #1976d2, #9c27b0)',
+              backgroundClip: 'text',
+              textFillColor: 'transparent',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              Review History
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary">
+              Archive of past appraisal reviews
+            </Typography>
+          </Box>
         </Box>
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
@@ -264,134 +292,141 @@ const History = () => {
         </Box>
 
         {!loading && (
-          <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary', textAlign: 'left', display: 'block',textTransform: 'uppercase', fontWeight: 600 ,}}>
+          <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary', textAlign: 'left', display: 'block', textTransform: 'uppercase', fontWeight: 600, }}>
             Total Files: {filteredReports.length}
           </Typography>
         )}
 
         <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden' }}>
-            {loading ? (
-                <Box sx={{ p: 6, display: 'flex', justifyContent: 'center' }}>
-                    <CircularProgress />
-                </Box>
-            ) : reports.length === 0 ? (
-                <Box sx={{ p: 6, textAlign: 'center' }}>
-                    <Typography color="text.secondary" variant="h6" gutterBottom>No review history found.</Typography>
-                    <Button variant="contained" sx={{ mt: 2 }} onClick={() => navigate('/extractor')}>
-                        Start New Review
-                    </Button>
-                </Box>
-            ) : (
-                <TableContainer>
-                    <Table sx={{ minWidth: 650 }}>
-                        <TableHead sx={{ bgcolor: 'grey.200' }}>
-                            <TableRow>
-                                <TableCell sx={{ fontWeight: 'bold', py: 2 }}>File Name</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', py: 2 }}>User</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Date Processed</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Time Taken</TableCell>
-                                {isAdmin && <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Actions</TableCell>}
-                            </TableRow>
-                            <TableRow>
-                                <TableCell sx={{ p: 1 }}>
-                                    <TextField 
-                                        size="small" 
-                                        variant="standard" 
-                                        placeholder="Filter File" 
-                                        fullWidth 
-                                        onChange={(e) => handleFilterChange('file_name', e.target.value)} 
-                                    />
-                                </TableCell>
-                                <TableCell sx={{ p: 1 }}>
-                                    <TextField 
-                                        size="small" 
-                                        variant="standard" 
-                                        placeholder="Filter User" 
-                                        fullWidth 
-                                        value={filters.user_name}
-                                        onChange={(e) => handleFilterChange('user_name', e.target.value)} 
-                                    />
-                                </TableCell>
-                                <TableCell sx={{ p: 1 }}>
-                                    <TextField 
-                                        size="small" 
-                                        variant="standard" 
-                                        placeholder="Filter Date" 
-                                        fullWidth 
-                                        onChange={(e) => handleFilterChange('created_at', e.target.value)} 
-                                    />
-                                </TableCell>
-                                <TableCell sx={{ p: 1 }}>
-                                    <TextField size="small" variant="standard" placeholder="Filter Status" fullWidth onChange={(e) => handleFilterChange('status', e.target.value)} />
-                                </TableCell>
-                                <TableCell sx={{ p: 1 }}>
-                                    <TextField size="small" variant="standard" placeholder="Filter Time" fullWidth onChange={(e) => handleFilterChange('totalTimeTaken', e.target.value)} />
-                                </TableCell>
-                                {isAdmin && <TableCell sx={{ p: 1 }} />}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filteredReports.length === 0 && (
-                                <TableRow><TableCell colSpan={isAdmin ? 6 : 5} align="center" sx={{ py: 3 }}>No matching records found</TableCell></TableRow>
-                            )}
-                            {filteredReports.map((report) => (
-                                <TableRow key={report.id /* Assuming unique id from API */} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                    <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
-                                        <Box
-                                            onClick={() => handleFileClick(report)}
-                                            sx={{ cursor: 'pointer', color: 'primary.main', '&:hover': { textDecoration: 'underline' } }}
-                                        >
-                                            {report.file_name || 'Unknown File'}
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>{report.user_name || 'Unknown'}</TableCell>
-                                    <TableCell>
-                                        {report.created_at ? new Date(report.created_at).toLocaleString() : 'N/A'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Select
-                                            value={report.status || 'Completed'}
-                                            onChange={(e) => handleStatusChange(report.id, e.target.value)}
-                                            variant="standard"
-                                            disableUnderline
-                                            size="small"
-                                            sx={{ 
-                                                fontSize: '0.875rem',
-                                                minWidth: 120,
-                                                '& .MuiSelect-select': { padding: 0 }
-                                            }}
-                                            renderValue={(selected) => (
-                                                <Chip 
-                                                    label={selected} 
-                                                    color={getStatusColor(selected)} 
-                                                    size="small" 
-                                                    sx={{ fontWeight: 600, width: '100%', cursor: 'pointer' }}
-                                                />
-                                            )}
-                                        >
-                                            <MenuItem value="Completed">Completed</MenuItem>
-                                            <MenuItem value="Pending">Pending</MenuItem>
-                                            <MenuItem value="In Progress">In Progress</MenuItem>
-                                            <MenuItem value="Failed">Failed</MenuItem>
-                                        </Select>
-                                    </TableCell>
-                                    <TableCell>{report.report_data?.totalTimeTaken || 'N/A'}</TableCell>
-                                    {isAdmin && (
-                                        <TableCell>
-                                            <Tooltip title="Delete Report">
-                                                <IconButton onClick={() => handleDeleteClick(report)} color="error" size="small">
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
+          {loading ? (
+            <Box sx={{ p: 6, display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress />
+            </Box>
+          ) : reports.length === 0 ? (
+            <Box sx={{ p: 6, textAlign: 'center' }}>
+              <Typography color="text.secondary" variant="h6" gutterBottom>No review history found.</Typography>
+              <Button variant="contained" sx={{ mt: 2 }} onClick={() => navigate('/extractor')}>
+                Start New Review
+              </Button>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead sx={{ bgcolor: 'grey.200' }}>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold', py: 2 }}>File Name</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 2 }}>User</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Date Processed</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Time Taken</TableCell>
+                    {isAdmin && <TableCell sx={{ fontWeight: 'bold', py: 2 }}>Actions</TableCell>}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell sx={{ p: 1 }}>
+                      <TextField
+                        size="small"
+                        variant="standard"
+                        placeholder="Filter File"
+                        fullWidth
+                        onChange={(e) => handleFilterChange('file_name', e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ p: 1 }}>
+                      <TextField
+                        size="small"
+                        variant="standard"
+                        placeholder="Filter User"
+                        fullWidth
+                        value={filters.user_name}
+                        onChange={(e) => handleFilterChange('user_name', e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ p: 1 }}>
+                      <TextField
+                        size="small"
+                        variant="standard"
+                        placeholder="Filter Date"
+                        fullWidth
+                        onChange={(e) => handleFilterChange('created_at', e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ p: 1 }}>
+                      <TextField size="small" variant="standard" placeholder="Filter Status" fullWidth onChange={(e) => handleFilterChange('status', e.target.value)} />
+                    </TableCell>
+                    <TableCell sx={{ p: 1 }}>
+                      <TextField size="small" variant="standard" placeholder="Filter Time" fullWidth onChange={(e) => handleFilterChange('totalTimeTaken', e.target.value)} />
+                    </TableCell>
+                    {isAdmin && <TableCell sx={{ p: 1 }} />}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredReports.length === 0 && (
+                    <TableRow><TableCell colSpan={isAdmin ? 6 : 5} align="center" sx={{ py: 3 }}>No matching records found</TableCell></TableRow>
+                  )}
+                  {filteredReports.map((report) => (
+                    <TableRow key={report.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                      <TableCell component="th" scope="row" sx={{ fontWeight: 500, width: '25%' }}>
+                        {processingId === report.id ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CircularProgress size={20} />
+                            <Typography variant="body2">Processing...</Typography>
+                          </Box>
+                        ) : (
+                          <Box
+                            onClick={() => !processingId && handleFileClick(report)}
+                            sx={{ cursor: processingId ? 'default' : 'pointer', color: 'primary.main', '&:hover': { textDecoration: 'underline' } }}
+                          >
+                            {report.file_name || 'Unknown File'}
+                          </Box>
+                        )}
+                      </TableCell>
+                      <TableCell>{report.user_name || 'Unknown'}</TableCell>
+                      <TableCell>
+                        {report.created_at ? new Date(report.created_at).toLocaleString() : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={report.status || 'Completed'}
+                          onChange={(e) => handleStatusChange(report.id, e.target.value)}
+                          variant="standard"
+                          disableUnderline
+                          size="small"
+                          sx={{
+                            fontSize: '0.875rem',
+                            minWidth: 120,
+                            '& .MuiSelect-select': { padding: 0 }
+                          }}
+                          renderValue={(selected) => (
+                            <Chip
+                              label={selected}
+                              color={getStatusColor(selected)}
+                              size="small"
+                              sx={{ fontWeight: 600, width: '100%', cursor: 'pointer' }}
+                            />
+                          )}
+                        >
+                          <MenuItem value="Completed">Completed</MenuItem>
+                          <MenuItem value="Pending">Pending</MenuItem>
+                          <MenuItem value="In Progress">In Progress</MenuItem>
+                          <MenuItem value="Failed">Failed</MenuItem>
+                        </Select>
+                      </TableCell>
+                      <TableCell>{report.report_data?.totalTimeTaken || 'N/A'}</TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <Tooltip title="Delete Report">
+                            <IconButton onClick={() => handleDeleteClick(report)} color="error" size="small">
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Paper>
       </Container>
       <Dialog
