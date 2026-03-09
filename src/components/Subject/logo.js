@@ -21,21 +21,21 @@ const PremiumLogo = ({ size = 60, fullScreen = true }) => {
         overflow: 'hidden',
       }}
     >
-      
+
       {/* Subtle Background Glow - Only for fullScreen */}
       {fullScreen && (
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '60vw',
-          height: '60vw',
-          borderRadius: '50%',
-          pointerEvents: 'none',
-        }}
-      />)}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '60vw',
+            height: '60vw',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          }}
+        />)}
 
       <Box
         component={motion.div}
@@ -56,7 +56,7 @@ const PremiumLogo = ({ size = 60, fullScreen = true }) => {
           height: fullScreen ? { xs: 320, md: 500 } : baseSize,
         }}
       >
-        
+
         {/* Rotating Outer Ring - Dashed */}
         <Box
           component={motion.div}
@@ -89,13 +89,13 @@ const PremiumLogo = ({ size = 60, fullScreen = true }) => {
 
         {/* Static Inner Circle */}
         <Box
-            sx={{
-                position: 'absolute',
-                inset: 45,
-                borderRadius: '50%',
-                border: '1px solid',
-                borderColor: fullScreen ? 'rgba(255, 255, 255, 0.03)' : theme.palette.divider,
-            }}
+          sx={{
+            position: 'absolute',
+            inset: 45,
+            borderRadius: '50%',
+            border: '1px solid',
+            borderColor: fullScreen ? 'rgba(255, 255, 255, 0.03)' : theme.palette.divider,
+          }}
         />
 
         {/* Brand Content */}
@@ -129,12 +129,12 @@ const PremiumLogo = ({ size = 60, fullScreen = true }) => {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ delay: 0.8, duration: 0.8 }}
-            sx={{ 
-                width: '60px', 
-                height: '3px', 
-                background: fullScreen ? 'rgb(0, 26, 255)' : theme.palette.primary.main,
-                mb: 2,
-                borderRadius: '2px'
+            sx={{
+              width: '60px',
+              height: '3px',
+              background: fullScreen ? 'rgb(0, 26, 255)' : theme.palette.primary.main,
+              mb: 2,
+              borderRadius: '2px'
             }}
           />
 
@@ -148,7 +148,7 @@ const PremiumLogo = ({ size = 60, fullScreen = true }) => {
               fontSize: fullScreen ? { xs: '0.75rem', md: '1rem' } : '1rem',
               fontWeight: 600,
               textTransform: 'uppercase',
-              color: fullScreen ? 'rgb(0, 26, 255)' : theme.palette.text.secondary, 
+              color: fullScreen ? 'rgb(0, 26, 255)' : theme.palette.text.secondary,
             }}
           >
             Services

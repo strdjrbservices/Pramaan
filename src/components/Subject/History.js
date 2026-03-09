@@ -56,7 +56,10 @@ const History = () => {
   }, []);
 
   const fetchReports = async () => {
+    setLoading(true);
+    setError(''); 
     const token = localStorage.getItem('authToken');
+
 
     if (!token) {
       setError('Please log in to view history.');
@@ -113,6 +116,7 @@ const History = () => {
           'Authorization': `Bearer ${token}`,
         },
       });
+
 
       if (!response.ok) {
         throw new Error('Failed to delete report');

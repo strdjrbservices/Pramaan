@@ -167,7 +167,7 @@ export const checkAnsi = (field, text, data) => {
 export const checkCensusTract = (field, text) => {
     if (field !== 'Census Tract') return null;
     const value = String(text || '').trim();
-    if (!value) return null; 
+    if (!value) return null;
 
     if (!/^\d+(\.\d+)?$/.test(value)) {
         return { isError: true, message: 'Census Tract must only contain numbers.' };
@@ -187,7 +187,7 @@ export const checkFullAddressConsistency = (field, text) => {
 export const checkPresence = (field, text) => {
     const value = String(text || '').trim();
     if (!value) return { isError: true, message: `${field} is empty.` };
-    
+
     const lowerValue = value.toLowerCase();
     if (lowerValue.includes('not present')) {
         return { isError: true, message: `${field} is marked as not present.` };

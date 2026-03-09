@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import  { useCallback } from 'react';
 import {
   Button,
   CircularProgress,
@@ -70,7 +70,6 @@ const StateRequirementCheck = ({ onPromptSubmit, loading, response, error }) => 
 
     return (
       <Stack spacing={3} sx={{ mt: 3 }}>
-        {/* Summary Section */}
         {summary && (
           <Paper elevation={1} sx={{ p: 2, bgcolor: 'background.default' }}>
             <Typography variant="h6" gutterBottom component="div" color="primary.main">
@@ -82,7 +81,6 @@ const StateRequirementCheck = ({ onPromptSubmit, loading, response, error }) => 
           </Paper>
         )}
 
-        {/* Details Table */}
         {details && Array.isArray(details) && (
           <Paper elevation={1} sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom component="div" color="primary.main">
@@ -113,36 +111,36 @@ const StateRequirementCheck = ({ onPromptSubmit, loading, response, error }) => 
                       }
                     }
                     return (
-                    <TableRow key={index}>
-                      <TableCell>{item.requirement}</TableCell>
-                      <TableCell>
-                        {isInvalid ? (
-                          <Tooltip title={tooltipContent} arrow>
+                      <TableRow key={index}>
+                        <TableCell>{item.requirement}</TableCell>
+                        <TableCell>
+                          {isInvalid ? (
+                            <Tooltip title={tooltipContent} arrow>
+                              <span style={statusStyle}>{item.status}</span>
+                            </Tooltip>
+                          ) : (
                             <span style={statusStyle}>{item.status}</span>
-                          </Tooltip>
-                        ) : (
-                          <span style={statusStyle}>{item.status}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {/* ✅ Handle both string and object safely */}
-                        {typeof item.value_or_comment === 'object' && item.value_or_comment !== null ? (
-                          <>
-                            {item.value_or_comment.value && (
-                              <Typography variant="body2">{item.value_or_comment.value}</Typography>
-                            )}
-                            {item.value_or_comment.page_no && (
-                              <Typography variant="caption" color="text.secondary">
-                                Page: {item.value_or_comment.page_no}
-                              </Typography>
-                            )}
-                          </>
-                        ) : (
-                          item.value_or_comment
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )})}
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {typeof item.value_or_comment === 'object' && item.value_or_comment !== null ? (
+                            <>
+                              {item.value_or_comment.value && (
+                                <Typography variant="body2">{item.value_or_comment.value}</Typography>
+                              )}
+                              {item.value_or_comment.page_no && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Page: {item.value_or_comment.page_no}
+                                </Typography>
+                              )}
+                            </>
+                          ) : (
+                            item.value_or_comment
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>

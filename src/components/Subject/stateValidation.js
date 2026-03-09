@@ -27,7 +27,7 @@ const checkCaliforniaRequirements = (data) => {
     const missing = [];
 
     // Check for fields directly in the data object, as they are part of the Subject section for CA.
-        // Check for fields directly in the data object, as they are part of the Subject section for CA.
+    // Check for fields directly in the data object, as they are part of the Subject section for CA.
     if (!data?.['Smoke detector comment']) missing.push("Smoke detector comment");
     if (!data?.['CO detector comment']) missing.push("CO detector comment");
     if (!data?.['Water heater double-strapped comment']) missing.push("Water heater double-strapped comment");
@@ -64,7 +64,7 @@ export const checkStateRequirements = (field, text, data) => {
     const state = String(text || '').trim().toUpperCase();
     if (!state) return null;
 
-    
+
     const detailedChecks = {
         'GA': () => {
             const missing = [];
@@ -117,7 +117,7 @@ export const checkStateRequirements = (field, text, data) => {
         'ND': { check: () => checkAppraiserFee(data), msg: "Appraiser's fee must be disclosed." },
         'WV': { check: () => checkAppraiserFee(data), msg: "Appraiser's fee must be disclosed." },
         'MT': { check: () => checkAmcLicense(data), msg: "AMC License # must be included." },
-        'NY': { check: () => true, msg: "Invoice copy should be included in the report (except for Plaza Home Mortgage)." } // Manual check
+        'NY': { check: () => true, msg: "Invoice copy should be included in the report (except for Plaza Home Mortgage)." }
     };
 
     if (detailedChecks[state]) {

@@ -132,7 +132,7 @@ export const RevisionLanguageDialog = ({ open, onClose, title, prompts, onCopy, 
 export const NotepadDialog = ({ open, onClose, notes, onNotesChange }) => {
     const handleSaveNotes = () => {
         if (!notes) {
-            return; // Don't save an empty file
+            return;
         }
         const blob = new Blob([notes], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);

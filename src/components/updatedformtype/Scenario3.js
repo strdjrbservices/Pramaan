@@ -55,8 +55,8 @@ import {
   reconciliationAppraisalSummaryPrompt,
   certificationPrompt,
   sectionPrompts
-} from './Scenario2Data';
-import Scenario2Form from './Scenario2Form';
+} from './Scenario3Data';
+import Scenario3Form from './Scenario3Form';
 
 const TooltipStyles = () => (
   <GlobalStyles styles={{
@@ -113,7 +113,7 @@ const playSound = (soundType) => {
   }
 };
 
-const Scenario2 = () => {
+const Scenario3 = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [htmlFile, setHtmlFile] = useState(null);
@@ -141,7 +141,7 @@ const Scenario2 = () => {
   const engagementLetterFileInputRef = useRef(null);
   const [showRawData, setShowRawData] = useState(false);
 
-  const [selectedFormType, setSelectedFormType] = useState({ label: 'Scenario 2', id: 'Scenario2' });
+  const [selectedFormType, setSelectedFormType] = useState({ label: 'Scenario 3', id: 'Scenario3' });
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
@@ -560,7 +560,7 @@ const Scenario2 = () => {
           <Box className="header-container" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, my: 2 }}>
             <PremiumLogo size={80} fullScreen={false} />
             <Typography variant="h3" component="h1" className="app-title" sx={{ fontFamily: 'BBH Sans Hegarty', fontWeight: 'bold', fontSize: { xs: '2rem', md: '3rem' } }}>
-              SCENARIO 2 REVIEW
+              SCENARIO 3 REVIEW
             </Typography>
           </Box>
 
@@ -899,8 +899,8 @@ const Scenario2 = () => {
           </Paper>
 
           <Box sx={{ mt: 4 }}>
-            {selectedFormType.id === 'Scenario2' && (
-              <Scenario2Form
+            {selectedFormType.id === 'Scenario3' && (
+              <Scenario3Form
                 extractedData={extractedData}
                 handleDataChange={handleDataChange}
                 handleSalesGridDataChange={handleSalesGridDataChange}
@@ -985,4 +985,4 @@ const Scenario2 = () => {
   );
 };
 
-export default Scenario2;
+export default Scenario3;

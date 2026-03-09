@@ -37,7 +37,7 @@ export const checkCostApproachDeveloped = (field, text, allData) => {
 
 export const checkAppraisalCondition = (field, text) => {
     if (field !== 'This appraisal is made "as is", subject to completion per plans and specifications on the basis of a hypothetical condition that the improvements have been completed, subject to the following repairs or alterations on the basis of a hypothetical condition that the repairs or alterations have been completed, or subject to the following required inspection based on the extraordinary assumption that the condition or deficiency does not require alteration or repair:') return null;
-    
+
     const value = String(text || '').trim().toLowerCase();
     const hasAsIs = value.includes('as is');
     const hasSubjectTo = value.includes('subject to');

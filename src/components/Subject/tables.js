@@ -70,7 +70,6 @@ export const ComparableAddressConsistency = ({ data, comparableSales, extraction
                                             editingField={editingField}
                                             setEditingField={setEditingField} allData={allData}
                                             isMissing={isMissingSalesGrid} isEditable={isEditable}
-                                        // isEditable={true}
                                         />
                                     </td>
                                     <td style={isMissingLocationMap ? { border: '2px solid red' } : {}}>
@@ -137,7 +136,7 @@ export const MarketConditionsTable = ({ data, marketConditionsRows, marketCondit
 
     return (
         <TableContainer component={Paper} sx={{ marginTop: '20px', marginBottom: '20px' }}>
-            {/* <div className="card-header CAR1 bg-warning text-dark" style={{ position: 'sticky', top: 0, zIndex: 10 }}><strong>Market Conditions Addendum</strong></div> */}
+
             <Table className="table mb-20" style={{ marginTop: '20px' }} size="small" aria-label="market-conditions-table">
                 <TableHead style={{}}>
                     <TableRow>
@@ -165,7 +164,6 @@ export const MarketConditionsTable = ({ data, marketConditionsRows, marketCondit
             </Table>
             <Box sx={{ p: 2 }}>
                 {marketConditionsFields.map(field => {
-                    // Render only fields that are not part of the table
                     if (marketConditionsRows.some(row => row.fullLabel.includes(field) || field.includes(row.fullLabel))) return null;
 
                     return (

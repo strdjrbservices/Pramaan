@@ -1,27 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Paper,
-  Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Container,
-  Grid,
+  IconButton ,Box ,Button , TextField, Typography, Paper, Alert, Table, TableBody, TableCell, TableContainer,
+  TableHead , TableRow, Container, Tooltip, Grid, CssBaseline,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SearchIcon from '@mui/icons-material/Search';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import NightlightRoundIcon from '@mui/icons-material/NightlightRound';
 import uploadSoundFile from '../../Assets/upload.mp3';
 import successSoundFile from '../../Assets/success.mp3';
 import errorSoundFile from '../../Assets/error.mp3';
 import PremiumLogo from './logo';
+import { useThemeContext } from '../../context/ThemeContext';
 
 const playSound = (soundType) => {
   let soundFile;
@@ -65,16 +56,17 @@ const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
     }
     if (i < retries - 1) {
       await new Promise(resolve => setTimeout(resolve));
-      delay *= 2; 
+      delay *= 2;
     }
   }
   throw new Error(`Failed to fetch from ${url} after ${retries} attempts.`);
 };
 
 const CustomQuery = () => {
+  const { themeMode, toggleTheme } = useThemeContext();
   const [file, setFile] = useState(null);
   const [comment, setComment] = useState('');
-  const [formType,] = useState('1004'); // Default form type
+  const [formType,] = useState('1004');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -133,23 +125,23 @@ const CustomQuery = () => {
     formData.append('comment', comment);
 
     try {
-      const res = await fetchWithRetry('https://praman-strdjrbservices.pythonanywhere.com/api/extract/', {
+      const res = await fetchWithRetry('https://praman-strdjrbservices.pythonanywhere.com/api/customquery/', {
         method: 'POST',
         body: formData,
       });
 
-      const text = await res.text(); // res can be undefined if all retries fail
+      const text = await res.text();
 
       if (!res.ok) {
         throw new Error(text || `HTTP error! status: ${res.status}`);
       }
 
-      // Try to parse server reply as JSON. If it fails, treat it as plain text.
+
       try {
         const parsedJson = JSON.parse(text);
         setResponse(parsedJson);
       } catch (err) {
-        // If it's not JSON, wrap it in a format that can be rendered.
+
         setResponse({ rawText: text });
       }
     } catch (e) {
@@ -164,16 +156,21 @@ const CustomQuery = () => {
   const renderResponse = () => {
     if (!response) return null;
 
-    // Handle raw text response
-
     let dataToRender = [];
     let summary = null;
-    // let tableHeaders = [];
-
 
     if (response.rawText) {
       return (
-        <Paper elevation={1} sx={{ p: 3, mt: 3, whiteSpace: 'pre-wrap', bgcolor: 'grey.50', borderRadius: 3 }}>
+        <Paper elevation={1} sx={{
+          p: 3,
+          mt: 3,
+          whiteSpace: 'pre-wrap',
+          overflowWrap: 'break-word',
+          bgcolor: 'background.paper',
+          borderRadius: 3,
+          color: 'text.primary',
+          wordWrap: 'break-word',
+        }}>
           <Typography variant="body1">{response.rawText}</Typography>
         </Paper>
       );
@@ -194,14 +191,12 @@ const CustomQuery = () => {
           'final_output': typeof val === 'object' && val !== null ? val.value : val,
         }));
     } else if (Object.values(response).every(v => typeof v === 'object' && v !== null && 'value' in v && 'page_no' in v)) {
-      // Handle object with { value, page_no } structure
       dataToRender = Object.entries(response).map(([key, val]) => ({
         'field': key.replace(/_/g, ' '),
         'value': val.value,
         'page_no': val.page_no,
       }));
     } else {
-      // Generic object to key-value table
       dataToRender = Object.entries(response).map(([key, value]) => ({
         'field': key.replace(/_/g, ' '),
         'value': typeof value === 'object' && value !== null ? JSON.stringify(value, null, 2) : String(value)
@@ -243,16 +238,25 @@ const CustomQuery = () => {
       );
     }
 
-    // Fallback for other object structures
     return (
-      <Paper elevation={1} sx={{ p: 3, mt: 3, whiteSpace: 'pre-wrap', bgcolor: 'grey.50', borderRadius: 3 }}>
+      <Paper elevation={1} sx={{
+        p: 3,
+        mt: 3,
+        whiteSpace: 'pre-wrap',
+        bgcolor: 'background.paper',
+        borderRadius: 3,
+        color: 'text.primary'
+      }}>
         <pre>{JSON.stringify(response, null, 2)}</pre>
       </Paper>
     );
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <>
+      <CssBaseline />
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+        <Container maxWidth="xl">
       <Box
         sx={{
           display: 'flex',
@@ -266,13 +270,18 @@ const CustomQuery = () => {
         <Typography variant="h4" component="h1" sx={{ fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(45deg, #1976d2, #9c27b0)', backgroundClip: 'text', textFillColor: 'transparent', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           CUSTOM QUERY
         </Typography>
+        <Tooltip title="Toggle Dark/Light Theme">
+          <IconButton onClick={toggleTheme} color="primary">
+            {themeMode === 'dark' ? <LightModeIcon /> : <NightlightRoundIcon />}
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <form onSubmit={handleSubmit}>
-        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 4, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 4, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper', color: 'text.primary' }}>
           <Grid container spacing={3} justifyContent="center">
             <Grid item xs={12} md={6}>
-              <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: file ? 'success.main' : 'divider', bgcolor: file ? 'success.lighter' : 'transparent' }}>
+              <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderStyle: 'dashed', borderColor: file ? 'success.main' : 'divider', bgcolor: file ? 'action.selected' : 'transparent' }}>
                 <Button component="label" fullWidth startIcon={<CloudUploadIcon />} sx={{ mb: 1 }}>
                   Upload PDF File
                   <input type="file" hidden accept=".pdf" onChange={handleFileChange} />
@@ -285,7 +294,7 @@ const CustomQuery = () => {
           </Grid>
         </Paper>
 
-        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper', color: 'text.primary' }}>
           <Typography variant="subtitle2" gutterBottom fontWeight="bold">Query Details</Typography>
           <TextField
             label="Enter your query or comment"
@@ -304,28 +313,28 @@ const CustomQuery = () => {
 
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
           <LoadingButton
-              type="submit"
-              variant="contained"
-              color="primary"
-              size="large"
-              loading={loading}
-              disabled={!file || !comment.trim()}
-              startIcon={<SearchIcon />}
-              sx={{ px: 6, py: 1.5, borderRadius: 3, fontSize: '1.1rem', fontWeight: 'bold', boxShadow: 4 }}
-            >
-              Run Query
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            loading={loading}
+            disabled={!file || !comment.trim()}
+            startIcon={<SearchIcon />}
+            sx={{ px: 6, py: 1.5, borderRadius: 3, fontSize: '1.1rem', fontWeight: 'bold', boxShadow: 4 }}
+          >
+            Run Query
           </LoadingButton>
         </Box>
         {loading && <Typography variant="body2" sx={{ mt: -2, mb: 3, textAlign: 'center', color: 'text.secondary' }}>Processing... {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
       </form>
-
       {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
-
       <Box sx={{ animation: 'fadeIn 0.5s ease-in-out' }}>
         {response && renderResponse()}
       </Box>
-    </Container>
+        </Container>
+      </Box>
+    </>
   );
 };
 
-export default CustomQuery;
+export default CustomQuery; 

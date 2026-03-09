@@ -55,8 +55,8 @@ import {
   reconciliationAppraisalSummaryPrompt,
   certificationPrompt,
   sectionPrompts
-} from './Scenario2Data';
-import Scenario2Form from './Scenario2Form';
+} from './Scenario4Data';
+import Scenario4Form from './Scenario4Form';
 
 const TooltipStyles = () => (
   <GlobalStyles styles={{
@@ -113,7 +113,7 @@ const playSound = (soundType) => {
   }
 };
 
-const Scenario2 = () => {
+const Scenario4 = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [htmlFile, setHtmlFile] = useState(null);
@@ -141,7 +141,7 @@ const Scenario2 = () => {
   const engagementLetterFileInputRef = useRef(null);
   const [showRawData, setShowRawData] = useState(false);
 
-  const [selectedFormType, setSelectedFormType] = useState({ label: 'Scenario 2', id: 'Scenario2' });
+  const [selectedFormType, setSelectedFormType] = useState({ label: 'Scenario 4', id: 'Scenario4' });
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
@@ -560,7 +560,7 @@ const Scenario2 = () => {
           <Box className="header-container" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, my: 2 }}>
             <PremiumLogo size={80} fullScreen={false} />
             <Typography variant="h3" component="h1" className="app-title" sx={{ fontFamily: 'BBH Sans Hegarty', fontWeight: 'bold', fontSize: { xs: '2rem', md: '3rem' } }}>
-              SCENARIO 2 REVIEW
+              SCENARIO 4 REVIEW
             </Typography>
           </Box>
 
@@ -574,6 +574,7 @@ const Scenario2 = () => {
               borderColor: 'divider'
             }}
           >
+            {/* ... (rest of the component structure is identical to Scenario3, just using Scenario4Form) ... */}
             <Grid container>
               <Grid item xs={12} md={8}>
                 <Stack spacing={2}>
@@ -899,8 +900,8 @@ const Scenario2 = () => {
           </Paper>
 
           <Box sx={{ mt: 4 }}>
-            {selectedFormType.id === 'Scenario2' && (
-              <Scenario2Form
+            {selectedFormType.id === 'Scenario4' && (
+              <Scenario4Form
                 extractedData={extractedData}
                 handleDataChange={handleDataChange}
                 handleSalesGridDataChange={handleSalesGridDataChange}
@@ -985,4 +986,4 @@ const Scenario2 = () => {
   );
 };
 
-export default Scenario2;
+export default Scenario4;

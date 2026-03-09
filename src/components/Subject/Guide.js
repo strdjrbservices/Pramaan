@@ -43,13 +43,13 @@ const Guide = () => {
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f6f8', py: 5 }}>
       <Container maxWidth="md">
         <Button
-          startIcon={<ArrowBackIcon />} 
+          startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/')}
           sx={{ mb: 3 }}
         >
           Back
         </Button>
-        
+
         <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: 4 }} >
           <Box display="flex" alignItems="center" justifyContent='center' gap={2} mb={4}>
             <PremiumLogo size={60} fullScreen={false} />
@@ -85,7 +85,7 @@ const Guide = () => {
 
           <SectionHeader>Overview</SectionHeader>
           <Typography paragraph color="text.secondary" sx={{ lineHeight: 1.7, fontSize: '1.05rem' }}>
-            The Appraisal Review Tool is designed to streamline the review process of appraisal reports. 
+            The Appraisal Review Tool is designed to streamline the review process of appraisal reports.
             It leverages automated data extraction and validation rules to identify potential issues and inconsistencies.
           </Typography>
 
@@ -211,16 +211,16 @@ const Guide = () => {
 
           <Stack direction="row" spacing={2} sx={{ mt: 4, justifyContent: 'center' }}>
             <Button
-              variant="contained" 
-              size="large" 
+              variant="contained"
+              size="large"
               startIcon={<EmailIcon />}
               href="mailto:strdjrbservices@gmail.com?subject=Appraisal Review Tool Support Request"
             >
               Email Support
             </Button>
             <Button
-              variant="outlined" 
-              size="large" 
+              variant="outlined"
+              size="large"
               component={RouterLink}
               to="/contact"
             >

@@ -12,7 +12,7 @@ import {
   TableHead,
   TableRow,
   Stack,
-  
+
 } from '@mui/material';
 
 export const CLIENT_REQUIREMENT_PROMPT = `
@@ -174,13 +174,12 @@ const ClientRequirementCheck = ({ onPromptSubmit, loading, response, error }) =>
       }
     }
 
-    // Safely extract properties
+    
     const summary = data?.summary ?? 'No summary available';
     const details = Array.isArray(data?.details) ? data.details : [];
 
-    // Helper function to safely render cell values
     const renderValue = (val) => {
-      if (val == null) return ''; // handle undefined/null
+      if (val == null) return '';  
       if (typeof val === 'object') return JSON.stringify(val, null, 2);
       return String(val);
     };

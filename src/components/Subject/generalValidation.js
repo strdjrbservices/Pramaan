@@ -31,7 +31,7 @@ export const checkSubjectFieldsNotBlank = (field, text) => {
         'Address (Lender/Client)',
         'Report data source(s) used, offering price(s), and date(s)'
 
-        
+
     ];
     return checkNotBlank(field, text, fieldsToCheck.find(f => f === field));
 };

@@ -848,6 +848,7 @@ function Subject() {
       { name: 'Client Requirements', response: clientReqResponse },
       { name: 'State Requirements', response: stateReqResponse },
       { name: 'FHA Requirements', response: fhaResponse },
+      { name: 'Escalation Check', response: escalationResponse },
       { name: 'ADU Requirements', response: ADUResponse },
       { name: 'Escalation Points', response: escalationResponse },
     ];
@@ -862,6 +863,9 @@ function Subject() {
             const comment = (typeof item.value_or_comment === 'object' && item.value_or_comment !== null)
               ? (item.value_or_comment.value || JSON.stringify(item.value_or_comment))
               : item.value_or_comment;
+            if (check.name === 'Escalation Check') {
+              isIssue = item.status === 'Needs Escalation';
+            }
             requirementErrors.push([check.name, item.requirement, item.status, comment]);
           }
         });
@@ -1520,9 +1524,8 @@ function Subject() {
     "Effective Date of Data Source(s) for prior sale"
   ];
   const COMPARABLE_RENTAL_DATA = ["Address", "Proximity to Subject", "Current Monthly Rent", "Rent/Gross Bldg. Area", "Rent Control", "Data Source(s)", "Date of Lease(s)", "Location", "Actual Age", "Condition", "Gross Building Area", "Unit Breakdown Rm Count Tot Unit # 1", "Unit Breakdown Rm Count Br Unit # 1", "Unit Breakdown Rm Count Ba Unit # 1", "Unit Breakdown Rm Count Tot Unit # 2", "Unit Breakdown Rm Count Br Unit # 2", "Unit Breakdown Rm Count Ba Unit # 2", "Unit Breakdown Rm Count Tot Unit # 3", "Unit Breakdown Rm Count Br Unit # 3", "Unit Breakdown Rm Count Ba Unit # 3", "Unit Breakdown Rm Count Tot Unit # 4", "Unit Breakdown Rm Count Br Unit # 4", "Unit Breakdown Rm Count Ba Unit # 4", "Utilities Included"];
-  const SUBJECT_RENT_SCHEDULE = ["Unit # Lease Date Begin Date 1", "Unit # Lease Date Begin Date 2", "Unit # Lease Date Begin Date 3", "Unit # Lease Date  Begin Date 4",
-    "Unit # Lease Date End Date 1", "Unit # Lease Date End Date 2", "Unit # Lease Date End Date 3", "Unit # Lease Date End Date 4",
-    "Actual Rents Unit # 1  Per Unit Unfurnished", "Actual Rents Unit # 2  Per Unit Unfurnished", "Actual Rents Unit # 3  Per Unit Unfurnished", "Actual Rents Unit # 4  Per Unit Unfurnished",
+  const SUBJECT_RENT_SCHEDULE = [
+    "Unit # Lease Date Begin Date 1", "Unit # Lease Date Begin Date 2", "Unit # Lease Date Begin Date 3", "Unit # Lease Date  Begin Date 4", "Unit # Lease Date End Date 1", "Unit # Lease Date End Date 2", "Unit # Lease Date End Date 3", "Unit # Lease Date End Date 4", "Actual Rents Unit # 1  Per Unit Unfurnished", "Actual Rents Unit # 2  Per Unit Unfurnished", "Actual Rents Unit # 3  Per Unit Unfurnished", "Actual Rents Unit # 4  Per Unit Unfurnished",
     "Actual Rents Unit # 1  Per Unit Furnished", "Actual Rents Unit # 2  Per Unit Furnished", "Actual Rents Unit # 3  Per Unit Furnished", "Actual Rents Unit # 4  Per Unit Furnished",
     "Actual Rents Unit # 1 Total Rents", "Actual Rents Unit # 2 Total Rents", "Actual Rents Unit # 3 Total Rents", "Actual Rents Unit # 4 Total Rents",
     "Opinion Of Market Rent Unit # 1 Per Unit Unfurnished", "Opinion Of Market Rent Unit # 2 Per Unit Unfurnished", "Opinion Of Market Rent Unit # 3 Per Unit Unfurnished", "Opinion Of Market Rent Unit # 4 Per Unit Unfurnished",
@@ -1540,8 +1543,7 @@ function Subject() {
     "Data Source(s) for comparable sales research",
     "Analysis of prior sale or transfer history of the subject property and comparable sales",
     "Summary of Sales Comparison Approach",
-    "Indicated Value by Sales Comparison Approach $",
-
+    "Indicated Value by Sales Comparison Approach $"
   ];
 
   const infoOfSalesFields = [
@@ -1653,19 +1655,18 @@ function Subject() {
     { id: 'subject-info', title: 'Subject', category: 'SUBJECT', icon: <HomeIcon /> },
     { id: 'contract-section', title: 'Contract', category: 'CONTRACT', icon: <GavelIcon /> },
     { id: 'neighborhood-section', title: 'Neighborhood', category: 'NEIGHBORHOOD', icon: <LocationCityIcon /> },
-
     { id: 'project-site-section', title: 'Project Site', category: 'PROJECT_SITE', icon: <TerrainIcon /> },
     { id: 'project-info-section', title: 'Project Information', category: 'PROJECT_INFO', icon: <Info /> },
     { id: 'project-analysis-section', title: 'Project Analysis', category: 'PROJECT_ANALYSIS', icon: <AnalyticsIcon /> },
     { id: 'unit-descriptions-section', title: 'Unit Descriptions', category: 'UNIT_DESCRIPTIONS', icon: <MeetingRoomIcon /> },
-    { id: 'prior-sale-history-section', title: 'Prior Sale History', category: 'PRIOR_SALE_HISTORY', icon: <HistoryIcon /> },
     { id: 'site-section', title: 'Site', category: 'SITE', icon: <TerrainIcon /> },
     { id: 'improvements-section', title: 'Improvements', category: 'IMPROVEMENTS', icon: <BuildIcon /> },
+    { id: 'comparable-rental-data', title: 'COMPARABLE RENTAL DATA', category: 'COMPARABLE_RENTAL_DATA', icon: <ApartmentIcon /> },
+    { id: 'subject-rent-schedule', title: 'SUBJECT RENT SCHEDULE', category: 'SUBJECT_RENT_SCHEDULE', icon: <RequestQuoteIcon /> },
+    { id: 'prior-sale-history-section', title: 'Prior Sale History', category: 'PRIOR_SALE_HISTORY', icon: <HistoryIcon /> },
     { id: 'info-of-sales-section', title: 'Sales Comparison Approach', category: 'INFO_OF_SALES', icon: <MonetizationOnIcon /> },
     { id: 'sales-comparison', title: 'Sales GRID Section', category: ['SALES_GRID'], icon: <CompareArrowsIcon /> },
     { id: 'sales-history-section', title: 'Sales History', category: 'SALES_TRANSFER', icon: <HistoryIcon /> },
-    { id: 'comparable-rental-data', title: 'COMPARABLE RENTAL DATA', category: 'COMPARABLE_RENTAL_DATA', icon: <ApartmentIcon /> },
-    { id: 'subject-rent-schedule', title: 'SUBJECT RENT SCHEDULE', category: 'SUBJECT_RENT_SCHEDULE', icon: <RequestQuoteIcon /> },
     { id: 'rent-schedule-section', title: 'Comparable Rent Schedule', category: 'RENT_SCHEDULE_GRID', icon: <TableChartIcon /> },
     { id: 'rent-schedule-reconciliation-section', title: 'Rent Schedule Reconciliation', category: 'RENT_SCHEDULE_RECONCILIATION', icon: <MergeTypeIcon /> },
     { id: 'reconciliation-section', title: 'Reconciliation_Section', category: 'RECONCILIATION', icon: <BalanceIcon /> },
@@ -1698,7 +1699,6 @@ function Subject() {
     { label: "Total Rooms", valueKey: "Total Rooms" },
     { label: "Bedrooms", valueKey: "Bedrooms", adjustmentKey: "Bedrooms Adjustment" },
     { label: "Baths", valueKey: "Baths", adjustmentKey: "Baths Adjustment" },
-    // { label: "Above Grade Room Count Adjustment", valueKey: "Above Grade Room Count Adjustment", isAdjustmentOnly: true },
     { label: "Gross Living Area", valueKey: "Gross Living Area", adjustmentKey: "Gross Living Area Adjustment" },
     { label: "Basement & Finished", valueKey: "Basement & Finished Rooms Below Grade", adjustmentKey: "Basement & Finished Rooms Below Grade Adjustment" },
     { label: "Functional Utility", valueKey: "Functional Utility", adjustmentKey: "Functional Utility Adjustment" },
@@ -1755,27 +1755,27 @@ function Subject() {
   ];
 
   const comparableRents = [
-    "COMPARABLE RENT #1",
-    "COMPARABLE RENT #2",
-    "COMPARABLE RENT #3",
-    "COMPARABLE RENT #4",
-    "COMPARABLE RENT #5",
-    "COMPARABLE RENT #6",
-    "COMPARABLE RENT #7",
-    "COMPARABLE RENT #8",
-    "COMPARABLE RENT #9",
+    "COMPARABLE No. 1",
+    "COMPARABLE No. 2",
+    "COMPARABLE No. 3",
+    "COMPARABLE No. 4",
+    "COMPARABLE No. 5",
+    "COMPARABLE No. 6",
+    "COMPARABLE No. 7",
+    "COMPARABLE No. 8",
+    "COMPARABLE No. 9",
   ];
 
   const ComparableRentAdjustments = [
-    "COMPARABLE RENT # 1",
-    "COMPARABLE RENT # 2",
-    "COMPARABLE RENT # 3",
-    "COMPARABLE RENT # 4",
-    "COMPARABLE RENT # 5",
-    "COMPARABLE RENT # 6",
-    "COMPARABLE RENT # 7",
-    "COMPARABLE RENT # 8",
-    "COMPARABLE RENT # 9",
+    "COMPARABLE RENTAL # 1",
+    "COMPARABLE RENTAL # 2",
+    "COMPARABLE RENTAL # 3",
+    "COMPARABLE RENTAL # 4",
+    "COMPARABLE RENTAL # 5",
+    "COMPARABLE RENTAL # 6",
+    "COMPARABLE RENTAL # 7",
+    "COMPARABLE RENTAL # 8",
+    "COMPARABLE RENTAL # 9",
   ]
 
   const handleExportJSON = () => {
@@ -2652,7 +2652,6 @@ function Subject() {
             yPos -= 8;
           }
         };
-
         const sectionDefinitions = [
           { id: 'subject-info', title: 'Subject Information', fields: subjectFields, data: data.Subject || data },
           { id: 'contract-section', title: 'Contract', fields: contractFields, data: data.CONTRACT },
@@ -2849,7 +2848,7 @@ function Subject() {
         visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'rent-schedule-section', 'prior-sale-history-section', 'rent-schedule-reconciliation-section', 'project-site-section', 'project-info-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
         break;
       case '1025':
-        visibleSectionIds = baseSections.filter(id => !['rent-schedule-section', 'project-site-section', 'project-info-section', 'rent-schedule-reconciliation-section', 'project-analysis-section', 'unit-descriptions-section', 'market-conditions-section'].includes(id));
+        visibleSectionIds = baseSections.filter(id => !['rent-schedule-section', 'project-site-section', 'project-info-section', 'rent-schedule-reconciliation-section', 'project-analysis-section', 'unit-descriptions-section'].includes(id));
         break;
       case '1073':
         visibleSectionIds = baseSections.filter(id => !['comparable-rental-data', 'subject-rent-schedule', 'rent-schedule-section', 'improvements-section', 'site-section', 'rent-schedule-reconciliation-section', 'pud-info-section'].includes(id));
@@ -4794,8 +4793,9 @@ function Subject() {
                   <h5>Raw Gemini Output (Debug):</h5>
                   <pre style={{ background: '#f8f9fa', padding: '1em', borderRadius: '6px', maxHeight: '300px', overflow: 'auto' }}>
                     {rawGemini}
-                    {/* {'\n'}
-                {JSON.stringify(data, null, 2)} */}
+                    {'\n'}
+                    {JSON.stringify(data, null, 2)}
+                    {/* good */}
                   </pre>
                 </div>
               )}
@@ -4893,7 +4893,7 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
+
         }}
       />
       <RevisionLanguageDialog
@@ -4908,7 +4908,7 @@ function Subject() {
         onAddToNotepad={(text) => {
           setNotes(prev => `${prev}\n- ${text}`);
           setNotification({ open: true, message: 'Added to notepad!', severity: 'success' });
-          // onClose();
+
         }}
       />
       <RevisionLanguageDialog

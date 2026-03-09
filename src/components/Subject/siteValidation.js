@@ -50,11 +50,11 @@ export const checkHighestAndBestUse = (field, text) => {
     if (!raw) {
         return { isError: true, message: "This field must be marked 'Yes'." };
     }
-    
+
     const value = raw.toLowerCase();
     const yesPattern = /^(y|yes)\b|present use|as improved|as proposed/;
     if (yesPattern.test(value)) return { isMatch: true };
-    
+
     if (value.startsWith('no') || value.includes('no')) {
         return { isError: true, message: `CRITICAL: Highest & Best Use is not the present use. This should be 'Yes'.` };
     }
@@ -87,7 +87,7 @@ export const checkFemaFieldsConsistency = (field, text, data) => {
     if (!femaFields.includes(field) || !data) return null;
 
     const hazardArea = String(data['FEMA Special Flood Hazard Area'] || '').trim().toLowerCase();
-    const fieldValue = String(text || '').trim(); 
+    const fieldValue = String(text || '').trim();
 
     if (hazardArea && !fieldValue) {
         return { isError: true, message: `'${field}' cannot be empty when 'FEMA Special Flood Hazard Area' has a value.` };
@@ -119,14 +119,14 @@ export const checkArea = (field, text) => {
     const hasAcres = /ac|acres/i.test(value);
     const hasSqFt = /sf|sqft|sq\.ft\.|square feet/i.test(value);
 
-    if (numericValue > 43500) { // If area is greater than 43,500 (approx. 1 acre)
+    if (numericValue > 43500) {
         if (!hasAcres) {
             return { isError: true, message: 'Area is greater than 43,500, unit should be in Acres (AC).' };
         }
         if (hasSqFt) {
             return { isError: true, message: 'Area is greater than 43,500, unit should be in Acres (AC), not Square Feet.' };
         }
-    } else { // If area is 43,500 or less
+    } else {
         if (!hasSqFt) {
             return { isError: true, message: 'Area is 43,500 or less, unit should be in Square Feet (SF).' };
         }
@@ -137,47 +137,44 @@ export const checkArea = (field, text) => {
     return { isMatch: true };
 };
 export const checkYesNoWithComment = (field, text, data, fieldConfig) => {
-  if (field !== fieldConfig.name) return null;
+    if (field !== fieldConfig.name) return null;
 
-  const value = String(text || '').trim().toLowerCase();
+    const value = String(text || '').trim().toLowerCase();
 
-  if (!value) {
-    return {
-      isError: true,
-      message: `'${field}' should not be blank.`,
-    };
-  }
-
-  const wanted = fieldConfig.wantedValue.toLowerCase();     // allowed without comment
-  const unwanted = fieldConfig.unwantedValue.toLowerCase(); // requires comment
-
-  const isWanted = value === wanted || value.startsWith(`${wanted} `);
-  const isUnwanted = value.startsWith(unwanted);
-
-  // ✅ Wanted value → valid (no description needed)
-  if (isWanted) {
-    return { isMatch: true };
-  }
-
-  // ❌ Unwanted value → must have description
-  if (isUnwanted) {
-    const description = value.replace(unwanted, '').trim();
-
-    if (!description) {
-      return {
-        isError: true,
-        message: `'${field}' requires a description when answered '${unwanted}'.`,
-      };
+    if (!value) {
+        return {
+            isError: true,
+            message: `'${field}' should not be blank.`,
+        };
     }
 
-    return { isMatch: true };
-  }
+    const wanted = fieldConfig.wantedValue.toLowerCase();      
+    const unwanted = fieldConfig.unwantedValue.toLowerCase();  
 
-  // ❌ Invalid input
-  return {
-    isError: true,
-    message: `'${field}' should be '${wanted}' or '${unwanted}' with description.`,
-  };
+    const isWanted = value === wanted || value.startsWith(`${wanted} `);
+    const isUnwanted = value.startsWith(unwanted);
+
+    if (isWanted) {
+        return { isMatch: true };
+    }
+
+    if (isUnwanted) {
+        const description = value.replace(unwanted, '').trim();
+
+        if (!description) {
+            return {
+                isError: true,
+                message: `'${field}' requires a description when answered '${unwanted}'.`,
+            };
+        }
+
+        return { isMatch: true };
+    }
+
+    return {
+        isError: true,
+        message: `'${field}' should be '${wanted}' or '${unwanted}' with description.`,
+    };
 };
 
 
@@ -196,9 +193,7 @@ export const checkUtilities = (field, text, data) => {
 
     const supplementalAddendum = String(data['SUPPLEMENTAL ADDENDUM'] || '').trim();
 
-    // ✅ Special rule for Alley
     if (field === "Alley") {
-        // If Alley is NOT Private or None → comment required
         if (!/^(private|none)$/i.test(value)) {
             if (!supplementalAddendum) {
                 return {
@@ -210,7 +205,6 @@ export const checkUtilities = (field, text, data) => {
         return { isMatch: true };
     }
 
-    // ✅ Existing rule for other utilities
     if (/\b(other|private)\b/i.test(value)) {
         if (!supplementalAddendum) {
             return {

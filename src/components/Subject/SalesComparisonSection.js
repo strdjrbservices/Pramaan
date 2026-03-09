@@ -27,12 +27,12 @@ const SalesComparisonSection = ({
     <>
       <Paper id="sales-comparison" elevation={3} sx={{ mb: 4, mt: 4, borderRadius: 2, overflow: 'hidden' }}>
         <Box sx={{ bgcolor: 'primary.main', color: 'white', px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-            <Typography variant="subtitle1" fontWeight="bold">Sales Comparison Approach</Typography>
-            {onRevisionButtonClick && (
-              <Tooltip title="Revision Language">
-                <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: 'white' }}><LibraryBooksIcon /></IconButton>
-              </Tooltip>
-            )}
+          <Typography variant="subtitle1" fontWeight="bold">Sales Comparison Approach</Typography>
+          {onRevisionButtonClick && (
+            <Tooltip title="Revision Language">
+              <IconButton onClick={onRevisionButtonClick} size="small" sx={{ color: 'white' }}><LibraryBooksIcon /></IconButton>
+            </Tooltip>
+          )}
         </Box>
         <TableContainer>
           <Table size="small" aria-label="sales comparison table" className="sales-comparison-table">
@@ -205,7 +205,6 @@ const SalesComparisonSection = ({
 
       <Paper id="prior-sale-history-grid" elevation={3} sx={{ mb: 4, mt: 4, borderRadius: 2, overflow: 'hidden' }}>
         <Box sx={{ bgcolor: 'grey.900', color: 'white', px: 2, py: 1.5, position: 'sticky', top: 0, zIndex: 10 }}>
-          {/* <Typography variant="subtitle1" fontWeight="bold">Prior Sale History of Subject and Comparables</Typography> */}
         </Box>
         <TableContainer>
           <Table size="small">

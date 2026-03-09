@@ -63,7 +63,7 @@ export const checkSpecificZoningClassification = (field, text) => {
 
 export const checkSingleChoiceFields = (field, text) => {
     const singleChoiceFields = {
-        
+
         "Built-Up": ['Over 75%', '25-75%', 'Under 25%'],
         "Growth": ['Rapid', 'Stable', 'Slow'],
         "Property Values": ['Increasing', 'Stable', 'Declining'],

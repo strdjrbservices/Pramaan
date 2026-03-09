@@ -15,9 +15,9 @@ import {
     certificationFields,
     salesGridRows,
     comparableSales
-} from './Scenario2Data';
+} from './Scenario3Data';
 
-const Scenario2Form = ({
+const Scenario3Form = ({
     extractedData,
     handleDataChange,
     handleSalesGridDataChange,
@@ -217,4 +217,4 @@ const Scenario2Form = ({
     );
 };
 
-export default Scenario2Form;
+export default Scenario3Form;

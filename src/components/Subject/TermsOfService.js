@@ -24,7 +24,7 @@ const TermsOfService = () => {
           <Typography variant="body1" paragraph color="text.secondary">
             Last updated: {new Date().toLocaleDateString()}
           </Typography>
-          
+
           <Typography variant="h6" gutterBottom fontWeight={700} sx={{ mt: 3 }}>
             1. Acceptance of Terms
           </Typography>

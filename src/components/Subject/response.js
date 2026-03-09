@@ -49,7 +49,7 @@ const ResponsePage = () => {
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(0);
   const timerRef = useRef(null);
-  
+
   useEffect(() => {
     if (!htmlFile) {
       setRevisionText('');
@@ -62,16 +62,13 @@ const ResponsePage = () => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(content, 'text/html');
 
-      // Updated logic to find "report rejection reason"
       let extractedText = '';
       const fieldNameToFind = 'report rejection reason';
       const allElements = doc.body.querySelectorAll('*');
 
       for (let i = 0; i < allElements.length; i++) {
         const element = allElements[i];
-        // Check if the element's text content matches, ignoring case and trailing colons
         if (element.textContent.trim().toLowerCase().replace(/:$/, '') === fieldNameToFind) {
-          // Found the label. The value is likely in the next sibling element.
           let nextElement = element.nextElementSibling;
           if (nextElement) {
             extractedText = nextElement.innerText.trim();
@@ -104,7 +101,7 @@ const ResponsePage = () => {
     }
   }, [response]);
 
-  // Cleanup timer on unmount
+   
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -135,17 +132,17 @@ const ResponsePage = () => {
     setLoading(true);
     setError('');
     setResponse(null);
-    setTimer(0); // Reset timer
-    if (timerRef.current) { // Clear any existing timer before starting a new one
+    setTimer(0);  
+    if (timerRef.current) { 
       clearInterval(timerRef.current);
     }
-    timerRef.current = setInterval(() => { // Start timer
+    timerRef.current = setInterval(() => {  
       setTimer(prev => prev + 1);
     }, 1000);
 
     const formData = new FormData();
     formData.append('file', pdfFile);
-    formData.append('form_type', '1004'); // Or make this selectable
+    formData.append('form_type', '1004');  
     formData.append('revision_request', revisionText);
 
     try {
@@ -154,17 +151,15 @@ const ResponsePage = () => {
         body: formData,
       });
 
-      // Defensive parsing: get text first, then parse.
       const rawText = await res.text();
 
       if (!res.ok) {
-        // Try to parse error from text, fallback to status.
         let errorDetail = `HTTP error! status: ${res.status}`;
         try {
           const errorJson = JSON.parse(rawText);
           errorDetail = errorJson.detail || errorDetail;
         } catch (parseError) {
-          
+
           errorDetail = rawText || errorDetail;
         }
         throw new Error(errorDetail);
@@ -174,11 +169,11 @@ const ResponsePage = () => {
       setResponse(result);
     } catch (e) {
       const errorMessage = e.message.includes('Failed to fetch') ? 'Could not connect to the server. Please ensure it is running.' : e.message;
-      setError(errorMessage); 
+      setError(errorMessage);
       console.error('Verification failed:', e);
     } finally {
       setLoading(false);
-      if (timerRef.current) { 
+      if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     }
@@ -237,9 +232,6 @@ const ResponsePage = () => {
 
   return (
     <Paper elevation={3} sx={{ p: 4, m: 2 }}>
-      {/* <Typography variant="h5" gutterBottom>
-        REVISED FILE REVIEW
-      </Typography> */}
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} md={4}>
@@ -276,7 +268,7 @@ const ResponsePage = () => {
           variant="outlined"
           fullWidth
           lineHeight
-          sx={{ mb: 3}}
+          sx={{ mb: 3 }}
           InputProps={{
             readOnly: false
           }}
