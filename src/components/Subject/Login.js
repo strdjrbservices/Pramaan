@@ -257,7 +257,7 @@ const Login = ({ onLogin }) => {
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: 'action.selected',
-                  },
+                  },  
                   '&.Mui-focused': {
                     backgroundColor: 'background.paper',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)',

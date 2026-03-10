@@ -4793,8 +4793,8 @@ function Subject() {
                   <h5>Raw Gemini Output (Debug):</h5>
                   <pre style={{ background: '#f8f9fa', padding: '1em', borderRadius: '6px', maxHeight: '300px', overflow: 'auto' }}>
                     {rawGemini}
-                    {'\n'}
-                    {JSON.stringify(data, null, 2)}
+                    {/* {'\n'}
+                    {JSON.stringify(data, null, 2)} */}
                     {/* good */}
                   </pre>
                 </div>
