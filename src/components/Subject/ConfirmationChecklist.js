@@ -41,19 +41,19 @@ const playSound = (soundType) => {
 
 const CHECKLIST_PROMPT = `Appraisal Report Confirmation Checklist
 
-Please confirm the appraised value has been changed.
+Please confirm the appraised value has been not changed.
 
-Please confirm if the unadjusted value is bracketed with the appraised value.
+Please confirm if the appraised value is bracketed with the unadjusted value.
 
-Please confirm if the adjusted value is bracketed with the appraised value.
+Please confirm if the appraised value is bracketed with the  adjusted value.
 
-Please confirm the Aerial Map, Location Map, UAD Dataset Pages, and 1004MC are present, and that there are no changes from the old report.
+Please confirm the Aerial Map, Location Map, UAD Dataset Pages, and 1004MC are present.
 
 Please confirm the GLA, total room count, bath count, and bed count from the Improvements section match the Sales Grid, Photos, and Sketch.
 
-Please confirm if the 1007 form is present in the new report.
+Please confirm if the 1007 form is Not present in the new report.
 
-Please confirm if the 216,str,rental,operating income form is present in the new report.
+Please confirm if the 216,str,rental,operating income form is not present in the new report.
 
 For each item in the checklist, provide a 'yes' or 'no' answer in the 'final_output' field. The response should be a JSON object with a 'details' array. Each object in the array should have 'sr_no', 'description', 'old_pdf', 'new_pdf', and 'final_output' keys.
 `;
@@ -129,6 +129,35 @@ const ConfirmationChecklist = () => {
     }
   };
 
+  const renderFinalOutput = (output) => {
+    if (!output) {
+      return 'N/A';
+    }
+    const outputLower = String(output).toLowerCase().trim();
+    const style = {};
+
+    const positiveWords = ['yes', 'present', 'corrected', 'match', 'fulfilled', 'consistent', 'ok', 'pass', 'correct'];
+    const negativeWords = ['no', 'not corrected', 'mismatch', 'not fulfilled', 'inconsistent', 'absent', 'missing', 'fail', 'incorrect', 'no match'];
+
+    if (positiveWords.includes(outputLower)) {
+      style.backgroundColor = '#91ff00ff';
+      style.color = '#000000';
+    } else if (negativeWords.includes(outputLower)) {
+      style.backgroundColor = '#ff0000';
+      style.color = '#ffffff';
+    }
+
+    if (Object.keys(style).length > 0) {
+      return (
+        <span style={{ ...style, padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>
+          {output}
+        </span>
+      );
+    }
+
+    return output;
+  };
+
   const renderResponse = (data) => {
     if (!data || !data.details || data.details.length === 0) return null;
 
@@ -153,7 +182,7 @@ const ConfirmationChecklist = () => {
                   <TableCell>{item.description}</TableCell>
                   <TableCell>{item.old_pdf}</TableCell>
                   <TableCell>{item.new_pdf}</TableCell>
-                  <TableCell>{item.final_output}</TableCell>
+                  <TableCell>{renderFinalOutput(item.final_output)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -189,6 +218,11 @@ const ConfirmationChecklist = () => {
         </Box>
       </form>
       {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
+      {!loading && (response || error) && (
+        <Typography variant="body2" sx={{ mt: 2, textAlign: 'center', color: 'text.secondary' }}>
+          Total time taken: {Math.floor(timer / 60)}m {timer % 60}s
+        </Typography>
+      )}
       {response && renderResponse(response)}
     </Paper>
   );

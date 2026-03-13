@@ -39,7 +39,21 @@ const Sidebar = ({ sections, isOpen, isLocked, onLockToggle, onMouseEnter, onMou
             {sections.map((section) => (
                 <ListItem key={section.id} disablePadding>
                     <Tooltip title={!isOpen ? section.title : ""} placement="right" arrow>
-                        <ListItemButton component="a" href={`#${section.id}`} className={`sidebar-link ${activeSection === section.id ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); onSectionClick(section); }} disabled={loading}>
+                        <ListItemButton
+                            component="a"
+                            href={`#${section.id}`}
+                            className="sidebar-link"
+                            selected={activeSection === section.id}
+                            onClick={(e) => { e.preventDefault(); onSectionClick(section); }}
+                            disabled={loading}
+                            sx={{
+                                '&.Mui-selected': {
+                                    backgroundColor: 'info.main', // A nice sky blue
+                                    color: 'info.contrastText',
+                                    '&:hover': { backgroundColor: 'info.dark' },
+                                    '& .MuiListItemIcon-root': { color: 'info.contrastText' },
+                                },
+                            }}>
                             {section.icon && (
                                 <ListItemIcon>
                                     {section.icon}

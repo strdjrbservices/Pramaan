@@ -130,6 +130,35 @@ const normalizeCurrencyValue = (value) => {
   return parseFloat(cleanedValue);
 };
 
+const renderFinalOutput = (output) => {
+  if (!output) {
+    return 'N/A';
+  }
+  const outputLower = String(output).toLowerCase().trim();
+  const style = {};
+
+  const positiveWords = ['yes', 'present', 'corrected', 'match', 'fulfilled', 'consistent', 'ok', 'pass', 'correct'];
+  const negativeWords = ['no', 'not corrected', 'mismatch', 'not fulfilled', 'inconsistent', 'absent', 'missing', 'fail', 'incorrect', 'no match'];
+
+  if (positiveWords.includes(outputLower)) {
+    style.backgroundColor = '#91ff00ff';
+    style.color = '#000000';
+  } else if (negativeWords.includes(outputLower)) {
+    style.backgroundColor = '#ff0000';
+    style.color = '#ffffff';
+  }
+
+  if (Object.keys(style).length > 0) {
+    return (
+      <span style={{ ...style, padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>
+        {output}
+      </span>
+    );
+  }
+
+  return output;
+};
+
 const CHECKLIST_PROMPT = `Appraisal Report Confirmation Checklist
 
 Please confirm the appraised value has been changed.
@@ -138,7 +167,7 @@ Please confirm if the unadjusted value is bracketed with the appraised value.
 
 Please confirm if the adjusted value is bracketed with the appraised value.
 
-Please confirm the Aerial Map, Location Map, UAD Dataset Pages, and 1004MC are present, and that there are no changes from the old report.
+Please confirm the Aerial Map, Location Map, UAD Dataset Pages, and 1004MC are present.
 
 Please confirm the GLA, total room count, bath count, and bed count from the Improvements section match the Sales Grid, Photos, and Sketch.
 
@@ -146,7 +175,12 @@ Please confirm if the 1007 form is present in the new report.
 
 Please confirm if the 216,str,rental,operating income form is present in the new report.
 
+Please confirm the total pages count in the reports.
+
+Please  confirm if the changes present in the reports.
+
 For each item in the checklist, provide a 'yes' or 'no' answer in the 'final_output' field. The response should be a JSON object with a 'details' array. Each object in the array should have 'sr_no', 'description', 'old_pdf', 'new_pdf', and 'final_output' keys.
+
 `;
 
 
@@ -168,12 +202,12 @@ const Compare = () => {
 
   const keywordGroups = [
     {
-      keywords: ["Corrected", "Fulfilled", "pass", "correct"],
+      keywords: ["Corrected", "Fulfilled", "pass", "correct", "match", "matched"],
       style: { backgroundColor: '#91ff00ff', color: '#000000', padding: '1px 3px', borderRadius: '3px' },
       Tooltip: 'This item has been successfully validated.'
     },
     {
-      keywords: ["not Corrected", "not Fulfilled", "Fail", "incorrect", "mismatch", "mismatched"],
+      keywords: ["not Corrected", "not Fulfilled", "Fail", "incorrect", "mismatch", "mismatched", "no match"],
       style: { backgroundColor: '#ff0000', color: '#ffffff', padding: '1px 3px', borderRadius: '3px' },
       Tooltip: 'This item has an issue or could not be validated.'
     }
@@ -511,9 +545,7 @@ const Compare = () => {
             <TableBody>
               {comparisonSummary.map((change, index) => (
                 <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <TableCell component="th" scope="row">
-                    <HighlightKeywords text={change.status} keywordGroups={keywordGroups} comment={change.comment} />
-                  </TableCell>
+                  <TableCell component="th" scope="row">{renderFinalOutput(change.status)}</TableCell>
                   <TableCell>
                     <HighlightKeywords text={change.section} keywordGroups={keywordGroups} />
                   </TableCell>
@@ -553,7 +585,7 @@ const Compare = () => {
                   <TableCell>{item.description}</TableCell>
                   <TableCell>{item.old_pdf}</TableCell>
                   <TableCell>{item.new_pdf}</TableCell>
-                  <TableCell>{item.final_output}</TableCell>
+                  <TableCell>{renderFinalOutput(item.final_output)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -702,6 +734,12 @@ const Compare = () => {
       </form>
 
       {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+
+      {!loading && (response || error) && (
+        <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
+          Total time taken: {Math.floor(timer / 60)}m {timer % 60}s
+        </Typography>
+      )}
 
       <Box sx={{ animation: 'fadeIn 0.5s ease-in-out' }}>
         {response && comparisonMode === 'revision' && renderRevisionResponse(response)}

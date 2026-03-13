@@ -51,12 +51,12 @@ export const checkBedroomsAdjustment = (field, allData, saleName) => {
             return { isError: true, message: `Warning: Bedroom count is the same (${subjectBedrooms}), but adjustment is not $0 or blank.` };
         }
     } else if (compBedrooms > subjectBedrooms) { // Comp has more bedrooms than Subject
-        if (adjustmentValue >= 0) { // Expect negative adjustment
+        if (adjustmentValue > 0) { // Expect negative or zero adjustment
             return { isError: true, message: `Warning: Comp has more bedrooms (${compBedrooms}) than Subject (${subjectBedrooms}), so a negative adjustment is expected.` };
         }
     } else { // compBedrooms < subjectBedrooms
-        if (adjustmentValue >= 0) { // Expect negative adjustment
-            return { isError: true, message: `Warning: Comp has fewer bedrooms (${compBedrooms}) than Subject (${subjectBedrooms}), so a negative adjustment is expected.` };
+        if (adjustmentValue < 0) { // Expect positive or zero adjustment
+            return { isError: true, message: `Warning: Comp has fewer bedrooms (${compBedrooms}) than Subject (${subjectBedrooms}), so a positive adjustment is expected.` };
         }
     }
     return { isMatch: true };
@@ -85,11 +85,11 @@ export const checkBathsAdjustment = (field, allData, saleName) => {
             return { isError: true, message: `Warning: Bath count is the same (${subjectBaths}), but adjustment is not $0.` };
         }
     } else if (compBaths > subjectBaths) { // Comp is superior
-        if (adjustmentValue >= 0) {
+        if (adjustmentValue > 0) {
             return { isError: true, message: `Warning: Comp has more baths (${compBaths}) than Subject (${subjectBaths}), so a negative adjustment is expected.` };// Negative adjustment is valid
         }
     } else { // compBaths < subjectBaths, Comp is inferior
-        if (adjustmentValue <= 0) {
+        if (adjustmentValue < 0) {
             return { isError: true, message: `Warning: Comp has fewer baths (${compBaths}) than Subject (${subjectBaths}), so a positive adjustment is expected.` };
         }
     }
@@ -121,11 +121,11 @@ export const checkQualityOfConstructionAdjustment = (field, allData, saleName) =
             return { isError: true, message: `Warning: Quality is the same (${subjectQoC}), but adjustment is not $0.` };
         }
     } else if (subjectQualityNum > compQualityNum) { // Subject is inferior (e.g., Q4 vs Q3)
-        if (adjustmentValue >= 0) {
+        if (adjustmentValue > 0) {
             return { isError: true, message: `Warning: Subject (${subjectQoC}) is inferior to Comp (${compQoC}), so a negative adjustment is expected.` };
         }
     } else { // Subject is superior (e.g., Q2 vs Q3)
-        if (adjustmentValue <= 0) {
+        if (adjustmentValue < 0) {
             return { isError: true, message: `Warning: Subject (${subjectQoC}) is superior to Comp (${compQoC}), so a positive adjustment is expected.` };
         }
     }
@@ -320,7 +320,7 @@ export const checkFunctionalUtilityAdjustment = (field, allData, saleName) => {
             return { isError: true, message: `Warning: Functional Utility is the same (${subjectFunctionalUtility}), but adjustment is not $0.` };
         }
     } else {
-        if (!adjustmentText || adjustmentText === '0' || adjustmentText === '$0') {
+        if (!adjustmentText) {
             return { isError: true, message: `Warning: Functional Utility differs (Subject: '${subjectFunctionalUtility}', Comp: '${compFunctionalUtility}'), but no adjustment is made.` };
         }
     }
@@ -344,7 +344,7 @@ export const checkEnergyEfficientItemsAdjustment = (field, allData, saleName) =>
             return { isError: true, message: `Warning: Energy Efficient Items are the same, but adjustment is not $0.` };
         }
     } else {
-        if (!adjustmentText || adjustmentText === '0' || adjustmentText === '$0') {
+        if (!adjustmentText) {
             return { isError: true, message: `Warning: Energy Efficient Items differ (Subject: '${subjectItems}', Comp: '${compItems}'), but no adjustment is made.` };
         }
     }
@@ -368,7 +368,7 @@ export const checkPorchPatioDeckAdjustment = (field, allData, saleName) => {
             return { isError: true, message: `Warning: Porch/Patio/Deck are the same, but adjustment is not $0.` };
         }
     } else {
-        if (!adjustmentText || adjustmentText === '0' || adjustmentText === '$0') {
+        if (!adjustmentText) {
             return { isError: true, message: `Warning: Porch/Patio/Deck differ (Subject: '${subjectItems}', Comp: '${compItems}'), but no adjustment is made.` };
         }
     }
@@ -438,9 +438,9 @@ export const checkActualAgeAdjustment = (field, allData, saleName) => {
     if (compAge === subjectAge) {
         if (adjustmentValue !== 0) return { isError: true, message: `Subject and Comp Actual Age are the same (${subjectAge}), so adjustment should be $0.` };
     } else if (compAge > subjectAge) {
-        if (adjustmentValue <= 0) return { isError: true, message: `Comp is older (${compAge} yrs) than Subject (${subjectAge} yrs), so a positive adjustment is expected.` };
+        if (adjustmentValue < 0) return { isError: true, message: `Comp is older (${compAge} yrs) than Subject (${subjectAge} yrs), so a positive adjustment is expected.` };
     } else {
-        if (adjustmentValue >= 0) return { isError: true, message: `Comp is newer (${compAge} yrs) than Subject (${subjectAge} yrs), so a negative adjustment is expected.` };
+        if (adjustmentValue > 0) return { isError: true, message: `Comp is newer (${compAge} yrs) than Subject (${subjectAge} yrs), so a negative adjustment is expected.` };
     }
     return { isMatch: true };
 };
@@ -461,8 +461,7 @@ export const checkLeaseholdFeeSimpleConsistency = (field, allData, saleName) => 
     if (subjectValue.toLowerCase() === compValue.toLowerCase()) {
         return { isMatch: true };
     } else {
-        const adjustmentValue = parseFloat(adjustmentText.replace(/[^0-9.-]+/g, ""));
-        if (!adjustmentText || isNaN(adjustmentValue) || adjustmentValue === 0) {
+        if (!adjustmentText) {
             return { isError: true, message: `Property rights mismatch (${subjectValue} vs ${compValue}). An adjustment is required.` };
         }
     }

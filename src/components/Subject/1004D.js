@@ -597,6 +597,11 @@ For each item, provide a JSON object in a 'details' array. Each object must have
             <Box sx={{ animation: 'fadeIn 0.5s ease-in-out' }}>
                 {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
                 {successMessage && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>{successMessage}</Alert>}
+                {!loading && (response || error) && (
+                    <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
+                        Total time taken: {Math.floor(timer / 60)}m {timer % 60}s
+                    </Typography>
+                )}
                 {response && comparisonMode === 'pdf-vs-pdf' && renderPdfVsPdfResponse(response)}
                 {response && comparisonMode === 'html-vs-pdf' && renderHtmlVsPdfResponse(response)}
             </Box>

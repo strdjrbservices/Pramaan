@@ -328,6 +328,11 @@ const CustomQuery = () => {
         {loading && <Typography variant="body2" sx={{ mt: -2, mb: 3, textAlign: 'center', color: 'text.secondary' }}>Processing... {Math.floor(timer / 60)}m {timer % 60}s</Typography>}
       </form>
       {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+      {!loading && (response || error) && (
+        <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
+          Total time taken: {Math.floor(timer / 60)}m {timer % 60}s
+        </Typography>
+      )}
       <Box sx={{ animation: 'fadeIn 0.5s ease-in-out' }}>
         {response && renderResponse()}
       </Box>

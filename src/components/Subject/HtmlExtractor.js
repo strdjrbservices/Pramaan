@@ -157,6 +157,11 @@ const HtmlExtractor = () => {
         </Box>
       </form>
       {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
+      {!loading && (response || error) && (
+        <Typography variant="body2" sx={{ mt: 2, textAlign: 'center', color: 'text.secondary' }}>
+          Total time taken: {Math.floor(timer / 60)}m {timer % 60}s
+        </Typography>
+      )}
       {response && renderResponse(response)}
     </Paper>
   );
