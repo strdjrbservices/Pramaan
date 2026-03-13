@@ -177,8 +177,6 @@ Please confirm if the 216,str,rental,operating income form is present in the new
 
 Please confirm the total pages count in the reports.
 
-Please  confirm if the changes present in the reports.
-
 For each item in the checklist, provide a 'yes' or 'no' answer in the 'final_output' field. The response should be a JSON object with a 'details' array. Each object in the array should have 'sr_no', 'description', 'old_pdf', 'new_pdf', and 'final_output' keys.
 
 `;
