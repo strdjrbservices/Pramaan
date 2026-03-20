@@ -13,13 +13,14 @@ const checkAmcFee = (data) => {
 };
 
 const checkIllinoisRequirements = (data) => {
-    const addendum = data?.ADDENDUM?.['SUPPLEMENTAL ADDENDUM'] || '';
-    const improvements = data?.IMPROVEMENTS?.['Additional features']?.toLowerCase() || '';
+    // const addendum = data?.ADDENDUM?.['SUPPLEMENTAL ADDENDUM'] || '';
+    // const improvements = data?.IMPROVEMENTS?.['Additional features']?.toLowerCase() || '';
     const missing = [];
     if (!checkAmcLicense(data)) missing.push("AMC License #");
     if (!checkAppraiserFee(data)) missing.push("Appraiser's Fee");
-    if (!addendum.includes("Home Inspector License Act")) missing.push("Home Inspector License Act statement in addendum");
-    if (!improvements.includes('carbon monoxide')) missing.push("Carbon Monoxide detector comment");
+    // if (!addendum.includes("Home Inspector License Act")) missing.push("Home Inspector License Act statement in addendum");
+    // if (!improvements.includes('CO')) missing.push("CO detector comment in Improvements");
+    if (data?.Subject?.['CO detector comment']) return missing;
     return missing;
 };
 
@@ -48,13 +49,13 @@ const checkVirginiaRequirements = (data) => {
     const improvements = data?.IMPROVEMENTS?.['Additional features']?.toLowerCase() || '';
     const missing = [];
     if (!improvements.includes('smoke')) missing.push("Smoke detector comment");
-    if (!improvements.includes('carbon monoxide')) missing.push("CO detector comment");
+    if (!improvements.includes('CO')) missing.push("CO detector comment");
     return missing;
 };
 
 const checkWisconsinRequirements = (data) => {
     const improvements = data?.IMPROVEMENTS?.['Additional features']?.toLowerCase() || '';
-    const hasCO = improvements.includes('carbon monoxide');
+    const hasCO = improvements.includes('CO');
     return hasCO;
 };
 

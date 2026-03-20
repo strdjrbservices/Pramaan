@@ -6,7 +6,7 @@ import { checkHousingPriceAndAge, checkNeighborhoodUsageConsistency, checkSingle
 import { checkUnits, checkAccessoryUnit, checkNumberOfStories, checkPropertyType, checkConstructionStatusAndReconciliation, checkDesignStyle, checkYearBuilt, checkEffectiveAge, checkAdditionalFeatures, checkPropertyConditionDescription, checkPhysicalDeficienciesImprovements, checkNeighborhoodConformity, checkFoundationType, checkBasementDetails, checkEvidenceOf, checkMaterialCondition, checkHeatingFuel, checkCarStorage, checkImprovementsFieldsNotBlank } from './improvementsValidation';
 import { checkConditionAdjustment, checkBedroomsAdjustment, checkBathsAdjustment, checkQualityOfConstructionAdjustment, checkProximityToSubject, checkSiteAdjustment, checkGrossLivingAreaAdjustment, checkSubjectAddressInconsistency, checkDesignStyleAdjustment, checkFunctionalUtilityAdjustment, checkEnergyEfficientItemsAdjustment, checkPorchPatioDeckAdjustment, checkHeatingCoolingAdjustment, checkDataSourceDOM, checkActualAgeAdjustment, checkLeaseholdFeeSimpleConsistency, checkDateOfSale, checkLocationConsistency, checkSalePrice, checkSubjectAgeConsistency } from './salesComparisonValidation';
 import { checkFinalValueConsistency, checkCostApproachDeveloped, checkAppraisalCondition, checkAsOfDate, checkFinalValueBracketing, checkReconciliationFieldsNotBlank } from './reconciliationValidation';
-import { checkLenderAddressInconsistency, checkLenderNameInconsistency, checkAppraiserFieldsNotBlank, checkLicenseNumberConsistency as checkAppraiserLicenseConsistency, checkDateGreaterThanToday, checkClientNameHtmlConsistency } from './appraiserLenderValidation';
+import { checkLenderAddressInconsistency, checkLenderNameInconsistency, checkAppraiserFieldsNotBlank, checkLicenseNumberConsistency as checkAppraiserLicenseConsistency, checkDateGreaterThanToday, checkClientNameHtmlConsistency, checkClientAddressHtmlConsistency, checkBorrowerHtmlConsistency, checkPropertyAddressHtmlConsistency, checkAppraiserVendorNameConsistency } from './appraiserLenderValidation';
 import { checkCostNew, checkSourceOfCostData, checkIndicatedValueByCostApproach, checkCostApproachFieldsNotBlank } from './costApproachValidation';
 import { checkResearchHistory, checkSubjectPriorSales, checkComparablePriorSales, checkDataSourceNotBlank, checkEffectiveDateIsCurrentYear, checkSubjectPriorSaleDate, checkCompPriorSaleDate } from './salesHistoryValidation';
 import { checkStateRequirements } from './stateValidation';
@@ -97,7 +97,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     'Offered for Sale in Last 12 Months': [checkOfferedForSale],
     'ANSI': [checkAnsi],
     'State': [checkStateRequirements],
-    'Property Address': [checkSubjectFieldsNotBlank, checkSubjectAddressInconsistency],
+    'Property Address': [checkSubjectFieldsNotBlank, checkSubjectAddressInconsistency, checkPropertyAddressHtmlConsistency],
     'County': [checkSubjectFieldsNotBlank],
     'Borrower': [checkSubjectFieldsNotBlank],
     'Owner of Public Record': [checkSubjectFieldsNotBlank],
@@ -109,6 +109,7 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
     'Occupant': [checkSubjectFieldsNotBlank],
     'Property Rights Appraised': [checkSubjectFieldsNotBlank],
     'Lender/Client': [checkSubjectFieldsNotBlank, checkLenderNameInconsistency],
+    'Name': [checkAppraiserVendorNameConsistency],
     'Address (Lender/Client)': [checkSubjectFieldsNotBlank, checkLenderAddressInconsistency],
 
     // Neighborhood Validations
@@ -244,6 +245,12 @@ export const EditableField = ({ fieldPath, value, onDataChange, editingField, se
   validationRegistry['Lender/Client Company Address'].push(checkLenderAddressInconsistency);
   validationRegistry['LENDER/CLIENT Name'].push(checkLenderNameInconsistency, checkClientNameHtmlConsistency);
   validationRegistry['LICENSE/REGISTRATION/CERTIFICATION #'] = [checkAppraiserLicenseConsistency];
+
+  // HTML Data Validations
+  validationRegistry['Client Name'] = [checkClientNameHtmlConsistency];
+  validationRegistry['Client Address'] = [checkClientAddressHtmlConsistency];
+  validationRegistry['Borrower (and Co-Borrower)'] = [checkBorrowerHtmlConsistency];
+
   validationRegistry['Policy Period To'] = [checkDateGreaterThanToday];
   validationRegistry['License Vaild To'] = [checkDateGreaterThanToday];
 

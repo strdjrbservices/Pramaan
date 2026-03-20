@@ -89,6 +89,7 @@ import * as projectAnalysisValidation from './projectAnalysisValidation';
 import * as projectSiteValidation from './projectSiteValidation';
 import * as incomeApproachValidation from './incomeApproachValidation';
 import * as priorSaleHistoryValidation from './priorSaleHistoryValidation';
+import * as htmlDataValidation from './htmldatavaliadtion.js';
 import * as infoOfSalesValidation from './infoOfSalesValidation';
 
 import PremiumLogo from './logo';
@@ -380,6 +381,19 @@ function Subject() {
 
   const buildValidationRegistry = () => {
     const registry = {
+      'LENDER/CLIENT Name': [
+        appraiserLenderValidation.checkClientNameHtmlConsistency
+      ],
+      'Client Name': [
+        appraiserLenderValidation.checkClientNameHtmlConsistency
+      ],
+      'Lender/Client Company Address': [
+        htmlDataValidation.checkLenderAddressInconsistency,
+        appraiserLenderValidation.checkLenderAddressInconsistency,
+      ],
+      'Client Address': [appraiserLenderValidation.checkClientAddressHtmlConsistency],
+      'Borrower (and Co-Borrower)': [appraiserLenderValidation.checkBorrowerHtmlConsistency],
+
       // Site Validations
       'Zoning Compliance': [siteValidation.checkZoning],
       'Zoning Description': [siteValidation.checkZoningDescription],
@@ -412,7 +426,7 @@ function Subject() {
       'ANSI': [subjectValidation.checkAnsi],
       'Property Address': [subjectValidation.checkSubjectFieldsNotBlank, salesComparisonValidation.checkSubjectAddressInconsistency],
       'County': [subjectValidation.checkSubjectFieldsNotBlank],
-      'Borrower': [subjectValidation.checkSubjectFieldsNotBlank],
+      'Borrower': [subjectValidation.checkSubjectFieldsNotBlank, htmlDataValidation.checkBorrowerNameVsHtml],
       'Owner of Public Record': [subjectValidation.checkSubjectFieldsNotBlank],
       'Legal Description': [subjectValidation.checkSubjectFieldsNotBlank],
       "Assessor's Parcel #": [subjectValidation.checkSubjectFieldsNotBlank],
@@ -421,8 +435,8 @@ function Subject() {
       'Census Tract': [subjectValidation.checkSubjectFieldsNotBlank, subjectValidation.checkCensusTract],
       'Occupant': [subjectValidation.checkSubjectFieldsNotBlank],
       'Property Rights Appraised': [subjectValidation.checkSubjectFieldsNotBlank],
-      'Lender/Client': [subjectValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderNameInconsistency],
-      'Address (Lender/Client)': [subjectValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderAddressInconsistency],
+      'Lender/Client': [subjectValidation.checkSubjectFieldsNotBlank, appraiserLenderValidation.checkLenderNameInconsistency, htmlDataValidation.checkSubjectLenderNameVsHtml],
+      'Address (Lender/Client)': [subjectValidation.checkSubjectFieldsNotBlank, htmlDataValidation.checkLenderAddressInconsistency, appraiserLenderValidation.checkLenderAddressInconsistency],
 
       // Neighborhood Validations
       'one unit housing price(high,low,pred)': [neighborhoodValidation.checkHousingPriceAndAge, neighborhoodValidation.checkNeighborhoodFieldsNotBlank],
@@ -577,7 +591,7 @@ function Subject() {
     }
 
     const validationRegistry = buildValidationRegistry();
-    const allData = data;
+    const allData = { ...data, comparisonData };
 
     const runChecksForField = (sectionName, fieldName, value, path, saleName = null, customRegistry = validationRegistry) => {
       const validationFns = customRegistry[fieldName] || [];
@@ -671,7 +685,7 @@ function Subject() {
     }
 
     const validationRegistry = buildValidationRegistry();
-    const allData = data;
+    const allData = { ...data, comparisonData };
 
     const runChecksForField = (sectionName, fieldName, value, path, saleName = null, customRegistry = validationRegistry) => {
       const validationFns = customRegistry[fieldName] || [];
@@ -1260,6 +1274,22 @@ function Subject() {
         if (!subjectFields.includes(field)) {
           subjectFields.splice(stateIndex + offset, 0, field);
           offset++;
+        }
+      });
+    }
+    if (currentState === 'IL') {
+      const ilFields = ["CO detector comment"];
+      let insertionPoint = subjectFields.indexOf('State') + 1;
+      // Account for fields potentially added by statesRequiringAppraiserFee and statesRequiringAmcLicense
+      if (subjectFields.includes("Appraiser's Fee")) {
+        insertionPoint++;
+      }
+      if (subjectFields.includes('AMC License #')) {
+        insertionPoint++;
+      }
+      ilFields.forEach(field => {
+        if (!subjectFields.includes(field)) {
+          subjectFields.splice(insertionPoint, 0, field);
         }
       });
     }
@@ -4072,19 +4102,19 @@ function Subject() {
     let formComponent;
     switch (selectedFormType) {
       case '1004':
-        formComponent = <Form1004 {...props} allData={data} />;
+        formComponent = <Form1004 {...props} allData={{...data, comparisonData}} />;
         break;
       case '1073':
-        formComponent = <Form1073 {...props} allData={data} />;
+        formComponent = <Form1073 {...props} allData={{...data, comparisonData}} />;
         break;
       case '1007':
-        formComponent = <Form1007 {...props} allData={data} />;
+        formComponent = <Form1007 {...props} allData={{...data, comparisonData}} />;
         break;
       case '1004 + 1007':
-        formComponent = <Form1004And1007 {...props} allData={data} />;
+        formComponent = <Form1004And1007 {...props} allData={{...data, comparisonData}} />;
         break;
       case '1025':
-        formComponent = <Form1025 {...props} allData={data} />;
+        formComponent = <Form1025 {...props} allData={{...data, comparisonData}} />;
         break;
       case '1004D':
         formComponent = <Form1004D />;
